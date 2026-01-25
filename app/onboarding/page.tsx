@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { User, Users, ArrowRight, Check, Loader2 } from 'lucide-react';
+import { User, Users, ArrowRight, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -150,9 +150,9 @@ export default function OnboardingPage() {
         <>
           <div className="text-center space-y-2">
             <Users className="h-12 w-12 mx-auto text-muted-foreground" />
-            <h2 className="text-xl font-medium">Organizations Coming Soon</h2>
+            <h2 className="text-xl font-medium">Coming Soon</h2>
             <p className="text-muted-foreground">
-              Organizations are not supported yet. You can join one later when this feature becomes available.
+              Organizations are not supported yet.
             </p>
           </div>
           <Button
@@ -162,13 +162,10 @@ export default function OnboardingPage() {
             size="lg"
           >
             {isSubmitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Setting up...
-              </>
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>
-                Continue as Solo
+                Continue
                 <ArrowRight className="h-4 w-4" />
               </>
             )}
@@ -181,15 +178,10 @@ export default function OnboardingPage() {
       case 'username':
         return (
           <>
-            <div className="text-center space-y-2">
-              <h2 className="text-xl font-medium">Choose a username</h2>
-              <p className="text-sm text-muted-foreground">
-                This is how you&apos;ll be identified
-              </p>
-            </div>
+            <h2 className="text-xl font-medium text-center">Choose a username</h2>
             <div className="space-y-3">
               <Input
-                placeholder="Enter username"
+                placeholder="Username"
                 value={username}
                 onChange={handleUsernameChange}
                 onKeyDown={(e) => {
@@ -203,9 +195,6 @@ export default function OnboardingPage() {
               {usernameError && (
                 <p className="text-sm text-destructive">{usernameError}</p>
               )}
-              <p className="text-xs text-muted-foreground">
-                3-20 characters, letters, numbers, and underscores only
-              </p>
             </div>
             <Button
               onClick={handleUsernameSubmit}
@@ -231,12 +220,7 @@ export default function OnboardingPage() {
       case 'organization':
         return (
           <>
-            <div className="text-center space-y-2">
-              <h2 className="text-xl font-medium">Are you part of an organization?</h2>
-              <p className="text-sm text-muted-foreground">
-                Teams and studios can collaborate together
-              </p>
-            </div>
+            <h2 className="text-xl font-medium text-center">Part of an organization?</h2>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => handleOrganizationSelect(true)}
@@ -244,7 +228,7 @@ export default function OnboardingPage() {
                 className="p-6 rounded-lg border-2 border-border hover:border-primary transition-all flex flex-col items-center gap-3 disabled:opacity-50"
               >
                 <Users className="h-8 w-8 text-muted-foreground" />
-                <span className="font-medium">Yes, I&apos;m in an org</span>
+                <span className="font-medium">Yes</span>
               </button>
               <button
                 onClick={() => handleOrganizationSelect(false)}
@@ -258,7 +242,6 @@ export default function OnboardingPage() {
             {isSubmitting && (
               <div className="flex items-center justify-center gap-2 text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Setting up your account...</span>
               </div>
             )}
           </>
@@ -274,7 +257,6 @@ export default function OnboardingPage() {
         {/* Header - No branding */}
         <div className="text-center">
           <h1 className="text-3xl font-semibold tracking-tight">Welcome</h1>
-          <p className="text-muted-foreground mt-2">Let&apos;s set up your account</p>
         </div>
 
         {/* Progress dots */}

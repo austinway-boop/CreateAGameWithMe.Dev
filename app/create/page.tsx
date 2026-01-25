@@ -6,9 +6,9 @@ import { useSession } from 'next-auth/react';
 import { Lightbulb, Sparkles } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { Card, CardContent } from '@/components/ui/card';
-import { PLATFORMS, TEAM_SIZES, TIME_HORIZONS } from '@/lib/types';
+import { PLATFORMS, TIME_HORIZONS } from '@/lib/types';
 
-type Step = 'idea' | 'platform' | 'team' | 'timeline';
+type Step = 'idea' | 'platform' | 'timeline';
 
 export default function CreatePage() {
   const router = useRouter();
@@ -44,12 +44,7 @@ export default function CreatePage() {
   };
 
   const handlePlatformSelect = (value: string) => {
-    updateProject({ platform: value });
-    setStep('team');
-  };
-
-  const handleTeamSelect = (value: string) => {
-    updateProject({ teamSize: value });
+    updateProject({ platform: value, teamSize: 'Solo' });
     setStep('timeline');
   };
 
@@ -110,28 +105,6 @@ export default function CreatePage() {
           </>
         );
 
-      case 'team':
-        return (
-          <>
-            <h2 className="text-xl font-medium text-center">Team size?</h2>
-            <div className="grid grid-cols-2 gap-2">
-              {TEAM_SIZES.map((size) => (
-                <button
-                  key={size}
-                  onClick={() => handleTeamSelect(size)}
-                  className={`p-4 rounded-lg border-2 transition-all text-center ${
-                    project.teamSize === size
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-          </>
-        );
-
       case 'timeline':
         return (
           <>
@@ -156,7 +129,8 @@ export default function CreatePage() {
     }
   };
 
-  const stepIndex = ['idea', 'platform', 'team', 'timeline'].indexOf(step);
+  const steps: Step[] = ['idea', 'platform', 'timeline'];
+  const stepIndex = steps.indexOf(step);
 
   return (
     <div className="flex-1 flex items-center justify-center p-6">
@@ -168,7 +142,7 @@ export default function CreatePage() {
 
         {/* Progress dots */}
         <div className="flex justify-center gap-2">
-          {[0, 1, 2, 3].map((i) => (
+          {[0, 1, 2].map((i) => (
             <div
               key={i}
               className={`h-2 w-2 rounded-full transition-colors ${
@@ -189,7 +163,6 @@ export default function CreatePage() {
         {step !== 'idea' && (
           <button
             onClick={() => {
-              const steps: Step[] = ['idea', 'platform', 'team', 'timeline'];
               const currentIndex = steps.indexOf(step);
               if (currentIndex > 0) {
                 setStep(steps[currentIndex - 1]);
