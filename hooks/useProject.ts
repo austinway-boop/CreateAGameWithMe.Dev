@@ -1,8 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useTransition } from 'react';
 import { Project } from '@/lib/types';
-import { getOrCreateCurrentProject, saveProject, setCurrentProjectId } from '@/lib/db';
+import { 
+  getOrCreateCurrentProject, 
+  saveProject as saveProjectAction,
+  createProject as createProjectAction,
+} from '@/lib/actions/project';
 
 interface UseProjectReturn {
   project: Project | null;
@@ -15,6 +19,7 @@ interface UseProjectReturn {
 export function useProject(): UseProjectReturn {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
 
   // Load project on mount
   useEffect(() => {
@@ -37,11 +42,13 @@ export function useProject(): UseProjectReturn {
 
     const timer = setTimeout(async () => {
       try {
-        await saveProject(project);
+        startTransition(async () => {
+          await saveProjectAction(project.id, project);
+        });
       } catch (err) {
         console.error('Failed to save project:', err);
       }
-    }, 300);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [project]);
@@ -55,48 +62,26 @@ export function useProject(): UseProjectReturn {
 
   // Immediate save - use when navigating away
   const updateProjectAndSave = useCallback(async (updates: Partial<Project>) => {
-    let updatedProject: Project | null = null;
-    setProject((prev) => {
-      if (!prev) return prev;
-      updatedProject = { ...prev, ...updates };
-      return updatedProject;
-    });
+    // Get current project and update it
+    const currentProject = project;
+    if (!currentProject) return;
+    
+    const updatedProject = { ...currentProject, ...updates };
+    setProject(updatedProject);
     
     // Save immediately without debounce
-    if (updatedProject) {
-      try {
-        await saveProject(updatedProject);
-      } catch (err) {
-        console.error('Failed to save project:', err);
-      }
+    try {
+      await saveProjectAction(updatedProject.id, updatedProject);
+    } catch (err) {
+      console.error('Failed to save project:', err);
     }
-  }, []);
+  }, [project]);
 
   const resetProject = useCallback(async () => {
     setLoading(true);
     try {
-      const newProject = await getOrCreateCurrentProject();
-      // Clear and create new
-      const fresh = {
-        ...newProject,
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        hasIdea: null,
-        platform: '',
-        teamSize: '',
-        timeHorizon: '',
-        ideaDescription: '',
-        vibeChips: [],
-        structuredIdea: null,
-        ikigai: { chips: [] },
-        sparkRounds: [],
-        selectedSpark: null,
-        finalTitle: '',
-        finalConcept: '',
-      };
-      setCurrentProjectId(fresh.id);
-      await saveProject(fresh);
+      // Create a new project
+      const fresh = await createProjectAction();
       setProject(fresh);
     } catch (err) {
       console.error('Failed to reset project:', err);
@@ -107,7 +92,7 @@ export function useProject(): UseProjectReturn {
 
   return {
     project,
-    loading,
+    loading: loading || isPending,
     updateProject,
     updateProjectAndSave,
     resetProject,

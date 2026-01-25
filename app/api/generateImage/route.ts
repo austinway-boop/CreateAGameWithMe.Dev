@@ -1,16 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const AI_ENABLED = process.env.NEXT_PUBLIC_ENABLE_AI === 'true';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export async function POST(request: NextRequest) {
-  if (!AI_ENABLED) {
-    return NextResponse.json(
-      { message: 'AI features are disabled' },
-      { status: 403 }
-    );
-  }
-
   if (!OPENAI_API_KEY) {
     return NextResponse.json(
       { message: 'OpenAI API key not configured' },

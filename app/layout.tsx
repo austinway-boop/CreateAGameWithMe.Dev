@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { Providers } from '@/components/Providers'
 import './globals.css'
 
 const inter = Inter({ 
@@ -8,8 +9,8 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Artify — CREATE',
-  description: 'A minimal ideation wizard for game developers',
+  title: 'Create A Game With Me',
+  description: 'Turn your ideas into game concepts with AI-powered ideation tools',
 }
 
 export default function RootLayout({
@@ -20,9 +21,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased min-h-screen bg-gradient-to-b from-background to-muted/20`}>
-        <main className="min-h-screen flex flex-col">
-          {children}
-        </main>
+        <Providers>
+          <main className="min-h-screen flex flex-col">
+            {children}
+          </main>
+        </Providers>
       </body>
     </html>
   )
