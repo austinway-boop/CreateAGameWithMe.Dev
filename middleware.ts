@@ -1,5 +1,5 @@
-import { auth } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 // Routes that require authentication
 const protectedRoutes = [
@@ -13,29 +13,33 @@ const protectedRoutes = [
   '/card',
 ];
 
-export default auth((req) => {
+export function middleware(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some(route => 
-    req.nextUrl.pathname.startsWith(route)
+    request.nextUrl.pathname.startsWith(route)
   );
 
-  if (isProtectedRoute && !req.auth) {
-    const loginUrl = new URL('/', req.url);
+  // Check for session token cookie
+  const sessionToken = request.cookies.get('authjs.session-token') || 
+                       request.cookies.get('__Secure-authjs.session-token');
+
+  if (isProtectedRoute && !sessionToken) {
+    const loginUrl = new URL('/', request.url);
     return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: [
     /*
      * Match all request paths except:
-     * - api/auth (auth endpoints)
+     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public files
      */
-    '/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\..*).*)' 
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)' 
   ],
 };
