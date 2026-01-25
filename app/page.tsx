@@ -5,9 +5,10 @@ import { Sparkles, Lightbulb, Gamepad2, Zap } from 'lucide-react';
 export default async function LandingPage() {
   const session = await auth();
 
-  // If user is already logged in, redirect to create
+  // If user is already logged in, check onboarding status
   if (session?.user) {
-    redirect('/create');
+    // Redirect to onboarding if not complete, otherwise to create
+    redirect('/onboarding');
   }
 
   return (
@@ -34,7 +35,7 @@ export default async function LandingPage() {
           <form
             action={async () => {
               'use server';
-              await signIn('google', { redirectTo: '/create' });
+              await signIn('google', { redirectTo: '/onboarding' });
             }}
           >
             <button

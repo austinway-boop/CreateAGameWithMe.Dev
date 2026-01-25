@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 
 // Routes that require authentication
 const protectedRoutes = [
+  '/onboarding',
   '/create',
   '/idea',
   '/ikigai',

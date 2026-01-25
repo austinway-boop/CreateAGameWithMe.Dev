@@ -1,7 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { Lightbulb, Sparkles } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,16 +12,29 @@ type Step = 'idea' | 'platform' | 'team' | 'timeline';
 
 export default function CreatePage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const { project, loading, updateProject } = useProject();
   const [step, setStep] = useState<Step>('idea');
   const [hasIdea, setHasIdea] = useState<boolean | null>(null);
 
-  if (loading || !project) {
+  // Redirect to onboarding if not complete
+  useEffect(() => {
+    if (status === 'authenticated' && !session?.user?.onboardingComplete) {
+      router.push('/onboarding');
+    }
+  }, [status, session, router]);
+
+  if (loading || !project || status === 'loading') {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-muted-foreground">Loading...</div>
       </div>
     );
+  }
+
+  // Don't render if not onboarded
+  if (!session?.user?.onboardingComplete) {
+    return null;
   }
 
   const handleIdeaSelect = (value: boolean) => {
@@ -149,8 +163,7 @@ export default function CreatePage() {
       <div className="w-full max-w-[400px] space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-3xl font-semibold tracking-tight">Create Your Game</h1>
-          <p className="text-muted-foreground mt-2">Let&apos;s get started</p>
+          <p className="text-muted-foreground">Let&apos;s get started</p>
         </div>
 
         {/* Progress dots */}
