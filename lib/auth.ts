@@ -9,11 +9,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
   pages: {
     signIn: '/',
+    error: '/',
   },
+  trustHost: true,
   callbacks: {
     session({ session, user }) {
       if (session.user) {
