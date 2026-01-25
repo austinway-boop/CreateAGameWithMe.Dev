@@ -1,0 +1,580 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { ArrowRight, Loader2, ThumbsDown, Heart, Check, Sparkles, MessageSquare, Palette } from 'lucide-react';
+import { useProject } from '@/hooks/useProject';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { IdeaSpark, SparkRound } from '@/lib/types';
+
+type ViewState = 'loading' | 'swiping' | 'review' | 'noLikes' | 'moreContext';
+
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+export default function SparksPage() {
+  const router = useRouter();
+  const { project, loading, updateProject } = useProject();
+  const [viewState, setViewState] = useState<ViewState>('loading');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [likedSparks, setLikedSparks] = useState<IdeaSpark[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [contextInput, setContextInput] = useState('');
+  const [selectingSparkId, setSelectingSparkId] = useState<string | null>(null);
+
+  const aiEnabled = process.env.NEXT_PUBLIC_ENABLE_AI === 'true';
+
+  // Get current sparks from latest round
+  const currentRound = project?.sparkRounds[project.sparkRounds.length - 1];
+  const sparks = currentRound?.sparks || [];
+
+  // Check rate limit
+  const getRecentAttempts = () => {
+    if (!project) return [];
+    const attempts = project.regenerationAttempts || [];
+    const now = Date.now();
+    return attempts.filter(
+      (a) => now - new Date(a.timestamp).getTime() < RATE_LIMIT_WINDOW_MS
+    );
+  };
+
+  const isRateLimited = () => {
+    return getRecentAttempts().length >= RATE_LIMIT_MAX;
+  };
+
+  const getRateLimitRemainingMinutes = () => {
+    const attempts = getRecentAttempts();
+    if (attempts.length === 0) return 0;
+    const oldest = new Date(attempts[0].timestamp).getTime();
+    const resetTime = oldest + RATE_LIMIT_WINDOW_MS;
+    return Math.ceil((resetTime - Date.now()) / (60 * 1000));
+  };
+
+  // Auto-generate on first load if no sparks
+  useEffect(() => {
+    if (project && sparks.length === 0 && aiEnabled && !isGenerating) {
+      generateSparks();
+    } else if (project && sparks.length > 0 && viewState === 'loading') {
+      setViewState('swiping');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project?.id, sparks.length]);
+
+  // Check after state update if we just liked the last one
+  useEffect(() => {
+    if (currentIndex >= sparks.length && sparks.length > 0 && viewState === 'swiping') {
+      if (likedSparks.length > 0) {
+        setViewState('review');
+      } else {
+        setViewState('noLikes');
+      }
+    }
+  }, [currentIndex, likedSparks.length, sparks.length, viewState]);
+
+  if (loading || !project) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  const generateSparks = async (withContext?: string) => {
+    if (isRateLimited()) {
+      setError(`Rate limited. Try again in ${getRateLimitRemainingMinutes()} minutes.`);
+      return;
+    }
+
+    setIsGenerating(true);
+    setViewState('loading');
+    setError(null);
+    setCurrentIndex(0);
+    setLikedSparks([]);
+
+    try {
+      // Record attempt for rate limiting
+      const newAttempt = { timestamp: new Date().toISOString() };
+      updateProject({
+        regenerationAttempts: [...(project.regenerationAttempts || []), newAttempt],
+        additionalContext: withContext || project.additionalContext || '',
+      });
+
+      const response = await fetch('/api/generateSparks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ikigaiChips: project.ikigai.chips,
+          platform: project.platform,
+          teamSize: project.teamSize,
+          timeHorizon: project.timeHorizon,
+          previousRounds: project.sparkRounds.flatMap((r) => r.sparks),
+          additionalContext: withContext || project.additionalContext || '',
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || 'Failed to generate sparks');
+      }
+
+      const data = await response.json();
+
+      const newRound: SparkRound = {
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        sparks: data.sparks,
+        constraints: null,
+      };
+
+      updateProject({
+        sparkRounds: [...project.sparkRounds, newRound],
+      });
+
+      setViewState('swiping');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setViewState('swiping'); // Allow retry
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleLike = () => {
+    const spark = sparks[currentIndex];
+    if (spark) {
+      setLikedSparks([...likedSparks, spark]);
+    }
+    moveToNext();
+  };
+
+  const handleSkip = () => {
+    moveToNext();
+  };
+
+  const moveToNext = () => {
+    if (currentIndex < sparks.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      // Done swiping - check if any likes
+      if (likedSparks.length > 0 || (sparks[currentIndex] && likedSparks.length === 0 && currentIndex === sparks.length - 1)) {
+        // Need to check final state after this action
+        const finalLiked = sparks[currentIndex] && viewState === 'swiping' 
+          ? [...likedSparks] 
+          : likedSparks;
+        
+        setTimeout(() => {
+          if (finalLiked.length > 0 || likedSparks.length > 0) {
+            setViewState('review');
+          } else {
+            setViewState('noLikes');
+          }
+        }, 100);
+      } else {
+        setViewState('noLikes');
+      }
+    }
+  };
+
+  const selectSpark = async (spark: IdeaSpark) => {
+    setSelectingSparkId(spark.id);
+
+    const concept = `${spark.hook}
+
+**Core Loop:** ${spark.coreLoop}
+
+**Unique Mechanic:** ${spark.uniqueMechanic}
+
+**Win/Lose:** ${spark.winLoseCondition}
+
+**Why It's Fun:**
+${spark.whyFun.map(r => `• ${r}`).join('\n')}
+
+**Prototype Plan:** ${spark.prototypePlan}
+
+*Scope: ${spark.scopeLevel} | Platform: ${spark.targetPlatform}*`;
+
+    updateProject({
+      selectedSpark: { ...spark, isSelected: true },
+      finalTitle: spark.title,
+      finalConcept: concept,
+    });
+
+    try {
+      // Generate the concept card image
+      const imageResponse = await fetch('/api/generateImage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: spark.title,
+          concept: concept,
+          vibes: project.vibeChips,
+        }),
+      });
+
+      if (imageResponse.ok) {
+        const imageData = await imageResponse.json();
+        updateProject({ conceptImage: imageData.imageUrl });
+      }
+    } catch (err) {
+      console.error('Failed to generate image:', err);
+    }
+
+    router.push('/card');
+  };
+
+  const handleYesHaveIdea = () => {
+    router.push('/idea');
+  };
+
+  const handleNoNeedMore = () => {
+    setViewState('moreContext');
+  };
+
+  const handleSubmitContext = () => {
+    if (contextInput.trim()) {
+      generateSparks(contextInput.trim());
+      setContextInput('');
+    }
+  };
+
+  // If AI is disabled, show manual worksheet
+  if (!aiEnabled) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-[500px] space-y-6">
+          <div className="text-center">
+            <h1 className="text-2xl font-semibold tracking-tight">AI Disabled</h1>
+            <p className="text-muted-foreground mt-2">Enable AI to generate sparks, or use the remix worksheet.</p>
+          </div>
+
+          <Card>
+            <CardContent className="pt-6">
+              <Button onClick={() => router.push('/remix')} className="w-full">
+                Open Remix Worksheet
+              </Button>
+            </CardContent>
+          </Card>
+
+          <button
+            onClick={() => router.push('/ikigai')}
+            className="block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            ← Back to Ikigai
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading / Generating state
+  if (viewState === 'loading' || isGenerating) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-[500px] space-y-6">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="text-center">
+              <h1 className="text-xl font-semibold tracking-tight">Generating Sparks</h1>
+              <p className="text-muted-foreground mt-1">Creating 10 ideas based on your Ikigai...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && sparks.length === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-[500px] space-y-6">
+          <Card className="border-destructive">
+            <CardContent className="pt-6 text-center space-y-4">
+              <p className="text-destructive">{error}</p>
+              <Button onClick={() => generateSparks()} disabled={isRateLimited()}>
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+
+          <button
+            onClick={() => router.push('/ikigai')}
+            className="block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            ← Back to Ikigai
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Swiping state - one card at a time
+  if (viewState === 'swiping' && sparks.length > 0) {
+    const currentSpark = sparks[currentIndex];
+    
+    return (
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-[500px] space-y-6">
+          {/* Progress */}
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>Spark {currentIndex + 1} of {sparks.length}</span>
+            {likedSparks.length > 0 && (
+              <span className="flex items-center gap-1 text-rose-500">
+                <Heart className="h-3 w-3 fill-current" />
+                {likedSparks.length} liked
+              </span>
+            )}
+          </div>
+
+          {/* Card */}
+          <Card className="overflow-hidden">
+            <CardContent className="pt-6 space-y-4">
+              <div>
+                <h2 className="text-xl font-semibold">{currentSpark.title}</h2>
+                <p className="text-muted-foreground mt-2">{currentSpark.hook}</p>
+              </div>
+
+              <div className="space-y-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground text-xs uppercase tracking-wide">Core Loop</span>
+                  <p className="mt-0.5">{currentSpark.coreLoop}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground text-xs uppercase tracking-wide">What Makes It Unique</span>
+                  <p className="mt-0.5">{currentSpark.uniqueMechanic}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground text-xs uppercase tracking-wide">Why It&apos;s Fun</span>
+                  <ul className="mt-0.5 space-y-0.5">
+                    {currentSpark.whyFun?.map((reason, i) => (
+                      <li key={i} className="flex gap-1.5">
+                        <span className="text-primary">•</span>
+                        <span>{reason}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="flex gap-4 text-xs text-muted-foreground pt-2 border-t">
+                  <span>{currentSpark.scopeLevel}</span>
+                  <span>{currentSpark.targetPlatform}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              size="lg"
+              className="flex-1 gap-2"
+              onClick={handleSkip}
+            >
+              <ThumbsDown className="h-4 w-4" />
+              Skip
+            </Button>
+            <Button
+              size="lg"
+              className="flex-1 gap-2 bg-rose-500 hover:bg-rose-600"
+              onClick={handleLike}
+            >
+              <Heart className="h-4 w-4" />
+              Like
+            </Button>
+          </div>
+
+          <button
+            onClick={() => router.push('/ikigai')}
+            className="block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            ← Back to Ikigai
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Review state - show liked sparks
+  if (viewState === 'review' && likedSparks.length > 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-[600px] space-y-6">
+          <div className="text-center">
+            <h1 className="text-2xl font-semibold tracking-tight">Your Favorites</h1>
+            <p className="text-muted-foreground mt-1">Pick one to build on</p>
+          </div>
+
+          <div className="space-y-3">
+            {likedSparks.map((spark) => {
+              const isSelecting = selectingSparkId === spark.id;
+              return (
+                <Card
+                  key={spark.id}
+                  className={`transition-colors ${isSelecting ? 'border-primary' : 'cursor-pointer hover:border-primary'} ${selectingSparkId && !isSelecting ? 'opacity-50' : ''}`}
+                  onClick={() => !selectingSparkId && selectSpark(spark)}
+                >
+                  <CardContent className="pt-4 pb-4 flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <h3 className="font-semibold truncate">{spark.title}</h3>
+                      <p className="text-sm text-muted-foreground truncate">{spark.hook}</p>
+                    </div>
+                    <Button size="sm" className="shrink-0 gap-1" disabled={!!selectingSparkId}>
+                      {isSelecting ? (
+                        <>
+                          <Palette className="h-3 w-3 animate-pulse" />
+                          Creating...
+                        </>
+                      ) : (
+                        <>
+                          <Check className="h-3 w-3" />
+                          Select
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                setViewState('noLikes');
+              }}
+            >
+              None of these
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 gap-2"
+              onClick={() => generateSparks()}
+              disabled={isGenerating || isRateLimited()}
+            >
+              <Sparkles className="h-4 w-4" />
+              Generate More
+            </Button>
+          </div>
+
+          <button
+            onClick={() => router.push('/ikigai')}
+            className="block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            ← Back to Ikigai
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // No likes state - ask if they thought of their own idea
+  if (viewState === 'noLikes') {
+    return (
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-[500px] space-y-6">
+          <div className="text-center">
+            <h1 className="text-2xl font-semibold tracking-tight">No matches?</h1>
+            <p className="text-muted-foreground mt-1">Did any of these spark your own idea?</p>
+          </div>
+
+          <Card>
+            <CardContent className="pt-6 space-y-4">
+              <Button
+                className="w-full gap-2"
+                size="lg"
+                onClick={handleYesHaveIdea}
+              >
+                <Sparkles className="h-4 w-4" />
+                Yes, I have an idea now!
+              </Button>
+
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                size="lg"
+                onClick={handleNoNeedMore}
+              >
+                <MessageSquare className="h-4 w-4" />
+                No, give me more context options
+              </Button>
+            </CardContent>
+          </Card>
+
+          {isRateLimited() && (
+            <p className="text-center text-sm text-muted-foreground">
+              Rate limited. Try again in {getRateLimitRemainingMinutes()} minutes.
+            </p>
+          )}
+
+          <button
+            onClick={() => router.push('/ikigai')}
+            className="block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            ← Back to Ikigai
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // More context state - text input
+  if (viewState === 'moreContext') {
+    return (
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-[500px] space-y-6">
+          <div className="text-center">
+            <h1 className="text-2xl font-semibold tracking-tight">Tell us more</h1>
+            <p className="text-muted-foreground mt-1">What direction are you thinking?</p>
+          </div>
+
+          <Card>
+            <CardContent className="pt-6 space-y-4">
+              <Textarea
+                placeholder="e.g. I want something more casual, maybe with puzzle elements. I loved the vibe of Stardew Valley but want something shorter..."
+                value={contextInput}
+                onChange={(e) => setContextInput(e.target.value)}
+                rows={4}
+                className="resize-none"
+              />
+
+              <Button
+                className="w-full gap-2"
+                size="lg"
+                onClick={handleSubmitContext}
+                disabled={!contextInput.trim() || isGenerating || isRateLimited()}
+              >
+                <Sparkles className="h-4 w-4" />
+                Generate 10 More
+              </Button>
+            </CardContent>
+          </Card>
+
+          {isRateLimited() && (
+            <p className="text-center text-sm text-muted-foreground">
+              Rate limited. Try again in {getRateLimitRemainingMinutes()} minutes.
+            </p>
+          )}
+
+          <button
+            onClick={() => setViewState('noLikes')}
+            className="block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            ← Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback
+  return (
+    <div className="flex-1 flex items-center justify-center p-6">
+      <div className="text-muted-foreground">Something went wrong</div>
+    </div>
+  );
+}
