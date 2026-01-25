@@ -7,16 +7,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID || '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
       allowDangerousEmailAccountLinking: true,
     }),
   ],
   pages: {
-    signIn: '/',
-    error: '/',
+    error: '/auth/error',
   },
   trustHost: true,
+  debug: process.env.NODE_ENV === 'development',
   callbacks: {
     session({ session, user }) {
       if (session.user) {
