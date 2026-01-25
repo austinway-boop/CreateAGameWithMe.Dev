@@ -18,8 +18,6 @@ export default function IdeaPage() {
   const [loadingStage, setLoadingStage] = useState<LoadingStage>('idle');
   const [error, setError] = useState<string | null>(null);
 
-  const aiEnabled = process.env.NEXT_PUBLIC_ENABLE_AI === 'true';
-
   if (loading || !project) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -172,20 +170,14 @@ export default function IdeaPage() {
 
             {/* Actions */}
             <div className="pt-2">
-              {aiEnabled ? (
-                <Button
-                  onClick={handleStructure}
-                  disabled={!canStructure || isLoading}
-                  className="w-full gap-2"
-                  size="lg"
-                >
-                  {getButtonContent()}
-                </Button>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center">
-                  AI is required to structure your idea. Please enable AI in settings.
-                </p>
-              )}
+              <Button
+                onClick={handleStructure}
+                disabled={!canStructure || isLoading}
+                className="w-full gap-2"
+                size="lg"
+              >
+                {getButtonContent()}
+              </Button>
             </div>
 
           </CardContent>
