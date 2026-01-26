@@ -33,6 +33,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   // Track if we've already loaded for this session to prevent re-fetching
   const hasLoadedRef = useRef(false);
   const lastUserIdRef = useRef<string | null>(null);
+  const isLoadingRef = useRef(false); // Prevent duplicate concurrent loads
 
   // Load project on mount and when user changes
   useEffect(() => {
@@ -57,13 +58,16 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
       return;
     }
     
-    // Already loaded, don't reload
-    if (hasLoadedRef.current) {
-      if (loading) setLoading(false);
+    // Already loaded or currently loading, don't reload
+    if (hasLoadedRef.current || isLoadingRef.current) {
+      setLoading(false);
       return;
     }
 
     async function loadProject() {
+      if (isLoadingRef.current) return; // Extra guard
+      isLoadingRef.current = true;
+      
       try {
         const loaded = await getOrCreateCurrentProject();
         setProject(loaded);
@@ -73,11 +77,12 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
         setProject(null);
       } finally {
         setLoading(false);
+        isLoadingRef.current = false;
       }
     }
     
     loadProject();
-  }, [status, session?.user?.id, loading]);
+  }, [status, session?.user?.id]); // Removed 'loading' from deps - it was causing feedback loop
 
   // Debounced save
   useEffect(() => {
