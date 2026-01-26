@@ -24,7 +24,7 @@ export default function CreatePage() {
     }
   }, [status, session, router]);
 
-  if (loading || !project || status === 'loading') {
+  if (loading || !project) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-muted-foreground">Loading...</div>

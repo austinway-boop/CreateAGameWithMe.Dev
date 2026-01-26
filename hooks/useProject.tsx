@@ -34,27 +34,32 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   const hasLoadedRef = useRef(false);
   const lastUserIdRef = useRef<string | null>(null);
 
-  // Load project when authenticated
+  // Load project on mount and when user changes
   useEffect(() => {
     const userId = session?.user?.id;
     
-    // Reset if user changed (logged out and back in as different user)
-    if (userId !== lastUserIdRef.current) {
+    // Only reset if user explicitly changed to a DIFFERENT user (not just undefined)
+    // This prevents resetting during hydration when session is briefly unavailable
+    if (userId && lastUserIdRef.current && userId !== lastUserIdRef.current) {
       hasLoadedRef.current = false;
-      lastUserIdRef.current = userId || null;
+      setProject(null);
+    }
+    if (userId) {
+      lastUserIdRef.current = userId;
     }
     
-    // Reset state if explicitly not authenticated
+    // Reset state if explicitly logged out
     if (status === 'unauthenticated') {
       setProject(null);
       setLoading(false);
       hasLoadedRef.current = false;
+      lastUserIdRef.current = null;
       return;
     }
     
-    // Already loaded for this user, skip
-    if (hasLoadedRef.current && project) {
-      setLoading(false);
+    // Already loaded, don't reload
+    if (hasLoadedRef.current) {
+      if (loading) setLoading(false);
       return;
     }
 
@@ -65,7 +70,6 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
         hasLoadedRef.current = true;
       } catch (err) {
         console.error('Failed to load project:', err);
-        // Server will throw if not authenticated - that's fine, just stop loading
         setProject(null);
       } finally {
         setLoading(false);
@@ -73,7 +77,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     }
     
     loadProject();
-  }, [status, session?.user?.id]);
+  }, [status, session?.user?.id, loading]);
 
   // Debounced save
   useEffect(() => {
