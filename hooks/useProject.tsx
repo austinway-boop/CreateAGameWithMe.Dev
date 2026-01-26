@@ -46,6 +46,12 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     }
   }, [loading]);
 
+  // #region agent log
+  useEffect(() => {
+    fetch('http://127.0.0.1:7242/ingest/2e0b1f85-926b-4d72-80e8-36943dcd7c46',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useProject.tsx:value-change',message:'Context value changed',data:{loading,showLoading,isPending,hasProject:!!project,status,hasLoadedRef:hasLoadedRef.current},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1-H3'})}).catch(()=>{});
+  }, [loading, showLoading, isPending, project, status]);
+  // #endregion
+
   // DEBUG: Visual debug log
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
   const addLog = (msg: string) => {
@@ -180,7 +186,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
 
   const value: UseProjectReturn = {
     project,
-    loading: showLoading || isPending, // Use delayed loading to avoid flash
+    loading: showLoading, // Only show loading for initial fetch, NOT for background saves
     updateProject,
     updateProjectAndSave,
     resetProject,
@@ -209,7 +215,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
           zIndex: 99999,
         }}>
           <div style={{ marginBottom: 5, color: '#fff', fontWeight: 'bold' }}>
-            Debug: render#{renderCountRef.current} | loading={String(loading)} | showLoading={String(showLoading)} | project={project ? 'yes' : 'no'} | status={status}
+            Debug: render#{renderCountRef.current} | loading={String(loading)} | showLoading={String(showLoading)} | isPending={String(isPending)} | project={project ? 'yes' : 'no'} | status={status}
           </div>
           {debugLogs.map((log, i) => (
             <div key={i} style={{ opacity: 0.8 }}>{log}</div>
