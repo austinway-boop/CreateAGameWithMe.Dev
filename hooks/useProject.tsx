@@ -33,15 +33,27 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   // Track if we've already loaded for this session to prevent re-fetching
   const hasLoadedRef = useRef(false);
   const lastUserIdRef = useRef<string | null>(null);
-  const isLoadingRef = useRef(false); // Prevent duplicate concurrent loads
+  const isLoadingRef = useRef(false);
+
+  // DEBUG: Visual debug log
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
+  const addLog = (msg: string) => {
+    const timestamp = new Date().toISOString().split('T')[1].slice(0, 12);
+    setDebugLogs(prev => [...prev.slice(-15), `${timestamp} ${msg}`]);
+  };
+  
+  const renderCountRef = useRef(0);
+  renderCountRef.current++;
 
   // Load project on mount and when user changes
   useEffect(() => {
     const userId = session?.user?.id;
     
-    // Only reset if user explicitly changed to a DIFFERENT user (not just undefined)
-    // This prevents resetting during hydration when session is briefly unavailable
+    addLog(`Effect: status=${status}, userId=${userId?.slice(0,8) || 'none'}, hasLoaded=${hasLoadedRef.current}, isLoading=${isLoadingRef.current}`);
+    
+    // Only reset if user explicitly changed to a DIFFERENT user
     if (userId && lastUserIdRef.current && userId !== lastUserIdRef.current) {
+      addLog('User changed, resetting');
       hasLoadedRef.current = false;
       setProject(null);
     }
@@ -51,6 +63,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     
     // Reset state if explicitly logged out
     if (status === 'unauthenticated') {
+      addLog('Unauthenticated, clearing');
       setProject(null);
       setLoading(false);
       hasLoadedRef.current = false;
@@ -58,31 +71,41 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
       return;
     }
     
-    // Already loaded or currently loading, don't reload
-    if (hasLoadedRef.current || isLoadingRef.current) {
-      setLoading(false);
+    // Currently loading, let it finish
+    if (isLoadingRef.current) {
+      addLog('Already loading, skip');
+      return;
+    }
+    
+    // Already loaded
+    if (hasLoadedRef.current) {
+      addLog('Already loaded, skip');
+      if (loading) setLoading(false);
       return;
     }
 
     async function loadProject() {
-      if (isLoadingRef.current) return; // Extra guard
+      if (isLoadingRef.current) return;
       isLoadingRef.current = true;
+      addLog('Starting load...');
       
       try {
         const loaded = await getOrCreateCurrentProject();
+        addLog(`Loaded: ${loaded?.id?.slice(0,8) || 'null'}`);
         setProject(loaded);
         hasLoadedRef.current = true;
       } catch (err) {
-        console.error('Failed to load project:', err);
+        addLog(`Error: ${err instanceof Error ? err.message : 'unknown'}`);
         setProject(null);
       } finally {
+        addLog('Load done, loading=false');
         setLoading(false);
         isLoadingRef.current = false;
       }
     }
     
     loadProject();
-  }, [status, session?.user?.id]); // Removed 'loading' from deps - it was causing feedback loop
+  }, [status, session?.user?.id]);
 
   // Debounced save
   useEffect(() => {
@@ -144,9 +167,36 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     resetProject,
   };
 
+  // DEBUG: Show debug panel
+  const showDebug = true; // Set to false to hide
+
   return (
     <ProjectContext.Provider value={value}>
       {children}
+      {showDebug && (
+        <div style={{
+          position: 'fixed',
+          bottom: 10,
+          right: 10,
+          background: 'rgba(0,0,0,0.9)',
+          color: '#0f0',
+          padding: 10,
+          borderRadius: 8,
+          fontSize: 10,
+          fontFamily: 'monospace',
+          maxWidth: 350,
+          maxHeight: 250,
+          overflow: 'auto',
+          zIndex: 99999,
+        }}>
+          <div style={{ marginBottom: 5, color: '#fff', fontWeight: 'bold' }}>
+            Debug: render#{renderCountRef.current} | loading={String(loading)} | project={project ? 'yes' : 'no'} | status={status}
+          </div>
+          {debugLogs.map((log, i) => (
+            <div key={i} style={{ opacity: 0.8 }}>{log}</div>
+          ))}
+        </div>
+      )}
     </ProjectContext.Provider>
   );
 }
