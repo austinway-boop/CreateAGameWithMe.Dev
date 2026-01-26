@@ -17,12 +17,6 @@ export default function CreatePage() {
   const [step, setStep] = useState<Step>('idea');
   const [hasIdea, setHasIdea] = useState<boolean | null>(null);
 
-  // #region agent log
-  useEffect(() => {
-    fetch('http://127.0.0.1:7242/ingest/2e0b1f85-926b-4d72-80e8-36943dcd7c46',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'create/page.tsx:render',message:'CreatePage render',data:{loading,hasProject:!!project,sessionStatus:status,willShowLoading:loading||!project},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1-H2'})}).catch(()=>{});
-  });
-  // #endregion
-
   // Redirect to onboarding if not complete
   useEffect(() => {
     if (status === 'authenticated' && !session?.user?.onboardingComplete) {
@@ -31,9 +25,6 @@ export default function CreatePage() {
   }, [status, session, router]);
 
   if (loading || !project) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/2e0b1f85-926b-4d72-80e8-36943dcd7c46',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'create/page.tsx:loading-branch',message:'Showing Loading screen',data:{loading,hasProject:!!project},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-muted-foreground">Loading...</div>

@@ -46,37 +46,17 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     }
   }, [loading]);
 
-  // #region agent log
-  useEffect(() => {
-    fetch('http://127.0.0.1:7242/ingest/2e0b1f85-926b-4d72-80e8-36943dcd7c46',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useProject.tsx:value-change',message:'Context value changed',data:{loading,showLoading,isPending,hasProject:!!project,status,hasLoadedRef:hasLoadedRef.current},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1-H3'})}).catch(()=>{});
-  }, [loading, showLoading, isPending, project, status]);
-  // #endregion
-
-  // DEBUG: Visual debug log
-  const [debugLogs, setDebugLogs] = useState<string[]>([]);
-  const addLog = (msg: string) => {
-    const timestamp = new Date().toISOString().split('T')[1].slice(0, 12);
-    setDebugLogs(prev => [...prev.slice(-15), `${timestamp} ${msg}`]);
-  };
-  
-  const renderCountRef = useRef(0);
-  renderCountRef.current++;
-
   // Load project on mount and when user changes
   useEffect(() => {
     const userId = session?.user?.id;
     
-    addLog(`Effect: status=${status}, userId=${userId?.slice(0,8) || 'none'}, hasLoaded=${hasLoadedRef.current}, isLoading=${isLoadingRef.current}`);
-    
     // Wait for session to resolve before doing anything
     if (status === 'loading') {
-      addLog('Session loading, waiting...');
       return;
     }
     
     // Reset state if logged out
     if (status === 'unauthenticated') {
-      addLog('Unauthenticated, clearing');
       setProject(null);
       setLoading(false);
       hasLoadedRef.current = false;
@@ -88,7 +68,6 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     
     // Reset if user changed to a DIFFERENT user
     if (userId && lastUserIdRef.current && userId !== lastUserIdRef.current) {
-      addLog('User changed, resetting');
       hasLoadedRef.current = false;
       setProject(null);
     }
@@ -98,13 +77,11 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     
     // Currently loading, let it finish
     if (isLoadingRef.current) {
-      addLog('Already loading, skip');
       return;
     }
     
     // Already loaded
     if (hasLoadedRef.current) {
-      addLog('Already loaded, skip');
       if (loading) setLoading(false);
       return;
     }
@@ -112,18 +89,15 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     async function loadProject() {
       if (isLoadingRef.current) return;
       isLoadingRef.current = true;
-      addLog('Starting load...');
       
       try {
         const loaded = await getOrCreateCurrentProject();
-        addLog(`Loaded: ${loaded?.id?.slice(0,8) || 'null'}`);
         setProject(loaded);
         hasLoadedRef.current = true;
       } catch (err) {
-        addLog(`Error: ${err instanceof Error ? err.message : 'unknown'}`);
+        console.error('Failed to load project:', err);
         setProject(null);
       } finally {
-        addLog('Load done, loading=false');
         setLoading(false);
         isLoadingRef.current = false;
       }
@@ -192,36 +166,9 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     resetProject,
   };
 
-  // DEBUG: Show debug panel
-  const showDebug = true; // Set to false to hide
-
   return (
     <ProjectContext.Provider value={value}>
       {children}
-      {showDebug && (
-        <div style={{
-          position: 'fixed',
-          bottom: 10,
-          right: 10,
-          background: 'rgba(0,0,0,0.9)',
-          color: '#0f0',
-          padding: 10,
-          borderRadius: 8,
-          fontSize: 10,
-          fontFamily: 'monospace',
-          maxWidth: 350,
-          maxHeight: 250,
-          overflow: 'auto',
-          zIndex: 99999,
-        }}>
-          <div style={{ marginBottom: 5, color: '#fff', fontWeight: 'bold' }}>
-            Debug: render#{renderCountRef.current} | loading={String(loading)} | showLoading={String(showLoading)} | isPending={String(isPending)} | project={project ? 'yes' : 'no'} | status={status}
-          </div>
-          {debugLogs.map((log, i) => (
-            <div key={i} style={{ opacity: 0.8 }}>{log}</div>
-          ))}
-        </div>
-      )}
     </ProjectContext.Provider>
   );
 }

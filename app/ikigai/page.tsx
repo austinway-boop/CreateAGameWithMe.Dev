@@ -123,18 +123,7 @@ export default function IkigaiPage() {
   const [dropPreview, setDropPreview] = useState<{ x: number; y: number; categories: IkigaiCategory[] } | null>(null);
   const diagramRef = useRef<HTMLDivElement>(null);
 
-  // #region agent log
-  if (typeof window !== 'undefined') {
-    fetch('http://127.0.0.1:7242/ingest/2e0b1f85-926b-4d72-80e8-36943dcd7c46',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ikigai/page.tsx:render',message:'IkigaiPage render',data:{loading,hasProject:!!project,willShowLoading:loading||!project},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1-H4'})}).catch(()=>{});
-  }
-  // #endregion
-
   if (loading || !project) {
-    // #region agent log
-    if (typeof window !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/2e0b1f85-926b-4d72-80e8-36943dcd7c46',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ikigai/page.tsx:loading-branch',message:'IkigaiPage showing Loading',data:{loading,hasProject:!!project},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
-    }
-    // #endregion
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-muted-foreground">Loading...</div>
