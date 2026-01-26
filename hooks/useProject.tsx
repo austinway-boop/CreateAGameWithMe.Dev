@@ -44,13 +44,8 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
       lastUserIdRef.current = userId || null;
     }
     
-    // Don't load if still checking auth status
-    if (status === 'loading') {
-      return;
-    }
-    
-    // Reset state if not authenticated
-    if (status === 'unauthenticated' || !session?.user) {
+    // Reset state if explicitly not authenticated
+    if (status === 'unauthenticated') {
       setProject(null);
       setLoading(false);
       hasLoadedRef.current = false;
@@ -59,6 +54,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     
     // Already loaded for this user, skip
     if (hasLoadedRef.current && project) {
+      setLoading(false);
       return;
     }
 
@@ -69,12 +65,13 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
         hasLoadedRef.current = true;
       } catch (err) {
         console.error('Failed to load project:', err);
+        // Server will throw if not authenticated - that's fine, just stop loading
+        setProject(null);
       } finally {
         setLoading(false);
       }
     }
     
-    setLoading(true);
     loadProject();
   }, [status, session?.user?.id]);
 
@@ -132,7 +129,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
 
   const value: UseProjectReturn = {
     project,
-    loading: loading || isPending || status === 'loading',
+    loading: loading || isPending,
     updateProject,
     updateProjectAndSave,
     resetProject,
