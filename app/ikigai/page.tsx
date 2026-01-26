@@ -7,6 +7,7 @@ import { useProject } from '@/hooks/useProject';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import { IkigaiCategory, IkigaiChip, getOverlapChips, isIkigaiComplete } from '@/lib/types';
 
 // Example items users can drag
@@ -115,7 +116,7 @@ const getCategoriesAtPoint = (x: number, y: number): IkigaiCategory[] => {
 
 export default function IkigaiPage() {
   const router = useRouter();
-  const { project, loading, updateProject } = useProject();
+  const { project, loading, updateProject, retryLoad } = useProject();
   const [showIntro, setShowIntro] = useState(true);
   const [customText, setCustomText] = useState('');
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
@@ -124,11 +125,7 @@ export default function IkigaiPage() {
   const diagramRef = useRef<HTMLDivElement>(null);
 
   if (loading || !project) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen onRetry={retryLoad} />;
   }
 
   const chips = project.ikigai.chips;

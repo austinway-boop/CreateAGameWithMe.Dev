@@ -15,6 +15,7 @@ interface UseProjectReturn {
   updateProject: (updates: Partial<Project>) => void;
   updateProjectAndSave: (updates: Partial<Project>) => Promise<void>;
   resetProject: () => Promise<void>;
+  retryLoad: () => Promise<void>;
 }
 
 // Context for sharing project state across all pages
@@ -29,7 +30,6 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [showLoading, setShowLoading] = useState(false);
-  const [debugInfo, setDebugInfo] = useState('init');
   
   // Track if we've already loaded for this session to prevent re-fetching
   const hasLoadedRef = useRef(false);
@@ -52,13 +52,11 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     
     // Wait for session to resolve before doing anything
     if (status === 'loading') {
-      setDebugInfo('waiting for session');
       return;
     }
     
     // Reset state if logged out
     if (status === 'unauthenticated') {
-      setDebugInfo('unauthenticated');
       setProject(null);
       setLoading(false);
       hasLoadedRef.current = false;
@@ -67,7 +65,6 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     }
     
     // From here, status is 'authenticated'
-    setDebugInfo(`auth ok, hasLoaded=${hasLoadedRef.current}, isLoading=${isLoadingRef.current}`);
     
     // Reset if user changed to a DIFFERENT user
     if (userId && lastUserIdRef.current && userId !== lastUserIdRef.current) {
@@ -80,13 +77,11 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     
     // Currently loading, let it finish
     if (isLoadingRef.current) {
-      setDebugInfo('already loading, skip');
       return;
     }
     
     // Already loaded
     if (hasLoadedRef.current) {
-      setDebugInfo('already loaded');
       if (loading) setLoading(false);
       return;
     }
@@ -94,15 +89,12 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     async function loadProject() {
       if (isLoadingRef.current) return;
       isLoadingRef.current = true;
-      setDebugInfo('starting load...');
       
       try {
         const loaded = await getOrCreateCurrentProject();
-        setDebugInfo(`loaded: ${loaded?.id?.slice(0,8)}`);
         setProject(loaded);
         hasLoadedRef.current = true;
       } catch (err) {
-        setDebugInfo(`error: ${err instanceof Error ? err.message : 'unknown'}`);
         console.error('Failed to load project:', err);
         setProject(null);
       } finally {
@@ -170,31 +162,37 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     }
   }, []);
 
+  const retryLoad = useCallback(async () => {
+    // Reset state and try loading again
+    hasLoadedRef.current = false;
+    isLoadingRef.current = false;
+    setLoading(true);
+    
+    try {
+      const loaded = await getOrCreateCurrentProject();
+      setProject(loaded);
+      hasLoadedRef.current = true;
+    } catch (err) {
+      console.error('Failed to load project:', err);
+      setProject(null);
+    } finally {
+      setLoading(false);
+      isLoadingRef.current = false;
+    }
+  }, []);
+
   const value: UseProjectReturn = {
     project,
     loading: showLoading, // Only show loading for initial fetch, NOT for background saves
     updateProject,
     updateProjectAndSave,
     resetProject,
+    retryLoad,
   };
 
   return (
     <ProjectContext.Provider value={value}>
       {children}
-      <div style={{
-        position: 'fixed',
-        bottom: 10,
-        right: 10,
-        background: 'rgba(0,0,0,0.9)',
-        color: '#0f0',
-        padding: 10,
-        borderRadius: 8,
-        fontSize: 11,
-        fontFamily: 'monospace',
-        zIndex: 99999,
-      }}>
-        status={status} | loading={String(loading)} | showLoading={String(showLoading)} | project={project ? 'yes' : 'no'} | {debugInfo}
-      </div>
     </ProjectContext.Provider>
   );
 }

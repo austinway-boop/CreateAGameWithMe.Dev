@@ -8,22 +8,19 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import { VIBE_OPTIONS } from '@/lib/types';
 
 type LoadingStage = 'idle' | 'structuring' | 'creating-card';
 
 export default function IdeaPage() {
   const router = useRouter();
-  const { project, loading, updateProject, updateProjectAndSave } = useProject();
+  const { project, loading, updateProject, updateProjectAndSave, retryLoad } = useProject();
   const [loadingStage, setLoadingStage] = useState<LoadingStage>('idle');
   const [error, setError] = useState<string | null>(null);
 
   if (loading || !project) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen onRetry={retryLoad} />;
   }
 
   const toggleVibe = (vibe: string) => {

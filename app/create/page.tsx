@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { Lightbulb, Sparkles } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { Card, CardContent } from '@/components/ui/card';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import { PLATFORMS, TIME_HORIZONS } from '@/lib/types';
 
 type Step = 'idea' | 'platform' | 'timeline';
@@ -13,7 +14,7 @@ type Step = 'idea' | 'platform' | 'timeline';
 export default function CreatePage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { project, loading, updateProject } = useProject();
+  const { project, loading, updateProject, retryLoad } = useProject();
   const [step, setStep] = useState<Step>('idea');
   const [hasIdea, setHasIdea] = useState<boolean | null>(null);
 
@@ -25,11 +26,7 @@ export default function CreatePage() {
   }, [status, session, router]);
 
   if (loading || !project) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen onRetry={retryLoad} />;
   }
 
   // Don't render if not onboarded
