@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useTransition, createContext, useContext, useRef, ReactNode } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext, useRef, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { Project } from '@/lib/types';
 import { 
@@ -29,7 +29,6 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [showLoading, setShowLoading] = useState(false); // Delayed loading indicator
-  const [isPending, startTransition] = useTransition();
   
   // Track if we've already loaded for this session to prevent re-fetching
   const hasLoadedRef = useRef(false);
@@ -106,15 +105,16 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     loadProject();
   }, [status, session?.user?.id]);
 
-  // Debounced save
+  // Debounced save - only save the fields that can be updated
   useEffect(() => {
     if (!project) return;
 
     const timer = setTimeout(async () => {
+      // Extract only the fields that should be saved (exclude id, createdAt, updatedAt)
+      const { id, createdAt, updatedAt, ...savableFields } = project;
+      
       try {
-        startTransition(async () => {
-          await saveProjectAction(project.id, project);
-        });
+        await saveProjectAction(id, savableFields);
       } catch (err) {
         console.error('Failed to save project:', err);
       }
@@ -136,8 +136,11 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
       if (!prev) return prev;
       const updatedProject = { ...prev, ...updates };
       
+      // Extract only the fields that should be saved (exclude id, createdAt, updatedAt)
+      const { id, createdAt, updatedAt, ...savableFields } = updatedProject;
+      
       // Save immediately without debounce (fire and forget from state update)
-      saveProjectAction(updatedProject.id, updatedProject).catch((err) => {
+      saveProjectAction(id, savableFields).catch((err) => {
         console.error('Failed to save project:', err);
       });
       
