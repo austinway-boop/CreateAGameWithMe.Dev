@@ -51,17 +51,13 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     
     addLog(`Effect: status=${status}, userId=${userId?.slice(0,8) || 'none'}, hasLoaded=${hasLoadedRef.current}, isLoading=${isLoadingRef.current}`);
     
-    // Only reset if user explicitly changed to a DIFFERENT user
-    if (userId && lastUserIdRef.current && userId !== lastUserIdRef.current) {
-      addLog('User changed, resetting');
-      hasLoadedRef.current = false;
-      setProject(null);
-    }
-    if (userId) {
-      lastUserIdRef.current = userId;
+    // Wait for session to resolve before doing anything
+    if (status === 'loading') {
+      addLog('Session loading, waiting...');
+      return;
     }
     
-    // Reset state if explicitly logged out
+    // Reset state if logged out
     if (status === 'unauthenticated') {
       addLog('Unauthenticated, clearing');
       setProject(null);
@@ -69,6 +65,18 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
       hasLoadedRef.current = false;
       lastUserIdRef.current = null;
       return;
+    }
+    
+    // From here, status is 'authenticated'
+    
+    // Reset if user changed to a DIFFERENT user
+    if (userId && lastUserIdRef.current && userId !== lastUserIdRef.current) {
+      addLog('User changed, resetting');
+      hasLoadedRef.current = false;
+      setProject(null);
+    }
+    if (userId) {
+      lastUserIdRef.current = userId;
     }
     
     // Currently loading, let it finish
