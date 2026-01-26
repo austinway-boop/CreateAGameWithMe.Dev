@@ -28,12 +28,23 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   const { data: session, status } = useSession();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showLoading, setShowLoading] = useState(false); // Delayed loading indicator
   const [isPending, startTransition] = useTransition();
   
   // Track if we've already loaded for this session to prevent re-fetching
   const hasLoadedRef = useRef(false);
   const lastUserIdRef = useRef<string | null>(null);
   const isLoadingRef = useRef(false);
+
+  // Delay showing loading indicator by 300ms to avoid flash for fast loads
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => setShowLoading(true), 300);
+      return () => clearTimeout(timer);
+    } else {
+      setShowLoading(false);
+    }
+  }, [loading]);
 
   // DEBUG: Visual debug log
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
@@ -169,7 +180,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
 
   const value: UseProjectReturn = {
     project,
-    loading: loading || isPending,
+    loading: showLoading || isPending, // Use delayed loading to avoid flash
     updateProject,
     updateProjectAndSave,
     resetProject,
@@ -198,7 +209,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
           zIndex: 99999,
         }}>
           <div style={{ marginBottom: 5, color: '#fff', fontWeight: 'bold' }}>
-            Debug: render#{renderCountRef.current} | loading={String(loading)} | project={project ? 'yes' : 'no'} | status={status}
+            Debug: render#{renderCountRef.current} | loading={String(loading)} | showLoading={String(showLoading)} | project={project ? 'yes' : 'no'} | status={status}
           </div>
           {debugLogs.map((log, i) => (
             <div key={i} style={{ opacity: 0.8 }}>{log}</div>
