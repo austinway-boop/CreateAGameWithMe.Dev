@@ -71,7 +71,7 @@ export default function GameLoopPage() {
   // Get unique sub-loop names for color assignment
   const getSubLoopColor = useCallback((loopName?: string) => {
     if (!project || !loopName) return SUB_LOOP_COLORS[0];
-    const uniqueNames = [...new Set(project.gameLoop.filter(n => n.loopName).map(n => n.loopName))];
+    const uniqueNames = Array.from(new Set(project.gameLoop.map(n => n.loopName).filter((name): name is string => !!name)));
     const index = uniqueNames.indexOf(loopName);
     return SUB_LOOP_COLORS[index % SUB_LOOP_COLORS.length];
   }, [project]);
