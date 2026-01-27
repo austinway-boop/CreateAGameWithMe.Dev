@@ -45,6 +45,7 @@ export interface Project {
 // ============================================
 
 export type GameLoopNodeType = 'action' | 'challenge' | 'reward' | 'decision' | 'repeat';
+export type LoopType = 'main' | 'sub';
 
 export interface GameLoopNode {
   id: string;
@@ -53,6 +54,8 @@ export interface GameLoopNode {
   x: number;
   y: number;
   connections: string[]; // IDs of connected nodes
+  loopType: LoopType;    // Whether this is part of main loop or a sub-loop
+  loopName?: string;     // Name of the sub-loop (e.g., "Mining", "Combat")
 }
 
 // ============================================
