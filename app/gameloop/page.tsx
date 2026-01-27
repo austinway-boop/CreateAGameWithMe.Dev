@@ -61,6 +61,7 @@ export default function GameLoopPage() {
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedLoopType, setSelectedLoopType] = useState<LoopType>('main');
   const [subLoopName, setSubLoopName] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Get unique sub-loop names for color assignment
@@ -280,9 +281,6 @@ export default function GameLoopPage() {
     }
     return null;
   };
-
-  // State for advanced section toggle
-  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Simplified Intro Screen
   if (showIntro) {

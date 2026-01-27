@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { Lightbulb, Sparkles } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
@@ -17,6 +17,7 @@ export default function CreatePage() {
   const { project, loading, updateProject, retryLoad } = useProject();
   const [step, setStep] = useState<Step>('idea');
   const [hasIdea, setHasIdea] = useState<boolean | null>(null);
+  const hasRedirected = useRef(false);
 
   // Redirect to onboarding if not complete
   useEffect(() => {
@@ -25,9 +26,10 @@ export default function CreatePage() {
     }
   }, [status, session, router]);
 
-  // Auto-redirect to saved page if user has progress
+  // Auto-redirect to saved page if user has progress (only once)
   useEffect(() => {
-    if (project && project.currentPage && project.currentPage !== 'create') {
+    if (!hasRedirected.current && project && project.currentPage && project.currentPage !== 'create') {
+      hasRedirected.current = true;
       router.push(`/${project.currentPage}`);
     }
   }, [project, router]);
