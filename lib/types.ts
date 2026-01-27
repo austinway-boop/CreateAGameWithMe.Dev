@@ -38,6 +38,9 @@ export interface Project {
   conceptImage: string;
   hasConceptCard: boolean;
   conceptCardCreatedAt: string;
+  
+  // Progress tracking
+  currentPage: string;  // e.g., 'create', 'idea', 'finalize', 'gameloop', 'card'
 }
 
 // ============================================
@@ -270,6 +273,7 @@ export function createEmptyProject(): Project {
     conceptImage: '',
     hasConceptCard: false,
     conceptCardCreatedAt: '',
+    currentPage: 'create',
   };
 }
 

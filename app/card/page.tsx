@@ -406,15 +406,24 @@ export default function ConceptCardPage() {
 
         {showActions && (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <Button onClick={() => router.push('/gameloop')} className="w-full gap-2" size="lg">
+            <Button onClick={() => {
+              updateProject({ currentPage: 'gameloop' });
+              router.push('/gameloop');
+            }} className="w-full gap-2" size="lg">
               Continue to Validation
               <ArrowRight className="h-4 w-4" />
             </Button>
             <div className="flex justify-center gap-4 text-sm">
-              <button onClick={() => router.push('/idea')} className="text-muted-foreground hover:text-foreground transition-colors">
+              <button onClick={() => {
+                updateProject({ currentPage: 'idea' });
+                router.push('/idea');
+              }} className="text-muted-foreground hover:text-foreground transition-colors">
                 ← Edit Concept
               </button>
-              <button onClick={() => router.push('/')} className="text-muted-foreground hover:text-foreground transition-colors">
+              <button onClick={() => {
+                updateProject({ currentPage: 'create' });
+                router.push('/');
+              }} className="text-muted-foreground hover:text-foreground transition-colors">
                 Start New
               </button>
             </div>

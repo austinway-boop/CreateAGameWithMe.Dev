@@ -2,17 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { ArrowRight, ArrowLeft, Trash2, HelpCircle, GripVertical, X, Plus } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Trash2, HelpCircle, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import { GameLoopNode, GameLoopNodeType, LoopType } from '@/lib/types';
 
 const NODE_TYPES: { type: GameLoopNodeType; label: string; color: string; borderColor: string; description: string }[] = [
@@ -286,142 +281,100 @@ export default function GameLoopPage() {
     return null;
   };
 
-  // Intro Screen with Minecraft Example
+  // State for advanced section toggle
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Simplified Intro Screen
   if (showIntro) {
     return (
       <div className="flex-1 flex items-center justify-center p-6 overflow-auto">
-        <div className="w-full max-w-[700px] space-y-6">
+        <div className="w-full max-w-[500px] space-y-6">
           <div className="text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">Understanding Game Loops</h1>
-            <p className="text-muted-foreground mt-1">The core cycles that make games engaging</p>
+            <h1 className="text-2xl font-semibold tracking-tight">What&apos;s a Game Loop?</h1>
           </div>
 
           <Card>
-            <CardContent className="pt-6 space-y-6">
+            <CardContent className="pt-6 space-y-5">
               <p className="text-muted-foreground">
-                Every great game has loops — repeating cycles that keep players engaged. There&apos;s usually a <strong>main loop</strong> (the core experience) and <strong>sub-loops</strong> (supporting activities).
+                A game loop is the repeating cycle that keeps players engaged — the &quot;one more turn&quot; feeling.
               </p>
 
-              {/* Minecraft Example */}
-              <div className="space-y-4">
-                <p className="text-sm font-medium">Example: Minecraft</p>
-                
-                {/* Main Loop Visualization */}
-                <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                    <span className="text-xs font-medium uppercase tracking-wide">Main Loop</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs flex-wrap justify-center">
-                    <div className="px-2 py-1.5 rounded bg-blue-500 text-white font-medium">Explore</div>
-                    <span className="text-muted-foreground">→</span>
-                    <div className="px-2 py-1.5 rounded bg-orange-500 text-white font-medium">Survive Night</div>
-                    <span className="text-muted-foreground">→</span>
-                    <div className="px-2 py-1.5 rounded bg-green-500 text-white font-medium">Get Stronger</div>
-                    <span className="text-muted-foreground">→</span>
-                    <div className="px-2 py-1.5 rounded bg-purple-500 text-white font-medium">Progress</div>
-                    <span className="text-muted-foreground">→</span>
-                    <div className="px-2 py-1.5 rounded bg-pink-500 text-white font-medium">Repeat</div>
-                  </div>
+              {/* Simple Example */}
+              <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                <p className="text-sm font-medium">Example: Tetris</p>
+                <div className="flex items-center gap-1 text-xs flex-wrap justify-center">
+                  <div className="px-2 py-1.5 rounded bg-blue-500 text-white font-medium">Move Block</div>
+                  <span className="text-muted-foreground">→</span>
+                  <div className="px-2 py-1.5 rounded bg-orange-500 text-white font-medium">Clear Lines</div>
+                  <span className="text-muted-foreground">→</span>
+                  <div className="px-2 py-1.5 rounded bg-green-500 text-white font-medium">Score Points</div>
+                  <span className="text-muted-foreground">→</span>
+                  <div className="px-2 py-1.5 rounded bg-pink-500 text-white font-medium">Repeat</div>
                 </div>
-
-                {/* Sub-Loops */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-3 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-cyan-500"></div>
-                      <span className="text-xs font-medium text-cyan-700">Mining Sub-Loop</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-[10px] flex-wrap">
-                      <span className="px-1.5 py-0.5 rounded bg-blue-500/80 text-white">Dig</span>
-                      <span>→</span>
-                      <span className="px-1.5 py-0.5 rounded bg-orange-500/80 text-white">Find Ores</span>
-                      <span>→</span>
-                      <span className="px-1.5 py-0.5 rounded bg-green-500/80 text-white">Better Tools</span>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-                      <span className="text-xs font-medium text-amber-700">Combat Sub-Loop</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-[10px] flex-wrap">
-                      <span className="px-1.5 py-0.5 rounded bg-blue-500/80 text-white">Hunt</span>
-                      <span>→</span>
-                      <span className="px-1.5 py-0.5 rounded bg-orange-500/80 text-white">Fight</span>
-                      <span>→</span>
-                      <span className="px-1.5 py-0.5 rounded bg-green-500/80 text-white">Loot</span>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-rose-500/10 border border-rose-500/30 rounded-lg p-3 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-rose-500"></div>
-                      <span className="text-xs font-medium text-rose-700">Building Sub-Loop</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-[10px] flex-wrap">
-                      <span className="px-1.5 py-0.5 rounded bg-blue-500/80 text-white">Gather</span>
-                      <span>→</span>
-                      <span className="px-1.5 py-0.5 rounded bg-orange-500/80 text-white">Plan</span>
-                      <span>→</span>
-                      <span className="px-1.5 py-0.5 rounded bg-green-500/80 text-white">Create</span>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                      <span className="text-xs font-medium text-emerald-700">Farming Sub-Loop</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-[10px] flex-wrap">
-                      <span className="px-1.5 py-0.5 rounded bg-blue-500/80 text-white">Plant</span>
-                      <span>→</span>
-                      <span className="px-1.5 py-0.5 rounded bg-orange-500/80 text-white">Wait</span>
-                      <span>→</span>
-                      <span className="px-1.5 py-0.5 rounded bg-green-500/80 text-white">Harvest</span>
-                    </div>
-                  </div>
-                </div>
-
-                <p className="text-xs text-muted-foreground text-center">
-                  Sub-loops feed into and support the main loop, creating depth
-                </p>
               </div>
 
-              <div className="space-y-3 border-t pt-4">
-                <p className="text-sm font-medium">Your task:</p>
-                <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-                  <li>Start with your <strong>Main Loop</strong> — the core cycle players repeat</li>
-                  <li>Add <strong>Sub-Loops</strong> for supporting activities (optional but adds depth)</li>
-                  <li><strong>Connect</strong> blocks by dragging from the right dot to another block</li>
+              {/* Quick instructions */}
+              <div className="space-y-2">
+                <p className="text-sm font-medium">How to build:</p>
+                <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                  <li>Drag blocks from the palette onto the canvas</li>
+                  <li>Connect them by dragging from one dot to another</li>
+                  <li>Click on text to edit what each step does</li>
                 </ol>
               </div>
 
-              <div className="space-y-2 border-t pt-4">
-                <p className="text-sm font-medium">Building blocks:</p>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-blue-500"></div>
-                    <span><strong>Action</strong> — What players DO</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-orange-500"></div>
-                    <span><strong>Challenge</strong> — What they OVERCOME</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-green-500"></div>
-                    <span><strong>Reward</strong> — What they GAIN</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-purple-500"></div>
-                    <span><strong>Decision</strong> — Choice points</span>
-                  </div>
+              {/* Building blocks - compact */}
+              <div className="flex flex-wrap gap-3 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded bg-blue-500"></div>
+                  <span><strong>Action</strong></span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded bg-orange-500"></div>
+                  <span><strong>Challenge</strong></span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded bg-green-500"></div>
+                  <span><strong>Reward</strong></span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded bg-purple-500"></div>
+                  <span><strong>Decision</strong></span>
                 </div>
               </div>
 
+              {/* Collapsible Advanced Section */}
+              <div className="border-t pt-3">
+                <button
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-full"
+                >
+                  {showAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  Advanced: Sub-loops (optional)
+                </button>
+                
+                {showAdvanced && (
+                  <div className="mt-3 space-y-3 text-sm text-muted-foreground">
+                    <p>
+                      Complex games have <strong>sub-loops</strong> — smaller cycles that support the main loop.
+                    </p>
+                    <div className="bg-muted/30 rounded p-3 space-y-2">
+                      <p className="text-xs font-medium text-foreground">Minecraft example:</p>
+                      <ul className="text-xs space-y-1">
+                        <li><strong>Main:</strong> Explore → Survive → Progress</li>
+                        <li><strong>Mining sub-loop:</strong> Dig → Find Ores → Better Tools</li>
+                        <li><strong>Combat sub-loop:</strong> Hunt → Fight → Loot</li>
+                      </ul>
+                    </div>
+                    <p className="text-xs">
+                      You can add sub-loops using the selector in the palette. Start with your main loop first!
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <Button onClick={() => setShowIntro(false)} className="w-full gap-2" size="lg">
-                Build My Game Loops
+                Start Building
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </CardContent>
@@ -448,33 +401,20 @@ export default function GameLoopPage() {
             Back to Concept
           </Button>
           <h1 className="text-xl font-semibold tracking-tight">Game Loop Builder</h1>
-          <Popover>
-            <PopoverTrigger asChild>
-              <button className="text-muted-foreground hover:text-foreground">
-                <HelpCircle className="h-4 w-4" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 text-sm">
-              <p className="font-medium mb-2">How to use:</p>
-              <ol className="space-y-2 text-muted-foreground list-decimal list-inside">
-                <li><strong>Drag</strong> blocks from the palette onto the canvas</li>
-                <li><strong>Connect</strong> by dragging from the right dot (o) to another block&apos;s left dot</li>
-                <li><strong>Move</strong> blocks using the grip handle (⋮⋮)</li>
-                <li><strong>Edit</strong> text by clicking on it</li>
-                <li><strong>Double-click</strong> canvas to add nodes quickly</li>
-              </ol>
-              <p className="mt-3 pt-3 border-t text-xs text-muted-foreground">
-                Tip: Create a main loop first, then add sub-loops for supporting activities!
-              </p>
-            </PopoverContent>
-          </Popover>
+          <Button variant="outline" size="sm" onClick={() => setShowIntro(true)} className="gap-2">
+            <HelpCircle className="h-4 w-4" />
+            How it works
+          </Button>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground">
             {nodes.length} block{nodes.length !== 1 ? 's' : ''}
           </span>
           <Button
-            onClick={() => router.push('/coming-soon')}
+            onClick={() => {
+              updateProject({ currentPage: 'coming-soon' });
+              router.push('/coming-soon');
+            }}
             disabled={!canContinue}
             className="gap-2"
           >
@@ -550,12 +490,6 @@ export default function GameLoopPage() {
             ))}
           </div>
 
-          <button
-            onClick={() => setShowIntro(true)}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-left"
-          >
-            What&apos;s a game loop?
-          </button>
         </div>
 
         {/* Canvas */}
@@ -657,13 +591,21 @@ export default function GameLoopPage() {
                   e.stopPropagation();
                   setSelectedNode(selectedNode === node.id ? null : node.id);
                 }}
-                className={`absolute group ${
+                onMouseDown={(e) => {
+                  // Don't start drag if clicking on input or handles
+                  const target = e.target as HTMLElement;
+                  if (target.tagName === 'INPUT' || target.closest('[data-handle]')) return;
+                  startNodeDrag(e, node.id);
+                }}
+                className={`absolute group cursor-grab active:cursor-grabbing ${
                   selectedNode === node.id ? 'ring-2 ring-primary ring-offset-2' : ''
-                } ${isSubLoop ? 'border-2 border-dashed ' + subLoopColor?.border : ''}`}
+                } ${isSubLoop ? 'border-2 border-dashed ' + subLoopColor?.border : ''} ${
+                  dragState?.nodeId === node.id ? 'cursor-grabbing' : ''
+                }`}
                 style={{
                   left: node.x,
                   top: node.y,
-                  zIndex: selectedNode === node.id ? 20 : 10,
+                  zIndex: selectedNode === node.id || dragState?.nodeId === node.id ? 20 : 10,
                 }}
               >
                 {/* Sub-loop label */}
@@ -675,6 +617,7 @@ export default function GameLoopPage() {
                 
                 {/* Input Handle (Left) */}
                 <div
+                  data-handle="input"
                   className={`absolute -left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 bg-white transition-all cursor-pointer z-20 ${
                     hoveredInputHandle === node.id 
                       ? 'border-green-500 scale-125 bg-green-100' 
@@ -684,28 +627,21 @@ export default function GameLoopPage() {
                   onMouseLeave={() => setHoveredInputHandle(null)}
                 />
                 
-                {/* Node Content */}
-                <div className={`${getNodeColor(node.type)} text-white rounded-lg shadow-md min-w-[150px] flex items-center ${isSubLoop ? 'opacity-90' : ''}`}>
-                  {/* Drag Handle */}
-                  <div
-                    className="px-2 py-3 cursor-grab active:cursor-grabbing hover:bg-white/10 rounded-l-lg flex items-center"
-                    onMouseDown={(e) => startNodeDrag(e, node.id)}
-                  >
-                    <GripVertical className="h-4 w-4 opacity-60" />
-                  </div>
-                  
-                  {/* Label Input */}
-                  <div className="flex-1 pr-2 py-1">
+                {/* Node Content - entire node is draggable */}
+                <div className={`${getNodeColor(node.type)} text-white rounded-lg shadow-md min-w-[150px] ${isSubLoop ? 'opacity-90' : ''}`}>
+                  {/* Label Input - cursor changes to text when hovering input */}
+                  <div className="px-3 py-2">
                     <Input
                       value={node.label}
                       onChange={(e) => updateNode(node.id, { label: e.target.value })}
-                      className="bg-transparent border-none text-white placeholder:text-white/60 h-auto p-1 text-sm font-medium focus-visible:ring-0 focus-visible:ring-offset-0"
+                      className="bg-transparent border-none text-white placeholder:text-white/60 h-auto p-0 text-sm font-medium focus-visible:ring-0 focus-visible:ring-offset-0 cursor-text"
                     />
                   </div>
                 </div>
                 
                 {/* Output Handle (Right) */}
                 <div
+                  data-handle="output"
                   className="absolute -right-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 border-gray-400 bg-white hover:border-blue-500 hover:scale-125 hover:bg-blue-100 transition-all cursor-crosshair z-20"
                   onMouseDown={(e) => startConnectionDrag(e, node.id)}
                 />

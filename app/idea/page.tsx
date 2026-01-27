@@ -84,7 +84,7 @@ export default function IdeaPage() {
       const imageData = await imageResponse.json();
       
       // Use immediate save before navigation to avoid race condition
-      await updateProjectAndSave({ conceptImage: imageData.imageUrl });
+      await updateProjectAndSave({ conceptImage: imageData.imageUrl, currentPage: 'card' });
 
       // Redirect to card page with reveal
       router.push('/card');

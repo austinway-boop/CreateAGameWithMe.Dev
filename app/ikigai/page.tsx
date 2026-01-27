@@ -285,6 +285,7 @@ export default function IkigaiPage() {
   };
 
   const handleContinue = () => {
+    updateProject({ currentPage: 'sparks' });
     router.push('/sparks');
   };
 

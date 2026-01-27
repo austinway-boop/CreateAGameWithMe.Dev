@@ -62,7 +62,10 @@ export default function FinalizePage() {
 
             {/* Continue Button */}
             <Button
-              onClick={() => router.push('/gameloop')}
+              onClick={() => {
+                updateProject({ currentPage: 'gameloop' });
+                router.push('/gameloop');
+              }}
               disabled={!canContinue}
               className="w-full gap-2"
               size="lg"

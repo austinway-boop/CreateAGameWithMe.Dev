@@ -216,16 +216,20 @@ ${spark.whyFun.map(r => `• ${r}`).join('\n')}
 
       if (imageResponse.ok) {
         const imageData = await imageResponse.json();
-        updateProject({ conceptImage: imageData.imageUrl });
+        updateProject({ conceptImage: imageData.imageUrl, currentPage: 'card' });
+      } else {
+        updateProject({ currentPage: 'card' });
       }
     } catch (err) {
       console.error('Failed to generate image:', err);
+      updateProject({ currentPage: 'card' });
     }
 
     router.push('/card');
   };
 
   const handleYesHaveIdea = () => {
+    updateProject({ currentPage: 'idea' });
     router.push('/idea');
   };
 

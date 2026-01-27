@@ -25,6 +25,13 @@ export default function CreatePage() {
     }
   }, [status, session, router]);
 
+  // Auto-redirect to saved page if user has progress
+  useEffect(() => {
+    if (project && project.currentPage && project.currentPage !== 'create') {
+      router.push(`/${project.currentPage}`);
+    }
+  }, [project, router]);
+
   if (loading || !project) {
     return <LoadingScreen onRetry={retryLoad} />;
   }
@@ -46,13 +53,9 @@ export default function CreatePage() {
   };
 
   const handleTimelineSelect = (value: string) => {
-    updateProject({ timeHorizon: value });
-    // Navigate to next page
-    if (hasIdea) {
-      router.push('/idea');
-    } else {
-      router.push('/ikigai');
-    }
+    const nextPage = hasIdea ? 'idea' : 'ikigai';
+    updateProject({ timeHorizon: value, currentPage: nextPage });
+    router.push(`/${nextPage}`);
   };
 
   const renderStep = () => {
