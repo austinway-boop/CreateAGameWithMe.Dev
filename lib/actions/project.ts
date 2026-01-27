@@ -28,6 +28,7 @@ function toAppProject(dbProject: {
   conceptImage: string;
   hasConceptCard: boolean;
   conceptCardCreatedAt: string;
+  currentPage: string;
 }): ProjectType {
   return {
     id: dbProject.id,
@@ -51,6 +52,7 @@ function toAppProject(dbProject: {
     conceptImage: dbProject.conceptImage,
     hasConceptCard: dbProject.hasConceptCard,
     conceptCardCreatedAt: dbProject.conceptCardCreatedAt,
+    currentPage: dbProject.currentPage,
   };
 }
 
@@ -140,6 +142,7 @@ export async function saveProject(id: string, updates: Partial<ProjectType>): Pr
   if (updates.conceptImage !== undefined) dbUpdates.conceptImage = updates.conceptImage;
   if (updates.hasConceptCard !== undefined) dbUpdates.hasConceptCard = updates.hasConceptCard;
   if (updates.conceptCardCreatedAt !== undefined) dbUpdates.conceptCardCreatedAt = updates.conceptCardCreatedAt;
+  if (updates.currentPage !== undefined) dbUpdates.currentPage = updates.currentPage;
 
   const project = await prisma.project.update({
     where: { id },

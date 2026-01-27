@@ -108,5 +108,8 @@ model Project {
   hasConceptCard       Boolean @default(false)
   conceptCardCreatedAt String  @default("")
 
+  // Progress tracking
+  currentPage String @default("create")
+
   @@index([userId])
 }
