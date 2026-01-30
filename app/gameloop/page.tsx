@@ -410,13 +410,13 @@ export default function GameLoopPage() {
           </span>
           <Button
             onClick={() => {
-              updateProject({ currentPage: 'coming-soon' });
-              router.push('/coming-soon');
+              updateProject({ currentPage: 'questions' });
+              router.push('/questions');
             }}
             disabled={!canContinue}
             className="gap-2"
           >
-            Continue to Validation
+            Continue to Questions
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>

@@ -34,6 +34,12 @@ export interface Project {
   // Game Loop Diagram
   gameLoop: GameLoopNode[];
   
+  // Questions about the game
+  gameQuestions: GameQuestions | null;
+  
+  // Skill Dependency Tree
+  skillTree: SkillTreeNode[];
+  
   // Concept Card
   conceptImage: string;
   hasConceptCard: boolean;
@@ -59,6 +65,39 @@ export interface GameLoopNode {
   connections: string[]; // IDs of connected nodes
   loopType: LoopType;    // Whether this is part of main loop or a sub-loop
   loopName?: string;     // Name of the sub-loop (e.g., "Mining", "Combat")
+}
+
+// ============================================
+// Game Questions
+// ============================================
+
+export interface GameQuestions {
+  oneSentence: string;
+  genre: string;
+  genreSuccessRate: string;
+  emotions: string[];
+  targetPlayer: string;
+  playerGames: string[];
+  pricePoint: string;
+  priceReason: string;
+  biggestRisk: string;
+  notFor: string;
+  memorableThing: string;
+}
+
+// ============================================
+// Skill Dependency Tree
+// ============================================
+
+export type SkillLevel = 'core' | 'advanced' | 'expert';
+
+export interface SkillTreeNode {
+  id: string;
+  label: string;
+  level: SkillLevel;
+  x: number;
+  y: number;
+  dependencies: string[]; // IDs of skills this depends on
 }
 
 // ============================================
@@ -270,6 +309,8 @@ export function createEmptyProject(): Project {
     finalTitle: '',
     finalConcept: '',
     gameLoop: [],
+    gameQuestions: null,
+    skillTree: [],
     conceptImage: '',
     hasConceptCard: false,
     conceptCardCreatedAt: '',
