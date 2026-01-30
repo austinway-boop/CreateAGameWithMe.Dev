@@ -25,6 +25,8 @@ function toAppProject(dbProject: {
   finalTitle: string;
   finalConcept: string;
   gameLoop: unknown;
+  gameQuestions: unknown;
+  skillTree: unknown;
   conceptImage: string;
   hasConceptCard: boolean;
   conceptCardCreatedAt: string;
@@ -49,6 +51,8 @@ function toAppProject(dbProject: {
     finalTitle: dbProject.finalTitle,
     finalConcept: dbProject.finalConcept,
     gameLoop: dbProject.gameLoop as ProjectType['gameLoop'],
+    gameQuestions: dbProject.gameQuestions as ProjectType['gameQuestions'],
+    skillTree: dbProject.skillTree as ProjectType['skillTree'],
     conceptImage: dbProject.conceptImage,
     hasConceptCard: dbProject.hasConceptCard,
     conceptCardCreatedAt: dbProject.conceptCardCreatedAt,
@@ -99,6 +103,7 @@ export async function createProject(): Promise<ProjectType> {
       sparkRounds: [],
       regenerationAttempts: [],
       gameLoop: [],
+      skillTree: [],
     },
   });
 
@@ -139,6 +144,8 @@ export async function saveProject(id: string, updates: Partial<ProjectType>): Pr
   if (updates.finalTitle !== undefined) dbUpdates.finalTitle = updates.finalTitle;
   if (updates.finalConcept !== undefined) dbUpdates.finalConcept = updates.finalConcept;
   if (updates.gameLoop !== undefined) dbUpdates.gameLoop = updates.gameLoop;
+  if (updates.gameQuestions !== undefined) dbUpdates.gameQuestions = updates.gameQuestions;
+  if (updates.skillTree !== undefined) dbUpdates.skillTree = updates.skillTree;
   if (updates.conceptImage !== undefined) dbUpdates.conceptImage = updates.conceptImage;
   if (updates.hasConceptCard !== undefined) dbUpdates.hasConceptCard = updates.hasConceptCard;
   if (updates.conceptCardCreatedAt !== undefined) dbUpdates.conceptCardCreatedAt = updates.conceptCardCreatedAt;
@@ -192,6 +199,7 @@ export async function getOrCreateCurrentProject(): Promise<ProjectType> {
       sparkRounds: [],
       regenerationAttempts: [],
       gameLoop: [],
+      skillTree: [],
     },
   });
 

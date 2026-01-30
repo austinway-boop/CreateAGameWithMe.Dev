@@ -103,6 +103,12 @@ model Project {
   // Game Loop Diagram
   gameLoop Json @default("[]")
 
+  // Questions
+  gameQuestions Json?
+
+  // Skill Tree
+  skillTree Json @default("[]")
+
   // Concept Card
   conceptImage         String  @default("")
   hasConceptCard       Boolean @default(false)
