@@ -25,8 +25,8 @@ function toAppProject(dbProject: {
   finalTitle: string;
   finalConcept: string;
   gameLoop: unknown;
-  gameQuestions: unknown;
-  skillTree: unknown;
+  gameQuestions?: unknown;
+  skillTree?: unknown;
   conceptImage: string;
   hasConceptCard: boolean;
   conceptCardCreatedAt: string;
@@ -51,8 +51,8 @@ function toAppProject(dbProject: {
     finalTitle: dbProject.finalTitle,
     finalConcept: dbProject.finalConcept,
     gameLoop: dbProject.gameLoop as ProjectType['gameLoop'],
-    gameQuestions: dbProject.gameQuestions as ProjectType['gameQuestions'],
-    skillTree: dbProject.skillTree as ProjectType['skillTree'],
+    gameQuestions: (dbProject.gameQuestions as ProjectType['gameQuestions']) ?? null,
+    skillTree: (dbProject.skillTree as ProjectType['skillTree']) ?? [],
     conceptImage: dbProject.conceptImage,
     hasConceptCard: dbProject.hasConceptCard,
     conceptCardCreatedAt: dbProject.conceptCardCreatedAt,
