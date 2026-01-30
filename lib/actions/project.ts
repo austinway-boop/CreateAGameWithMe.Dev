@@ -25,6 +25,8 @@ function toAppProject(dbProject: {
   finalTitle: string;
   finalConcept: string;
   gameLoop: unknown;
+  gameQuestions: unknown;
+  skillTree: unknown;
   conceptImage: string;
   hasConceptCard: boolean;
   conceptCardCreatedAt: string;
@@ -49,9 +51,8 @@ function toAppProject(dbProject: {
     finalTitle: dbProject.finalTitle,
     finalConcept: dbProject.finalConcept,
     gameLoop: dbProject.gameLoop as ProjectType['gameLoop'],
-    // TODO: Add database columns for these fields, then enable persistence
-    gameQuestions: null,
-    skillTree: [],
+    gameQuestions: (dbProject.gameQuestions as ProjectType['gameQuestions']) ?? null,
+    skillTree: (dbProject.skillTree as ProjectType['skillTree']) ?? [],
     conceptImage: dbProject.conceptImage,
     hasConceptCard: dbProject.hasConceptCard,
     conceptCardCreatedAt: dbProject.conceptCardCreatedAt,
@@ -142,9 +143,8 @@ export async function saveProject(id: string, updates: Partial<ProjectType>): Pr
   if (updates.finalTitle !== undefined) dbUpdates.finalTitle = updates.finalTitle;
   if (updates.finalConcept !== undefined) dbUpdates.finalConcept = updates.finalConcept;
   if (updates.gameLoop !== undefined) dbUpdates.gameLoop = updates.gameLoop;
-  // TODO: Uncomment when database columns are added:
-  // if (updates.gameQuestions !== undefined) dbUpdates.gameQuestions = updates.gameQuestions;
-  // if (updates.skillTree !== undefined) dbUpdates.skillTree = updates.skillTree;
+  if (updates.gameQuestions !== undefined) dbUpdates.gameQuestions = updates.gameQuestions;
+  if (updates.skillTree !== undefined) dbUpdates.skillTree = updates.skillTree;
   if (updates.conceptImage !== undefined) dbUpdates.conceptImage = updates.conceptImage;
   if (updates.hasConceptCard !== undefined) dbUpdates.hasConceptCard = updates.hasConceptCard;
   if (updates.conceptCardCreatedAt !== undefined) dbUpdates.conceptCardCreatedAt = updates.conceptCardCreatedAt;
