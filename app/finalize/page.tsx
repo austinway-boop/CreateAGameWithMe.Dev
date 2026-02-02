@@ -8,17 +8,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { LoadingScreen } from '@/components/LoadingScreen';
 
 export default function FinalizePage() {
   const router = useRouter();
-  const { project, loading, updateProject } = useProject();
+  const { project, loading, updateProject, retryLoad } = useProject();
 
   if (loading || !project) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen onRetry={retryLoad} message="Loading your concept..." />;
   }
 
   const canContinue = project.finalTitle.trim().length > 0 && project.finalConcept.trim().length > 10;
@@ -78,21 +75,12 @@ export default function FinalizePage() {
 
         {/* Back Links */}
         <div className="flex justify-center gap-4 text-sm">
-          {project.hasIdea ? (
-            <button
-              onClick={() => router.push('/idea')}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              ← Edit idea
-            </button>
-          ) : (
-            <button
-              onClick={() => router.push('/sparks')}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              ← Back to sparks
-            </button>
-          )}
+          <button
+            onClick={() => router.back()}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            ← Back
+          </button>
           <button
             onClick={() => router.push('/')}
             className="text-muted-foreground hover:text-foreground transition-colors"

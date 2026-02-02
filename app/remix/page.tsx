@@ -20,10 +20,11 @@ import {
   SparkRound,
   RemixConstraints,
 } from '@/lib/types';
+import { LoadingScreen } from '@/components/LoadingScreen';
 
 export default function RemixPage() {
   const router = useRouter();
-  const { project, loading, updateProject } = useProject();
+  const { project, loading, updateProject, retryLoad } = useProject();
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -45,11 +46,7 @@ export default function RemixPage() {
   const aiEnabled = process.env.NEXT_PUBLIC_ENABLE_AI === 'true';
 
   if (loading || !project) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen onRetry={retryLoad} message="Loading remix options..." />;
   }
 
   const previousSparks = project.sparkRounds.flatMap(r => r.sparks);

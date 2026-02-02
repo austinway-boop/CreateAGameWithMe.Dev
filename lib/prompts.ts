@@ -2,7 +2,7 @@
 // AI Prompt Templates
 // ============================================
 
-import { IkigaiChip, RemixConstraints, IdeaSpark } from './types';
+import { IkigaiChip, RemixConstraints, IdeaSpark, GameLoopNode } from './types';
 
 export function buildStructureIdeaPrompt(
   ideaDescription: string,
@@ -129,4 +129,140 @@ Respond with exactly 10 concepts in this JSON format:
 Only output valid JSON. No markdown, no extra text.`;
 
   return prompt;
+}
+
+export interface ValidationResult {
+  overallScore: number; // 1-10
+  verdict: 'strong' | 'promising' | 'needs_work' | 'rethink';
+  summary: string;
+  strengths: string[];
+  concerns: string[];
+  suggestions: string[];
+  questions: string[];
+  marketFit: {
+    score: number;
+    reasoning: string;
+  };
+  scopeAssessment: {
+    score: number;
+    reasoning: string;
+    timeEstimate: string;
+  };
+  uniqueness: {
+    score: number;
+    reasoning: string;
+    similarGames: string[];
+  };
+  loopAnalysis: {
+    score: number;
+    reasoning: string;
+    missingElements: string[];
+  };
+}
+
+export function buildValidationPrompt(
+  title: string,
+  concept: string,
+  platform: string,
+  teamSize: string,
+  timeHorizon: string,
+  gameLoop: GameLoopNode[],
+  vibes: string[]
+): string {
+  // Build a readable game loop description
+  const loopDescription = gameLoop.length > 0
+    ? gameLoop.map(node => {
+        const connections = node.connections
+          .map(connId => gameLoop.find(n => n.id === connId)?.label || 'unknown')
+          .filter(Boolean);
+        return `- ${node.type.toUpperCase()}: "${node.label}"${connections.length > 0 ? ` → connects to: ${connections.join(', ')}` : ''}`;
+      }).join('\n')
+    : 'No game loop defined yet';
+
+  return `You are an experienced game design consultant and indie game market analyst. Your job is to provide honest, constructive validation of a game concept.
+
+Be critical but supportive — the goal is to help the creator make a better game, not to crush their dreams. Point out real issues while acknowledging potential.
+
+GAME CONCEPT TO VALIDATE:
+
+Title: "${title}"
+
+Concept:
+${concept}
+
+Context:
+- Platform: ${platform || 'Not specified'}
+- Team Size: ${teamSize || 'Not specified'}  
+- Time Horizon: ${timeHorizon || 'Not specified'}
+- Desired Vibes: ${vibes.length > 0 ? vibes.join(', ') : 'Not specified'}
+
+Game Loop:
+${loopDescription}
+
+VALIDATION CRITERIA:
+
+1. MARKET FIT (1-10): Is there an audience for this? Would players actually want this?
+   - Consider current trends, underserved niches, and player expectations
+   - Think about discoverability and competition
+
+2. SCOPE ASSESSMENT (1-10): Is this achievable with their constraints?
+   - Be realistic about indie dev capabilities
+   - Consider art, code, content, and polish requirements
+   - Estimate time to a playable prototype vs full release
+
+3. UNIQUENESS (1-10): Does this stand out? Is there a hook?
+   - Identify 2-3 similar existing games
+   - What would make someone choose THIS over alternatives?
+   - Is the "twist" actually compelling?
+
+4. LOOP ANALYSIS (1-10): Is the core loop clear and engaging?
+   - Is the moment-to-moment gameplay defined?
+   - What creates the "one more turn" feeling?
+   - Are there missing elements (no clear reward, no progression, etc.)?
+
+IMPORTANT GUIDELINES:
+- Be specific — don't just say "needs more polish" — say what specifically needs work
+- Ground feedback in real examples when possible
+- Acknowledge what IS working before diving into problems
+- Provide actionable suggestions, not just criticism
+- Ask probing questions that help the creator think deeper
+- Consider the dev's constraints (solo/small team, limited time)
+
+Respond in this exact JSON format:
+{
+  "overallScore": 7,
+  "verdict": "promising",
+  "summary": "2-3 sentences summarizing the overall assessment",
+  "strengths": ["Specific strength 1", "Specific strength 2", "..."],
+  "concerns": ["Specific concern 1", "Specific concern 2", "..."],
+  "suggestions": ["Actionable suggestion 1", "Actionable suggestion 2", "..."],
+  "questions": ["Probing question to help them think", "Another question", "..."],
+  "marketFit": {
+    "score": 7,
+    "reasoning": "Explanation of market potential"
+  },
+  "scopeAssessment": {
+    "score": 6,
+    "reasoning": "Explanation of scope feasibility",
+    "timeEstimate": "e.g., '2-3 months to prototype, 8-12 months to release'"
+  },
+  "uniqueness": {
+    "score": 5,
+    "reasoning": "How unique or differentiated this is",
+    "similarGames": ["Game 1", "Game 2", "Game 3"]
+  },
+  "loopAnalysis": {
+    "score": 8,
+    "reasoning": "Analysis of the core gameplay loop",
+    "missingElements": ["Missing element 1", "Missing element 2"]
+  }
+}
+
+Verdict should be one of:
+- "strong": Overall score 8-10, ready to prototype
+- "promising": Overall score 6-7, good foundation but needs refinement
+- "needs_work": Overall score 4-5, has potential but significant issues
+- "rethink": Overall score 1-3, fundamental problems to address
+
+Only output valid JSON. No markdown, no explanation outside the JSON.`;
 }

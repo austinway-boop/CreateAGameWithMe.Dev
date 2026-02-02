@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import { GameLoopNode, GameLoopNodeType, LoopType } from '@/lib/types';
 
 const NODE_TYPES: { type: GameLoopNodeType; label: string; color: string; borderColor: string; description: string }[] = [
@@ -52,7 +53,7 @@ interface ConnectionDragState {
 
 export default function GameLoopPage() {
   const router = useRouter();
-  const { project, loading, updateProject } = useProject();
+  const { project, loading, updateProject, retryLoad } = useProject();
   const [showIntro, setShowIntro] = useState(true);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
@@ -141,11 +142,7 @@ export default function GameLoopPage() {
   }, [connectionDrag, hoveredInputHandle, project, updateProject]);
 
   if (loading || !project) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen onRetry={retryLoad} message="Loading game loop..." />;
   }
 
   const nodes = project.gameLoop || [];

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { User, Users, ArrowRight, Loader2 } from 'lucide-react';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -28,11 +29,7 @@ export default function OnboardingPage() {
   }, [status, session, router]);
 
   if (status === 'loading') {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen message="Loading your profile..." />;
   }
 
   if (!session?.user) {

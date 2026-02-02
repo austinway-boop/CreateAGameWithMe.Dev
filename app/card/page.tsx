@@ -7,6 +7,7 @@ import { useProject } from '@/hooks/useProject';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ElectricBorder from '@/components/ElectricBorder';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import html2canvas from 'html2canvas';
 
 type Phase = 'idle' | 'flipping' | 'revealed';
@@ -25,7 +26,7 @@ const ANIMATION_CONFIG = {
 
 export default function ConceptCardPage() {
   const router = useRouter();
-  const { project, loading, updateProject } = useProject();
+  const { project, loading, updateProject, retryLoad } = useProject();
   const [phase, setPhase] = useState<Phase>('idle');
   const [showActions, setShowActions] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -222,11 +223,7 @@ export default function ConceptCardPage() {
   }, [phase, tiltEngine]);
 
   if (loading || !project) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen onRetry={retryLoad} message="Loading your concept card..." />;
   }
 
   if (!project.conceptImage) {
@@ -407,10 +404,10 @@ export default function ConceptCardPage() {
         {showActions && (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <Button onClick={() => {
-              updateProject({ currentPage: 'gameloop' });
-              router.push('/gameloop');
+              updateProject({ currentPage: 'finalize' });
+              router.push('/finalize');
             }} className="w-full gap-2" size="lg">
-              Continue to Validation
+              Continue to Finalize
               <ArrowRight className="h-4 w-4" />
             </Button>
             <div className="flex justify-center gap-4 text-sm">
