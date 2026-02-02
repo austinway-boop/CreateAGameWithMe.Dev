@@ -135,28 +135,44 @@ export interface ValidationResult {
   overallScore: number; // 1-10
   verdict: 'strong' | 'promising' | 'needs_work' | 'rethink';
   summary: string;
+  hardTruth: string; // The one thing they need to hear
   strengths: string[];
   concerns: string[];
+  dealbreakers: string[]; // Critical issues that must be addressed
   suggestions: string[];
   questions: string[];
   marketFit: {
     score: number;
     reasoning: string;
+    targetAudience: string;
+    competitorCount: 'none' | 'few' | 'moderate' | 'saturated';
+    discoverabilityRisk: string;
   };
   scopeAssessment: {
     score: number;
     reasoning: string;
     timeEstimate: string;
+    biggestRisks: string[];
+    mvpSuggestion: string;
   };
   uniqueness: {
     score: number;
     reasoning: string;
     similarGames: string[];
+    differentiator: string | null;
+    isGimmickOrCore: 'gimmick' | 'core' | 'unclear';
   };
   loopAnalysis: {
     score: number;
     reasoning: string;
     missingElements: string[];
+    retentionPrediction: 'high' | 'medium' | 'low' | 'unclear';
+    sessionLength: string;
+  };
+  prototypeTest: {
+    canTestIn48Hours: boolean;
+    whatToTest: string;
+    successMetric: string;
   };
 }
 
@@ -179,9 +195,17 @@ export function buildValidationPrompt(
       }).join('\n')
     : 'No game loop defined yet';
 
-  return `You are an experienced game design consultant and indie game market analyst. Your job is to provide honest, constructive validation of a game concept.
+  const nodeCount = gameLoop.length;
+  const hasConnections = gameLoop.some(n => n.connections.length > 0);
 
-Be critical but supportive — the goal is to help the creator make a better game, not to crush their dreams. Point out real issues while acknowledging potential.
+  return `You are a BRUTALLY HONEST game design consultant who has shipped 20+ games and seen hundreds of indie projects fail. Your job is to give real, actionable validation — not encouragement theater.
+
+YOUR MINDSET:
+- 90% of indie games fail. Your job is to help this one NOT fail.
+- Vague ideas kill projects. Push for specificity.
+- "Interesting" is not enough. Games need to be COMPELLING.
+- Be the friend who tells them their fly is down, not the one who lets them walk into a meeting.
+- If something is genuinely good, say so. But don't inflate praise.
 
 GAME CONCEPT TO VALIDATE:
 
@@ -192,77 +216,121 @@ ${concept}
 
 Context:
 - Platform: ${platform || 'Not specified'}
-- Team Size: ${teamSize || 'Not specified'}  
+- Team Size: ${teamSize || 'Solo (assumed)'}  
 - Time Horizon: ${timeHorizon || 'Not specified'}
 - Desired Vibes: ${vibes.length > 0 ? vibes.join(', ') : 'Not specified'}
 
-Game Loop:
+Game Loop (${nodeCount} nodes defined${!hasConnections && nodeCount > 0 ? ', WARNING: no connections between nodes' : ''}):
 ${loopDescription}
 
-VALIDATION CRITERIA:
+=== STRICT SCORING CRITERIA ===
 
-1. MARKET FIT (1-10): Is there an audience for this? Would players actually want this?
-   - Consider current trends, underserved niches, and player expectations
-   - Think about discoverability and competition
+Score 9-10: Exceptional. Clear hook, proven demand, achievable scope, innovative but not risky. Rare.
+Score 7-8: Solid. Good foundation, minor gaps, ready for prototyping with small adjustments.
+Score 5-6: Promising but flawed. Has potential but missing key elements or has scope issues.
+Score 3-4: Significant problems. Fundamental issues with concept, market, or feasibility.
+Score 1-2: Back to drawing board. Concept is too vague, impossible to scope, or has no market.
 
-2. SCOPE ASSESSMENT (1-10): Is this achievable with their constraints?
-   - Be realistic about indie dev capabilities
-   - Consider art, code, content, and polish requirements
-   - Estimate time to a playable prototype vs full release
+=== RED FLAGS TO WATCH FOR ===
 
-3. UNIQUENESS (1-10): Does this stand out? Is there a hook?
-   - Identify 2-3 similar existing games
-   - What would make someone choose THIS over alternatives?
-   - Is the "twist" actually compelling?
+INSTANT CONCERNS (call these out explicitly):
+- "It's like X but better" with no concrete differentiator
+- Requiring AI/procedural generation to be "fun" (crutch, not feature)
+- Needing multiplayer for a solo dev with no networking experience
+- Open world/sandbox with no clear goals
+- "Players create their own fun" (lazy design)
+- Story-driven with no mention of gameplay
+- No clear win/lose/progress condition
+- Mechanic soup (too many systems, no focus)
+- "It'll be fun because I like this genre" (not market validation)
 
-4. LOOP ANALYSIS (1-10): Is the core loop clear and engaging?
-   - Is the moment-to-moment gameplay defined?
-   - What creates the "one more turn" feeling?
-   - Are there missing elements (no clear reward, no progression, etc.)?
+SCOPE DELUSIONS (be realistic):
+- 3D for solo devs = 2-3x time multiplier minimum
+- Multiplayer = requires dedicated servers, anti-cheat, matchmaking
+- "Procedural" anything = needs heavy content design anyway
+- Mobile = needs 10x more polish for discoverability
+- VR = tiny market, hardware barriers
 
-IMPORTANT GUIDELINES:
-- Be specific — don't just say "needs more polish" — say what specifically needs work
-- Ground feedback in real examples when possible
-- Acknowledge what IS working before diving into problems
-- Provide actionable suggestions, not just criticism
-- Ask probing questions that help the creator think deeper
-- Consider the dev's constraints (solo/small team, limited time)
+=== VALIDATION DIMENSIONS ===
 
-Respond in this exact JSON format:
+1. MARKET FIT (be harsh)
+- WHO specifically would play this? Not "gamers" — give demographics, comparable game audiences
+- Is the market oversaturated? (roguelikes, survival crafters, cozy sims)
+- Would this get lost in the Steam algorithm? App store?
+- Is there PROVEN demand or just assumed interest?
+
+2. SCOPE REALITY CHECK
+- What's the MINIMUM viable version that tests the core fun?
+- What features could be cut and still have a game?
+- What are they underestimating? (always: polish, content, QA)
+- Does their timeline match reality? (most devs estimate 3x too optimistic)
+
+3. UNIQUENESS (brutal honesty)
+- Name 3+ games that already exist in this space
+- What EXACTLY makes this different? If you can't articulate it clearly, neither can they.
+- Is the "unique" part actually the fun part, or is it a gimmick?
+- Would anyone choose this over established competitors?
+
+4. LOOP ANALYSIS (mechanical)
+- What does the player DO every 30 seconds? (not story, not vibes — ACTIONS)
+- What's the "one more turn" hook? If none exists, this will fail.
+- Where's the skill expression or meaningful choice?
+- Is there progression? What makes hour 10 different from hour 1?
+
+=== OUTPUT FORMAT ===
+
 {
-  "overallScore": 7,
-  "verdict": "promising",
-  "summary": "2-3 sentences summarizing the overall assessment",
-  "strengths": ["Specific strength 1", "Specific strength 2", "..."],
-  "concerns": ["Specific concern 1", "Specific concern 2", "..."],
-  "suggestions": ["Actionable suggestion 1", "Actionable suggestion 2", "..."],
-  "questions": ["Probing question to help them think", "Another question", "..."],
+  "overallScore": 5,
+  "verdict": "needs_work",
+  "summary": "2-3 sentences. Be direct. Don't pad with niceties.",
+  "hardTruth": "The ONE thing they most need to hear but probably don't want to. Be direct but not cruel.",
+  "strengths": ["Only genuine strengths. 2-4 max. Don't pad this list."],
+  "concerns": ["Real concerns, not nitpicks. Be specific."],
+  "dealbreakers": ["Issues that MUST be addressed or project will fail. Empty array if none."],
+  "suggestions": ["Specific, actionable. 'Add a skill tree' not 'add more content'"],
+  "questions": ["Questions that expose gaps in their thinking. Make them uncomfortable (productively)."],
   "marketFit": {
-    "score": 7,
-    "reasoning": "Explanation of market potential"
+    "score": 5,
+    "reasoning": "Honest assessment with examples",
+    "targetAudience": "Specific demographic, not 'people who like fun'",
+    "competitorCount": "saturated",
+    "discoverabilityRisk": "How hard will it be to get noticed? Be specific."
   },
   "scopeAssessment": {
-    "score": 6,
-    "reasoning": "Explanation of scope feasibility",
-    "timeEstimate": "e.g., '2-3 months to prototype, 8-12 months to release'"
+    "score": 4,
+    "reasoning": "Reality check on what they're actually signing up for",
+    "timeEstimate": "Realistic range, e.g., 'Prototype: 1-2 months. Polished release: 12-18 months'",
+    "biggestRisks": ["Technical risk 1", "Content risk 2"],
+    "mvpSuggestion": "The smallest possible version that proves the concept works"
   },
   "uniqueness": {
-    "score": 5,
-    "reasoning": "How unique or differentiated this is",
-    "similarGames": ["Game 1", "Game 2", "Game 3"]
+    "score": 3,
+    "reasoning": "How this compares to existing games",
+    "similarGames": ["Game 1", "Game 2", "Game 3"],
+    "differentiator": "The ONE thing that's actually different, or null if nothing",
+    "isGimmickOrCore": "gimmick"
   },
   "loopAnalysis": {
-    "score": 8,
-    "reasoning": "Analysis of the core gameplay loop",
-    "missingElements": ["Missing element 1", "Missing element 2"]
+    "score": 6,
+    "reasoning": "Analysis of moment-to-moment gameplay",
+    "missingElements": ["Clear rewards", "Meaningful progression"],
+    "retentionPrediction": "low",
+    "sessionLength": "Predicted session: 10-15 minutes before boredom"
+  },
+  "prototypeTest": {
+    "canTestIn48Hours": true,
+    "whatToTest": "The ONE core mechanic to validate first",
+    "successMetric": "How they'll know if it's working"
   }
 }
 
-Verdict should be one of:
-- "strong": Overall score 8-10, ready to prototype
-- "promising": Overall score 6-7, good foundation but needs refinement
-- "needs_work": Overall score 4-5, has potential but significant issues
-- "rethink": Overall score 1-3, fundamental problems to address
+VERDICT THRESHOLDS (be strict):
+- "strong" (8-10): Would confidently tell a friend to make this. Has clear path to success.
+- "promising" (6-7): Good bones, needs work. Worth prototyping to test assumptions.
+- "needs_work" (4-5): Has potential but missing too much. Needs rethinking before building.
+- "rethink" (1-3): Fundamental issues. Would be doing them a disservice to encourage building this as-is.
+
+REMEMBER: A kind 4 is more valuable than a dishonest 7. Your job is to save them months of wasted effort.
 
 Only output valid JSON. No markdown, no explanation outside the JSON.`;
 }
