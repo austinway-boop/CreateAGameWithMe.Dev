@@ -207,10 +207,18 @@ export default function ValidationPage() {
     );
   }
 
-  const verdictConfig = VERDICT_CONFIG[validation.verdict];
+  // Safe access with fallbacks
+  const verdict = validation.verdict && VERDICT_CONFIG[validation.verdict] ? validation.verdict : 'needs_work';
+  const verdictConfig = VERDICT_CONFIG[verdict];
   const VerdictIcon = verdictConfig.icon;
-  const competitorConfig = COMPETITOR_LABELS[validation.marketFit?.competitorCount || 'moderate'];
-  const retentionConfig = RETENTION_LABELS[validation.loopAnalysis?.retentionPrediction || 'unclear'];
+  const competitorCount = validation.marketFit?.competitorCount;
+  const competitorConfig = competitorCount && COMPETITOR_LABELS[competitorCount] 
+    ? COMPETITOR_LABELS[competitorCount] 
+    : COMPETITOR_LABELS.moderate;
+  const retentionPrediction = validation.loopAnalysis?.retentionPrediction;
+  const retentionConfig = retentionPrediction && RETENTION_LABELS[retentionPrediction]
+    ? RETENTION_LABELS[retentionPrediction]
+    : RETENTION_LABELS.unclear;
 
   return (
     <div className="flex-1 overflow-auto">
@@ -225,7 +233,7 @@ export default function ValidationPage() {
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-2xl font-bold">{verdictConfig.label}</h1>
                 <div className={`px-3 py-1 rounded-full text-xl font-bold ${verdictConfig.color} bg-white/70`}>
-                  {validation.overallScore}/10
+                  {validation.overallScore ?? '?'}/10
                 </div>
               </div>
               <p className="text-muted-foreground mt-1">{verdictConfig.description}</p>
