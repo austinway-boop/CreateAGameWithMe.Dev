@@ -1,13 +1,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { ArrowRight, ArrowLeft, HelpCircle, X, Plus } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { ArrowRight, X } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { FormSkeleton } from '@/components/LoadingScreen';
 import { SkillTreeNode, SkillLevel } from '@/lib/types';
 
 const SKILL_LEVELS: { level: SkillLevel; label: string; color: string; borderColor: string; description: string }[] = [
@@ -114,11 +113,7 @@ export default function SkillTreePage() {
   }, [connectionDrag, hoveredInputHandle, project, updateProject]);
 
   if (loading || !project) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return <FormSkeleton />;
   }
 
   const nodes = project.skillTree || [];
@@ -293,51 +288,65 @@ export default function SkillTreePage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col p-4 h-screen">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold tracking-tight">Skill Dependency Tree</h1>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">
-            {nodes.length} skill{nodes.length !== 1 ? 's' : ''}
-          </span>
-          <Button
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Top Header Bar */}
+      <header className="bg-white shadow-[0_2px_0_#e5e7eb] sticky top-0 z-50">
+        <div className="max-w-full mx-auto px-4 h-14 flex items-center justify-between">
+          <button
+            onClick={() => router.push('/journey')}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-100 
+              hover:bg-gray-200 active:translate-y-0.5 transition-all text-gray-600 font-bold text-sm"
+          >
+            <X className="h-4 w-4" />
+            Exit
+          </button>
+          
+          <h1 className="text-lg font-bold text-gray-900">Skill Tree Builder</h1>
+          
+          <button
             onClick={() => {
               updateProject({ currentPage: 'validation' });
               router.push('/journey?completed=skilltree');
             }}
             disabled={!canContinue}
-            className="gap-2"
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all
+              ${canContinue 
+                ? 'bg-pink-500 text-white shadow-[0_3px_0_#be185d] hover:bg-pink-600 active:translate-y-0.5 active:shadow-none' 
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
           >
             Continue
             <ArrowRight className="h-4 w-4" />
-          </Button>
+          </button>
         </div>
-      </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col p-4">
 
       {/* Progress Hint */}
       {nodes.length < 3 && (
-        <div className="mb-3 px-4 py-2 bg-muted/50 rounded-lg border border-muted text-sm text-muted-foreground">
-          {nodes.length === 0 && "Start by adding Core skills — what must every player learn first?"}
-          {nodes.length === 1 && "Great! Add more skills to build your tree."}
-          {nodes.length === 2 && "One more skill to continue. Try connecting them to show dependencies!"}
+        <div className="mb-3 px-4 py-2.5 bg-white rounded-xl shadow-[0_2px_0_#e5e7eb] text-sm text-gray-600 font-medium">
+          {nodes.length === 0 && "🎯 Start by adding Core skills — what must every player learn first?"}
+          {nodes.length === 1 && "✨ Great! Add more skills to build your tree."}
+          {nodes.length === 2 && "🔗 One more skill to continue. Try connecting them to show dependencies!"}
         </div>
       )}
 
       <div className="flex gap-4 flex-1 min-h-0">
         {/* Skill Palette */}
         <div className="w-52 flex-shrink-0 space-y-4 overflow-y-auto">
+          {/* Level Selector */}
           <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">Skill Level</Label>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Skill Level</p>
             <div className="flex flex-col gap-2">
               {SKILL_LEVELS.map((level) => (
                 <button
                   key={level.level}
                   onClick={() => setSelectedLevel(level.level)}
-                  className={`px-3 py-1.5 rounded text-xs font-medium text-left transition-colors ${
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all ${
                     selectedLevel === level.level 
-                      ? level.color + ' text-white' 
-                      : 'bg-muted hover:bg-muted/80'
+                      ? level.color + ' text-white shadow-[0_2px_0_rgba(0,0,0,0.2)]' 
+                      : 'bg-white text-gray-600 shadow-[0_2px_0_#e5e7eb] hover:bg-gray-50'
                   }`}
                 >
                   {level.label}
@@ -347,7 +356,7 @@ export default function SkillTreePage() {
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Drag to canvas →</p>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Drag to canvas</p>
             {SKILL_LEVELS.map((level) => (
               <div
                 key={level.level}
@@ -355,21 +364,22 @@ export default function SkillTreePage() {
                 onDragStart={(e) => {
                   e.dataTransfer.setData('skill-level', level.level);
                 }}
-                className={`${level.color} text-white px-3 py-2 rounded-lg cursor-grab active:cursor-grabbing text-sm font-medium shadow-sm hover:shadow-md transition-shadow`}
+                className={`${level.color} text-white px-3 py-2.5 rounded-xl cursor-grab active:cursor-grabbing 
+                  shadow-[0_3px_0_rgba(0,0,0,0.2)] hover:brightness-110 active:translate-y-0.5 active:shadow-none transition-all`}
               >
-                <div>{level.label} Skill</div>
-                <div className="text-xs opacity-80">{level.description}</div>
+                <div className="font-bold text-sm">{level.label} Skill</div>
+                <div className="text-xs opacity-90 font-medium">{level.description}</div>
               </div>
             ))}
           </div>
 
           {/* Tips */}
-          <div className="space-y-2 pt-4 border-t">
-            <p className="text-xs font-medium text-muted-foreground">Tips:</p>
-            <ul className="text-xs text-muted-foreground space-y-1">
-              <li>• Drag from top handle to connect skills</li>
-              <li>• Click text to edit skill names</li>
-              <li>• Arrow shows "requires this first"</li>
+          <div className="space-y-2 pt-4 border-t border-gray-200">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Tips</p>
+            <ul className="text-xs text-gray-500 space-y-1.5 font-medium">
+              <li>• Drag from bottom dot to connect</li>
+              <li>• Click text to edit names</li>
+              <li>• Arrow shows "requires this"</li>
             </ul>
           </div>
         </div>
@@ -381,7 +391,7 @@ export default function SkillTreePage() {
           onDrop={handleCanvasDrop}
           onDoubleClick={handleCanvasDoubleClick}
           onClick={handleCanvasClick}
-          className="flex-1 bg-muted/30 rounded-xl border-2 border-dashed relative overflow-hidden"
+          className="flex-1 bg-white rounded-2xl border-2 border-dashed border-gray-200 relative overflow-hidden shadow-[0_2px_0_#e5e7eb]"
           style={{ minHeight: '400px', cursor: connectionDrag ? 'crosshair' : 'default' }}
         >
           {/* Connection Lines */}
@@ -526,46 +536,46 @@ export default function SkillTreePage() {
           {/* Context Menu */}
           {contextMenuPos && (
             <div
-              className="absolute bg-white rounded-lg shadow-xl border p-2 z-50"
-              style={{ left: contextMenuPos.x, top: contextMenuPos.y }}
+              className="absolute bg-white rounded-xl shadow-lg border-0 p-2 z-50"
+              style={{ left: contextMenuPos.x, top: contextMenuPos.y, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}
             >
-              <div className="text-xs font-medium text-muted-foreground mb-2 px-2">Add Skill</div>
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2 px-2">Add Skill</div>
               <div className="space-y-1">
                 {SKILL_LEVELS.map((level) => (
                   <button
                     key={level.level}
                     onClick={() => addNode(level.level, contextMenuPos.x - 75, contextMenuPos.y - 25)}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-muted transition-colors"
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
                   >
-                    <div className={`w-3 h-3 rounded ${level.color}`}></div>
+                    <div className={`w-3 h-3 rounded-full ${level.color}`}></div>
                     <span>{level.label}</span>
                   </button>
                 ))}
               </div>
               <button
                 onClick={() => setContextMenuPos(null)}
-                className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80"
+                className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
               >
-                <X className="h-3 w-3" />
+                <X className="h-3.5 w-3.5 text-gray-500" />
               </button>
             </div>
           )}
 
           {/* Empty State */}
           {nodes.length === 0 && !contextMenuPos && (
-            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground pointer-events-none">
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center space-y-2">
-                <p className="text-lg font-medium">Build your skill tree!</p>
-                <p className="text-sm">
-                  Drag skills from the left, or <strong>double-click</strong> here to add
+                <p className="text-xl font-bold text-gray-400">Build your skill tree!</p>
+                <p className="text-sm text-gray-400">
+                  Drag skills from the left, or <span className="font-bold">double-click</span> here to add
                 </p>
-                <p className="text-xs">Start with Core skills — what must every player learn first?</p>
+                <p className="text-xs text-gray-400">Start with Core skills — what must every player learn first?</p>
               </div>
             </div>
           )}
         </div>
       </div>
-
+      </div>
     </div>
   );
 }
