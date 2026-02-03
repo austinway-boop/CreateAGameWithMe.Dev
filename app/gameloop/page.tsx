@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { ArrowRight, ArrowLeft, Trash2, HelpCircle, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowRight, ArrowLeft, X } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -258,26 +258,13 @@ export default function GameLoopPage() {
     return NODE_TYPES.find(t => t.type === type)?.borderColor || 'border-gray-500';
   };
 
-  const canContinue = nodes.length >= 3;
   const totalConnections = nodes.reduce((sum, node) => sum + node.connections.length, 0);
-  const hasNoConnections = nodes.length > 0 && totalConnections === 0;
-
-  const getProgressHint = () => {
-    if (nodes.length === 0) return null;
-    if (nodes.length === 1) {
-      return "Great start! Add more blocks to build your loop.";
-    }
-    if (hasNoConnections) {
-      return "Now connect your blocks! Drag from the right dot (o) to another block's left dot.";
-    }
-    if (nodes.length < 3) {
-      return `Add ${3 - nodes.length} more block${3 - nodes.length > 1 ? 's' : ''} to complete your loop.`;
-    }
-    if (canContinue) {
-      return "Looking good! Continue when ready, or keep building.";
-    }
-    return null;
-  };
+  
+  // Check if we have a complete loop: at least 3 nodes, connections, and a repeat node that connects back
+  const hasRepeatNode = nodes.some(n => n.type === 'repeat');
+  const hasEnoughNodes = nodes.length >= 3;
+  const hasConnections = totalConnections >= 2;
+  const canContinue = hasEnoughNodes && hasConnections && hasRepeatNode;
 
   // Simplified Intro Screen
   if (showIntro) {
@@ -343,11 +330,6 @@ export default function GameLoopPage() {
               Start Building
               <ArrowRight className="h-4 w-4" />
             </Button>
-            
-            <Button variant="ghost" onClick={() => router.push('/finalize')} className="w-full gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Concept
-            </Button>
           </div>
         </div>
       </div>
@@ -359,28 +341,6 @@ export default function GameLoopPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.push('/finalize')}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white text-gray-600 font-bold text-sm
-              shadow-[0_2px_0_#e5e7eb] hover:bg-gray-50 active:translate-y-0.5 active:shadow-none transition-all"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </button>
-          <h1 className="text-xl font-bold text-gray-900">Game Loop Builder</h1>
-          <button
-            onClick={() => setShowIntro(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white text-gray-500 font-medium text-sm
-              shadow-[0_2px_0_#e5e7eb] hover:bg-gray-50 active:translate-y-0.5 active:shadow-none transition-all"
-          >
-            <HelpCircle className="h-4 w-4" />
-            Help
-          </button>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-bold text-gray-500">
-            {nodes.length} block{nodes.length !== 1 ? 's' : ''}
-          </span>
           <button
             onClick={() => {
               updateProject({ currentPage: 'questions' });
@@ -396,14 +356,13 @@ export default function GameLoopPage() {
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
-      </div>
-
-      {/* Progress Hint Banner */}
-      {getProgressHint() && (
-        <div className="mb-3 px-4 py-2.5 bg-white rounded-xl shadow-[0_2px_0_#e5e7eb] text-sm font-medium text-gray-600">
-          {getProgressHint()}
+        <h1 className="text-xl font-bold text-gray-900">Game Loop Builder</h1>
+        <div className="flex items-center gap-4">
+          <span className="text-sm font-bold text-gray-500">
+            {nodes.length} block{nodes.length !== 1 ? 's' : ''}
+          </span>
         </div>
-      )}
+      </div>
 
       <div className="flex gap-4 flex-1 min-h-0">
         {/* Node Palette */}
@@ -677,20 +636,6 @@ export default function GameLoopPage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="flex justify-between items-center mt-4">
-        <button
-          onClick={() => router.push('/idea')}
-          className="text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          ← Edit Original Idea
-        </button>
-        {!canContinue && (
-          <p className="text-sm font-medium text-gray-400">
-            Add at least 3 blocks to continue
-          </p>
-        )}
-      </div>
     </div>
   );
 }
