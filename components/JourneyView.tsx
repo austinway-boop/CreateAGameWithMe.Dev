@@ -203,10 +203,14 @@ export function JourneyView({ currentStep }: { currentStep?: string }) {
               </div>
               <button
                 onClick={() => router.push(`/${JOURNEY_STEPS[currentIndex].path}`)}
-                className="p-3 rounded-xl text-white"
-                style={{ backgroundColor: JOURNEY_STEPS[currentIndex].color }}
+                className="px-5 py-3 rounded-xl text-white font-bold text-sm uppercase tracking-wide
+                  active:translate-y-1 active:shadow-none transition-all"
+                style={{ 
+                  backgroundColor: JOURNEY_STEPS[currentIndex].color,
+                  boxShadow: `0 4px 0 ${darken(JOURNEY_STEPS[currentIndex].color, 40)}`
+                }}
               >
-                <ChevronRight className="w-5 h-5" />
+                Start
               </button>
             </div>
           </div>
