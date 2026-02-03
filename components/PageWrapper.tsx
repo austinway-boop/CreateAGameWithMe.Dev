@@ -22,6 +22,7 @@ const ACTIVITY_ROUTES = [
 const SELF_CONTAINED_ROUTES = [
   '/journey',
   '/onboarding',
+  '/gameloop',
 ];
 
 export function PageWrapper({ children }: { children: React.ReactNode }) {

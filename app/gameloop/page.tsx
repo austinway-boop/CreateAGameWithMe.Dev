@@ -337,28 +337,40 @@ export default function GameLoopPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col p-4 h-screen bg-gray-50">
-      {/* Header */}
-      <div className="flex items-center h-12 mb-4">
-        <button
-          onClick={() => {
-            updateProject({ currentPage: 'questions' });
-            router.push('/journey?completed=gameloop');
-          }}
-          disabled={!canContinue}
-          className={`flex items-center gap-2 px-5 py-2 rounded-xl font-bold text-sm transition-all
-            ${canContinue 
-              ? 'bg-pink-500 text-white shadow-[0_3px_0_#be185d] hover:bg-pink-600 active:translate-y-0.5 active:shadow-none' 
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
-        >
-          Continue
-          <ArrowRight className="h-4 w-4" />
-        </button>
-        <h1 className="flex-1 text-xl font-bold text-gray-900 text-center">Game Loop Builder</h1>
-        <span className="text-sm font-bold text-gray-500">
-          {nodes.length} block{nodes.length !== 1 ? 's' : ''}
-        </span>
-      </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Top Header Bar */}
+      <header className="bg-white shadow-[0_2px_0_#e5e7eb] sticky top-0 z-50">
+        <div className="max-w-full mx-auto px-4 h-14 flex items-center justify-between">
+          <button
+            onClick={() => router.push('/journey')}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-100 
+              hover:bg-gray-200 active:translate-y-0.5 transition-all text-gray-600 font-bold text-sm"
+          >
+            <X className="h-4 w-4" />
+            Exit
+          </button>
+          
+          <h1 className="text-lg font-bold text-gray-900">Game Loop Builder</h1>
+          
+          <button
+            onClick={() => {
+              updateProject({ currentPage: 'questions' });
+              router.push('/journey?completed=gameloop');
+            }}
+            disabled={!canContinue}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all
+              ${canContinue 
+                ? 'bg-pink-500 text-white shadow-[0_3px_0_#be185d] hover:bg-pink-600 active:translate-y-0.5 active:shadow-none' 
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+          >
+            Continue
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col p-4">
 
       <div className="flex gap-4 flex-1 min-h-0">
         {/* Node Palette */}
@@ -631,7 +643,7 @@ export default function GameLoopPage() {
           )}
         </div>
       </div>
-
+      </div>
     </div>
   );
 }
