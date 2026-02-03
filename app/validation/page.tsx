@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Loader2, CheckCircle2, AlertTriangle, XCircle, Sparkles, Target, Clock, Lightbulb, HelpCircle, TrendingUp, Zap, RefreshCw, AlertOctagon, Flame, Beaker, Users, Gauge } from 'lucide-react';
+import { ArrowLeft, Loader2, CheckCircle2, AlertTriangle, XCircle, Sparkles, Target, Clock, Lightbulb, HelpCircle, TrendingUp, Zap, RefreshCw, AlertOctagon, Flame, Beaker, Users, Gauge, TrendingDown, DollarSign, Tv, ArrowRight, BarChart3, Rocket } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -423,6 +423,136 @@ export default function ValidationPage() {
           </Card>
         </div>
 
+        {/* Genre Analysis - New Data-Driven Section */}
+        {validation.genreAnalysis && (
+          <Card className={`border-2 ${validation.genreAnalysis.isGreatConjunction ? 'border-emerald-300 bg-emerald-50' : 'border-purple-200 bg-purple-50'}`}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2 text-purple-700">
+                <BarChart3 className="h-4 w-4" />
+                Market Data Analysis
+                {validation.genreAnalysis.isGreatConjunction && (
+                  <span className="ml-auto text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                    <Rocket className="h-3 w-3" />
+                    Great Conjunction
+                  </span>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">Detected Genre</p>
+                  <p className="text-sm font-medium">{validation.genreAnalysis.detectedGenre}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Success Rate</p>
+                  <p className={`text-sm font-bold ${
+                    parseFloat(validation.genreAnalysis.successRate) >= 5 ? 'text-green-600' :
+                    parseFloat(validation.genreAnalysis.successRate) >= 2 ? 'text-blue-600' :
+                    parseFloat(validation.genreAnalysis.successRate) >= 1 ? 'text-amber-600' :
+                    'text-red-600'
+                  }`}>
+                    {validation.genreAnalysis.successRate}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Lifecycle Phase</p>
+                  <p className={`text-sm font-medium ${
+                    ['proto', 'definer', 'variant_window'].includes(validation.genreAnalysis.lifecyclePhase) ? 'text-green-600' :
+                    validation.genreAnalysis.lifecyclePhase === 'mature' ? 'text-blue-600' :
+                    'text-amber-600'
+                  }`}>
+                    {validation.genreAnalysis.lifecyclePhase.replace('_', ' ')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Trend</p>
+                  <p className={`text-sm font-medium flex items-center gap-1 ${
+                    validation.genreAnalysis.trend.includes('rising') ? 'text-green-600' :
+                    validation.genreAnalysis.trend === 'stable' ? 'text-blue-600' :
+                    'text-amber-600'
+                  }`}>
+                    {validation.genreAnalysis.trend.includes('rising') ? <TrendingUp className="h-3 w-3" /> :
+                     validation.genreAnalysis.trend.includes('declining') ? <TrendingDown className="h-3 w-3" /> : null}
+                    {validation.genreAnalysis.trend.replace('_', ' ')}
+                  </p>
+                </div>
+              </div>
+              {validation.genreAnalysis.isGreatConjunction && (
+                <div className="bg-emerald-100 p-2 rounded border border-emerald-200 mt-2">
+                  <p className="text-xs text-emerald-700 font-medium">🔥 Great Conjunction Active</p>
+                  <p className="text-sm text-emerald-800">Player demand exceeds supply in this genre. Window is open for fast movers!</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Viral Potential - New Section */}
+        {validation.viralPotential && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Tv className="h-4 w-4 text-pink-500" />
+                Viral Potential
+                <span className={`ml-auto text-xs font-medium ${
+                  validation.viralPotential.streamerAppeal === 'high' ? 'text-green-600' :
+                  validation.viralPotential.streamerAppeal === 'medium' ? 'text-blue-600' :
+                  'text-muted-foreground'
+                }`}>
+                  {validation.viralPotential.streamerAppeal === 'high' ? '🔥 Highly Streamable' :
+                   validation.viralPotential.streamerAppeal === 'medium' ? '📺 Moderately Streamable' :
+                   '📝 Low Stream Appeal'}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <ScoreBar score={validation.viralPotential.score} label="Viral Score" />
+              <p className="text-sm text-muted-foreground">{validation.viralPotential.reasoning}</p>
+              {validation.viralPotential.clipWorthiness && (
+                <div className="pt-2 border-t">
+                  <p className="text-xs text-muted-foreground">Clip-Worthy Moments:</p>
+                  <p className="text-sm">{validation.viralPotential.clipWorthiness}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Pricing Analysis - New Section */}
+        {validation.pricingAnalysis && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-green-500" />
+                Pricing Analysis
+                <span className={`ml-auto text-xs px-2 py-0.5 rounded ${
+                  validation.pricingAnalysis.priceZone === 'impulse' ? 'bg-green-100 text-green-700' :
+                  validation.pricingAnalysis.priceZone === 'uncanny_valley' ? 'bg-red-100 text-red-700' :
+                  'bg-blue-100 text-blue-700'
+                }`}>
+                  {validation.pricingAnalysis.priceZone === 'impulse' ? '💰 Impulse Zone' :
+                   validation.pricingAnalysis.priceZone === 'uncanny_valley' ? '⚠️ Uncanny Valley' :
+                   '💎 Premium Zone'}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Suggested Price Range:</p>
+                <p className="text-sm font-bold text-green-700">{validation.pricingAnalysis.suggestedRange}</p>
+              </div>
+              <p className="text-sm text-muted-foreground">{validation.pricingAnalysis.reasoning}</p>
+              {validation.pricingAnalysis.priceZone === 'uncanny_valley' && (
+                <div className="bg-amber-50 p-2 rounded border border-amber-200">
+                  <p className="text-xs text-amber-700 font-medium">⚠️ Price Warning</p>
+                  <p className="text-sm text-amber-800">$10-25 is the "uncanny valley" - not cheap enough for impulse buys, not prestigious enough for hype. Consider $3-8 (viral) or $30+ (premium).</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Prototype Test */}
         {validation.prototypeTest && (
           <Card className="border-2 border-blue-200 bg-blue-50">
@@ -448,6 +578,29 @@ export default function ValidationPage() {
                 <p className="text-xs text-blue-600 font-medium">Success Metric:</p>
                 <p className="text-sm text-blue-900">{validation.prototypeTest.successMetric}</p>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Pivot Suggestions - New Section */}
+        {validation.pivotSuggestions && validation.pivotSuggestions.length > 0 && validation.overallScore < 7 && (
+          <Card className="border-2 border-indigo-200 bg-indigo-50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2 text-indigo-700">
+                <ArrowRight className="h-4 w-4" />
+                Pivot Suggestions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-indigo-600 mb-2">Consider these alternatives to improve your odds:</p>
+              <ul className="space-y-2">
+                {validation.pivotSuggestions.map((suggestion, i) => (
+                  <li key={i} className="text-sm flex gap-2 text-indigo-800">
+                    <span className="text-indigo-500 font-bold">{i + 1}.</span>
+                    {suggestion}
+                  </li>
+                ))}
+              </ul>
             </CardContent>
           </Card>
         )}

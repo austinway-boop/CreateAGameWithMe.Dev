@@ -2,12 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { ArrowRight, ArrowLeft, Plus, X, Check } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Plus, X } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { GameQuestions } from '@/lib/types';
 
@@ -16,25 +14,109 @@ const EMOTION_SUGGESTIONS = [
   'Satisfaction', 'Pride', 'Relaxation', 'Surprise', 'Nostalgia'
 ];
 
-type Tab = 'essential' | 'market' | 'details';
+interface Question {
+  id: keyof GameQuestions | 'playerGames';
+  title: string;
+  subtitle: string;
+  placeholder: string;
+  type: 'textarea' | 'input' | 'emotions' | 'price' | 'games';
+  required?: boolean;
+  hint?: string;
+}
+
+const QUESTIONS: Question[] = [
+  {
+    id: 'oneSentence',
+    title: 'What is your game in one sentence?',
+    subtitle: 'The elevator pitch that hooks people instantly',
+    placeholder: 'Players [verb] to [goal] by [core mechanic]...',
+    type: 'textarea',
+    required: true,
+  },
+  {
+    id: 'genre',
+    title: 'What genre is your game?',
+    subtitle: 'Be specific — not just "action" but "roguelike deckbuilder"',
+    placeholder: 'e.g., Roguelike Deckbuilder, Horror Simulation, Cozy Farming Sim',
+    type: 'input',
+    required: true,
+  },
+  {
+    id: 'emotions',
+    title: 'What emotions should players feel?',
+    subtitle: 'Pick up to 3 feelings you want to evoke',
+    placeholder: 'Add emotion...',
+    type: 'emotions',
+  },
+  {
+    id: 'targetPlayer',
+    title: 'Who is your ideal player?',
+    subtitle: 'Describe them specifically — age, lifestyle, gaming habits',
+    placeholder: 'A 25-year-old who works from home, plays games during lunch breaks, prefers games they can pause instantly...',
+    type: 'textarea',
+  },
+  {
+    id: 'playerGames',
+    title: 'What games does your player enjoy?',
+    subtitle: 'List 3 games your target player probably plays',
+    placeholder: 'Game name',
+    type: 'games',
+  },
+  {
+    id: 'pricePoint',
+    title: 'What\'s your price point?',
+    subtitle: '$3 games can earn MORE than $15 games through viral impulse buying',
+    placeholder: 'Or enter custom price...',
+    type: 'price',
+  },
+  {
+    id: 'genreSuccessRate',
+    title: 'What\'s your genre\'s success rate?',
+    subtitle: 'What percentage of games in this genre "succeed" on Steam?',
+    placeholder: 'e.g., 3.2%, 0.34%, 5.1%',
+    type: 'input',
+    hint: 'Hint: Horror ~3.2%, Puzzle ~0.34%, Roguelike Deckbuilder ~5.1%',
+  },
+  {
+    id: 'biggestRisk',
+    title: 'What could kill this project?',
+    subtitle: 'Be honest about the biggest risk',
+    placeholder: 'The biggest risk is...',
+    type: 'textarea',
+  },
+  {
+    id: 'memorableThing',
+    title: 'What will players remember?',
+    subtitle: 'A week after playing, what moment will stick with them?',
+    placeholder: 'The one thing that will stick with them is...',
+    type: 'textarea',
+  },
+  {
+    id: 'notFor',
+    title: 'Who is this game NOT for?',
+    subtitle: 'Knowing your anti-audience is powerful',
+    placeholder: 'This game is NOT for people who...',
+    type: 'textarea',
+  },
+];
 
 export default function QuestionsPage() {
   const router = useRouter();
   const { project, loading, updateProject } = useProject();
-  const [activeTab, setActiveTab] = useState<Tab>('essential');
+  const [currentIndex, setCurrentIndex] = useState(0);
   
   const [questions, setQuestions] = useState<GameQuestions>({
-    oneSentence: project?.gameQuestions?.oneSentence || '',
-    genre: project?.gameQuestions?.genre || '',
-    genreSuccessRate: project?.gameQuestions?.genreSuccessRate || '',
-    emotions: project?.gameQuestions?.emotions || [],
-    targetPlayer: project?.gameQuestions?.targetPlayer || '',
-    playerGames: project?.gameQuestions?.playerGames || ['', '', '', '', ''],
-    pricePoint: project?.gameQuestions?.pricePoint || '',
-    priceReason: project?.gameQuestions?.priceReason || '',
-    biggestRisk: project?.gameQuestions?.biggestRisk || '',
-    notFor: project?.gameQuestions?.notFor || '',
-    memorableThing: project?.gameQuestions?.memorableThing || '',
+    oneSentence: '',
+    genre: '',
+    genreSuccessRate: '',
+    emotions: [],
+    targetPlayer: '',
+    playerGames: ['', '', ''],
+    pricePoint: '',
+    priceReason: '',
+    biggestRisk: '',
+    notFor: '',
+    memorableThing: '',
   });
 
   const [newEmotion, setNewEmotion] = useState('');
@@ -48,7 +130,7 @@ export default function QuestionsPage() {
         genreSuccessRate: project.gameQuestions.genreSuccessRate || '',
         emotions: project.gameQuestions.emotions || [],
         targetPlayer: project.gameQuestions.targetPlayer || '',
-        playerGames: project.gameQuestions.playerGames || ['', '', '', '', ''],
+        playerGames: project.gameQuestions.playerGames?.slice(0, 3) || ['', '', ''],
         pricePoint: project.gameQuestions.pricePoint || '',
         priceReason: project.gameQuestions.priceReason || '',
         biggestRisk: project.gameQuestions.biggestRisk || '',
@@ -65,6 +147,10 @@ export default function QuestionsPage() {
       </div>
     );
   }
+
+  const currentQuestion = QUESTIONS[currentIndex];
+  const progress = ((currentIndex + 1) / QUESTIONS.length) * 100;
+  const isLastQuestion = currentIndex === QUESTIONS.length - 1;
 
   const updateField = (field: keyof GameQuestions, value: string | string[]) => {
     const updated = { ...questions, [field]: value };
@@ -89,324 +175,240 @@ export default function QuestionsPage() {
     updateField('playerGames', updated);
   };
 
-  // Only require the pitch and genre to continue (simplified)
-  const canContinue = questions.oneSentence.trim().length > 0 && questions.genre.trim().length > 0;
+  // Check if current question has a valid answer
+  const isCurrentAnswered = () => {
+    const q = currentQuestion;
+    if (q.type === 'emotions') {
+      return questions.emotions.length > 0;
+    }
+    if (q.type === 'games') {
+      return questions.playerGames.some(g => g.trim().length > 0);
+    }
+    if (q.type === 'price') {
+      return questions.pricePoint.trim().length > 0;
+    }
+    const value = questions[q.id as keyof GameQuestions];
+    return typeof value === 'string' && value.trim().length > 0;
+  };
 
-  // Check tab completion
-  const isEssentialComplete = questions.oneSentence && questions.genre && questions.emotions.length > 0;
-  const isMarketComplete = questions.targetPlayer || questions.pricePoint;
-  const isDetailsComplete = questions.biggestRisk || questions.memorableThing;
+  // Required questions must be answered, optional can be skipped
+  const canProceed = !currentQuestion.required || isCurrentAnswered();
 
-  const tabs: { id: Tab; label: string; isComplete: boolean }[] = [
-    { id: 'essential', label: 'Essential', isComplete: !!isEssentialComplete },
-    { id: 'market', label: 'Market', isComplete: !!isMarketComplete },
-    { id: 'details', label: 'Details', isComplete: !!isDetailsComplete },
-  ];
+  const handleNext = () => {
+    if (isLastQuestion) {
+      updateProject({ currentPage: 'skilltree', gameQuestions: questions });
+      router.push('/journey?completed=questions');
+    } else {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
 
-  const handleContinue = () => {
-    updateProject({ currentPage: 'skilltree', gameQuestions: questions });
-    router.push('/journey?completed=questions');
+  const handleBack = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
+  const renderQuestionInput = () => {
+    const q = currentQuestion;
+
+    switch (q.type) {
+      case 'textarea':
+        return (
+          <Textarea
+            placeholder={q.placeholder}
+            value={questions[q.id as keyof GameQuestions] as string}
+            onChange={(e) => updateField(q.id as keyof GameQuestions, e.target.value)}
+            className="min-h-[120px] text-base"
+            autoFocus
+          />
+        );
+
+      case 'input':
+        return (
+          <div className="space-y-2">
+            <Input
+              placeholder={q.placeholder}
+              value={questions[q.id as keyof GameQuestions] as string}
+              onChange={(e) => updateField(q.id as keyof GameQuestions, e.target.value)}
+              className="text-base h-12"
+              autoFocus
+            />
+            {q.hint && (
+              <p className="text-sm text-muted-foreground">{q.hint}</p>
+            )}
+          </div>
+        );
+
+      case 'emotions':
+        return (
+          <div className="space-y-4">
+            {/* Selected emotions */}
+            <div className="flex flex-wrap gap-2 min-h-[40px]">
+              {questions.emotions.map((emotion) => (
+                <div
+                  key={emotion}
+                  className="flex items-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-xl text-sm font-medium shadow-[0_3px_0_#be185d]"
+                >
+                  {emotion}
+                  <button onClick={() => removeEmotion(emotion)} className="hover:opacity-70">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Add custom emotion */}
+            {questions.emotions.length < 3 && (
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder={q.placeholder}
+                  value={newEmotion}
+                  onChange={(e) => setNewEmotion(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && addEmotion(newEmotion)}
+                  className="flex-1 h-11"
+                  autoFocus
+                />
+                <Button 
+                  variant="outline" 
+                  onClick={() => addEmotion(newEmotion)}
+                  disabled={!newEmotion.trim()}
+                  className="h-11"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
+            {/* Suggestions */}
+            <div className="flex flex-wrap gap-2">
+              {EMOTION_SUGGESTIONS.filter(e => !questions.emotions.includes(e)).map((emotion) => (
+                <button
+                  key={emotion}
+                  onClick={() => addEmotion(emotion)}
+                  disabled={questions.emotions.length >= 3}
+                  className="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm font-medium text-gray-700 disabled:opacity-50 transition-colors"
+                >
+                  + {emotion}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'price':
+        return (
+          <div className="space-y-4">
+            <div className="flex gap-2 flex-wrap">
+              {['Free', '$3', '$5', '$10', '$15', '$20+'].map((price) => (
+                <button
+                  key={price}
+                  onClick={() => updateField('pricePoint', price)}
+                  className={`px-5 py-3 rounded-xl text-sm font-bold transition-all ${
+                    questions.pricePoint === price
+                      ? 'bg-pink-500 text-white shadow-[0_3px_0_#be185d]'
+                      : 'bg-gray-100 text-gray-700 shadow-[0_3px_0_#d1d5db] hover:bg-gray-200'
+                  }`}
+                >
+                  {price}
+                </button>
+              ))}
+            </div>
+            <Input
+              placeholder={q.placeholder}
+              value={['Free', '$3', '$5', '$10', '$15', '$20+'].includes(questions.pricePoint) ? '' : questions.pricePoint}
+              onChange={(e) => updateField('pricePoint', e.target.value)}
+              className="h-11"
+            />
+          </div>
+        );
+
+      case 'games':
+        return (
+          <div className="space-y-3">
+            {[0, 1, 2].map((i) => (
+              <Input
+                key={i}
+                placeholder={`Game ${i + 1}`}
+                value={questions.playerGames[i] || ''}
+                onChange={(e) => updatePlayerGame(i, e.target.value)}
+                className="h-12 text-base"
+                autoFocus={i === 0}
+              />
+            ))}
+          </div>
+        );
+
+      default:
+        return null;
+    }
   };
 
   return (
-    <div className="flex-1 flex flex-col p-6 max-w-3xl mx-auto w-full overflow-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold tracking-tight">About Your Game</h1>
-        <Button
-          onClick={handleContinue}
-          disabled={!canContinue}
-          className="gap-2"
-        >
-          Continue
-          <ArrowRight className="h-4 w-4" />
-        </Button>
+    <div className="flex-1 flex flex-col">
+      {/* Progress bar */}
+      <div className="px-6 pt-4">
+        <div className="max-w-xl mx-auto">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-pink-500 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <span className="text-sm font-medium text-gray-500">
+              {currentIndex + 1}/{QUESTIONS.length}
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-muted/50 rounded-lg p-1">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === tab.id
-                ? 'bg-background shadow-sm text-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {tab.isComplete && <Check className="h-3 w-3 text-green-500" />}
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* Question content */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
+        <div className="w-full max-w-xl space-y-6">
+          {/* Question header */}
+          <div className="text-center space-y-2">
+            <h1 className="text-2xl font-bold text-gray-900">
+              {currentQuestion.title}
+              {currentQuestion.required && <span className="text-pink-500 ml-1">*</span>}
+            </h1>
+            <p className="text-gray-500">{currentQuestion.subtitle}</p>
+          </div>
 
-      {/* Tab Content */}
-      <div className="space-y-6">
-        {activeTab === 'essential' && (
-          <>
-            {/* One Sentence Pitch */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  The One-Sentence Pitch
-                  <span className="text-xs text-red-500 font-normal">*required</span>
-                </CardTitle>
-                <CardDescription className="text-sm">What is your game in one sentence?</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  placeholder="Players [verb] to [goal] by [core mechanic]..."
-                  value={questions.oneSentence}
-                  onChange={(e) => updateField('oneSentence', e.target.value)}
-                  className="min-h-[80px]"
-                />
-              </CardContent>
-            </Card>
+          {/* Question input */}
+          <div className="bg-white rounded-2xl p-6 shadow-[0_3px_0_#e5e7eb]">
+            {renderQuestionInput()}
+          </div>
 
-            {/* Genre */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  Genre
-                  <span className="text-xs text-red-500 font-normal">*required</span>
-                </CardTitle>
-                <CardDescription className="text-sm">Be specific — not just "action" but "roguelike deckbuilder"</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Input
-                  placeholder="e.g., Roguelike Deckbuilder, Horror Simulation, Cozy Farming Sim"
-                  value={questions.genre}
-                  onChange={(e) => updateField('genre', e.target.value)}
-                />
-              </CardContent>
-            </Card>
+          {/* Navigation */}
+          <div className="flex items-center justify-between pt-4">
+            <Button
+              variant="ghost"
+              onClick={handleBack}
+              disabled={currentIndex === 0}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
 
-            {/* Emotions */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Target Emotions (pick up to 3)</CardTitle>
-                <CardDescription className="text-sm">What feelings should players experience?</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex flex-wrap gap-2">
-                  {questions.emotions.map((emotion) => (
-                    <div
-                      key={emotion}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-sm"
-                    >
-                      {emotion}
-                      <button onClick={() => removeEmotion(emotion)} className="hover:text-primary-foreground/80">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                  {questions.emotions.length < 3 && (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        placeholder="Add emotion..."
-                        value={newEmotion}
-                        onChange={(e) => setNewEmotion(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && addEmotion(newEmotion)}
-                        className="w-32 h-8"
-                      />
-                      <Button size="sm" variant="outline" onClick={() => addEmotion(newEmotion)}>
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {EMOTION_SUGGESTIONS.filter(e => !questions.emotions.includes(e)).slice(0, 6).map((emotion) => (
-                    <button
-                      key={emotion}
-                      onClick={() => addEmotion(emotion)}
-                      disabled={questions.emotions.length >= 3}
-                      className="text-xs px-2 py-1 rounded bg-muted hover:bg-muted/80 disabled:opacity-50"
-                    >
-                      + {emotion}
-                    </button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <Button
+              onClick={handleNext}
+              disabled={!canProceed}
+              className="gap-2 px-6"
+            >
+              {isLastQuestion ? 'Finish' : 'Continue'}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
 
-            {/* Quick Navigation */}
-            <div className="flex justify-end">
-              <Button variant="ghost" onClick={() => setActiveTab('market')} className="gap-2">
-                Next: Market
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </>
-        )}
-
-        {activeTab === 'market' && (
-          <>
-            {/* Target Player */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Target Player</CardTitle>
-                <CardDescription className="text-sm">Who is your specific player? What games do they play?</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Textarea
-                  placeholder="A 25-year-old who works from home, plays games during lunch breaks, prefers games they can pause instantly..."
-                  value={questions.targetPlayer}
-                  onChange={(e) => updateField('targetPlayer', e.target.value)}
-                  className="min-h-[80px]"
-                />
-                <div>
-                  <Label className="text-xs text-muted-foreground">Games they might play (optional)</Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-                    {questions.playerGames.slice(0, 3).map((game, i) => (
-                      <Input
-                        key={i}
-                        placeholder={`Game ${i + 1}`}
-                        value={game}
-                        onChange={(e) => updatePlayerGame(i, e.target.value)}
-                        className="text-sm"
-                      />
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Price Point */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Price Point</CardTitle>
-                <CardDescription className="text-sm">$3 games can earn MORE than $15 games through viral impulse buying</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2 flex-wrap">
-                  {['Free', '$3', '$5', '$10', '$15', '$20+'].map((price) => (
-                    <button
-                      key={price}
-                      onClick={() => updateField('pricePoint', price)}
-                      className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
-                        questions.pricePoint === price
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      {price}
-                    </button>
-                  ))}
-                </div>
-                <Input
-                  placeholder="Or enter custom price..."
-                  value={['Free', '$3', '$5', '$10', '$15', '$20+'].includes(questions.pricePoint) ? '' : questions.pricePoint}
-                  onChange={(e) => updateField('pricePoint', e.target.value)}
-                  className="text-sm"
-                />
-              </CardContent>
-            </Card>
-
-            {/* Genre Success Rate */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Genre Success Rate</CardTitle>
-                <CardDescription className="text-sm">What's your genre's success rate on Steam? (Look it up!)</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Input
-                  placeholder="e.g., 3.2%, 0.34%, 5.1%"
-                  value={questions.genreSuccessRate}
-                  onChange={(e) => updateField('genreSuccessRate', e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  Hint: Horror ~3.2%, Puzzle ~0.34%, Roguelike Deckbuilder ~5.1%
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Quick Navigation */}
-            <div className="flex justify-between">
-              <Button variant="ghost" onClick={() => setActiveTab('essential')} className="gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back: Essential
-              </Button>
-              <Button variant="ghost" onClick={() => setActiveTab('details')} className="gap-2">
-                Next: Details
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </>
-        )}
-
-        {activeTab === 'details' && (
-          <>
-            {/* Biggest Risk */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Biggest Risk</CardTitle>
-                <CardDescription className="text-sm">What could kill this project? Be honest.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  placeholder="The biggest risk is..."
-                  value={questions.biggestRisk}
-                  onChange={(e) => updateField('biggestRisk', e.target.value)}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Memorable Thing */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">The Memorable Moment</CardTitle>
-                <CardDescription className="text-sm">What will players remember a week after playing?</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  placeholder="The one thing that will stick with them is..."
-                  value={questions.memorableThing}
-                  onChange={(e) => updateField('memorableThing', e.target.value)}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Not For */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Who It's NOT For</CardTitle>
-                <CardDescription className="text-sm">Knowing your anti-audience is powerful</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  placeholder="This game is NOT for people who..."
-                  value={questions.notFor}
-                  onChange={(e) => updateField('notFor', e.target.value)}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Quick Navigation */}
-            <div className="flex justify-between">
-              <Button variant="ghost" onClick={() => setActiveTab('market')} className="gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back: Market
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Footer */}
-      <div className="flex justify-between items-center mt-6 pt-4 border-t">
-        <span className="text-sm text-muted-foreground">
-          {canContinue ? '✓ Ready to continue' : 'Fill in pitch and genre to continue'}
-        </span>
-        <Button
-          onClick={handleContinue}
-          disabled={!canContinue}
-          className="gap-2"
-        >
-          Continue to Skill Tree
-          <ArrowRight className="h-4 w-4" />
-        </Button>
+          {/* Skip hint for optional questions */}
+          {!currentQuestion.required && !isCurrentAnswered() && (
+            <p className="text-center text-sm text-gray-400">
+              This question is optional — you can skip it
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

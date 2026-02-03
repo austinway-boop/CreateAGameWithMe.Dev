@@ -219,14 +219,24 @@ export function buildValidationPrompt(
   const nodeCount = gameLoop.length;
   const hasConnections = gameLoop.some(n => n.connections.length > 0);
 
+  // Get real market data context
+  const marketContext = buildMarketContext(concept, title, vibes, platform, teamSize);
+  
+  // Get market analysis for pivot suggestions
+  const marketAnalysis = analyzeMarket(concept, title, vibes, platform, teamSize);
+  const pivotSuggestions = generatePivotSuggestions(marketAnalysis.matchedGenres);
+
   return `You are a BRUTALLY HONEST game design consultant who has shipped 20+ games and seen hundreds of indie projects fail. Your job is to give real, actionable validation — not encouragement theater.
 
 YOUR MINDSET:
-- 90% of indie games fail. Your job is to help this one NOT fail.
+- Only 3% of Steam games achieve 1000+ reviews (success threshold). Your job is to help this one reach that bar.
 - Vague ideas kill projects. Push for specificity.
 - "Interesting" is not enough. Games need to be COMPELLING.
 - Be the friend who tells them their fly is down, not the one who lets them walk into a meeting.
 - If something is genuinely good, say so. But don't inflate praise.
+- USE THE REAL MARKET DATA BELOW to inform your analysis. Don't make up statistics.
+
+${marketContext}
 
 GAME CONCEPT TO VALIDATE:
 
@@ -244,13 +254,13 @@ Context:
 Game Loop (${nodeCount} nodes defined${!hasConnections && nodeCount > 0 ? ', WARNING: no connections between nodes' : ''}):
 ${loopDescription}
 
-=== STRICT SCORING CRITERIA ===
+=== STRICT SCORING CRITERIA (informed by real data) ===
 
-Score 9-10: Exceptional. Clear hook, proven demand, achievable scope, innovative but not risky. Rare.
-Score 7-8: Solid. Good foundation, minor gaps, ready for prototyping with small adjustments.
-Score 5-6: Promising but flawed. Has potential but missing key elements or has scope issues.
-Score 3-4: Significant problems. Fundamental issues with concept, market, or feasibility.
-Score 1-2: Back to drawing board. Concept is too vague, impossible to scope, or has no market.
+Score 9-10: Exceptional. In a Great Conjunction genre OR clear hook with proven demand. Achievable scope. Rare.
+Score 7-8: Solid. Good genre choice (>3% success rate), minor gaps, ready for prototyping.
+Score 5-6: Promising but flawed. Has potential but genre concerns OR missing key elements.
+Score 3-4: Significant problems. In a warning genre (<1% success rate) OR fundamental issues.
+Score 1-2: Back to drawing board. Genre is dead, concept too vague, or impossible scope.
 
 === RED FLAGS TO WATCH FOR ===
 
@@ -264,31 +274,34 @@ INSTANT CONCERNS (call these out explicitly):
 - No clear win/lose/progress condition
 - Mechanic soup (too many systems, no focus)
 - "It'll be fun because I like this genre" (not market validation)
+- Building in a "dead" or "oversaturated" genre without exceptional differentiation
 
 SCOPE DELUSIONS (be realistic):
 - 3D for solo devs = 2-3x time multiplier minimum
 - Multiplayer = requires dedicated servers, anti-cheat, matchmaking
 - "Procedural" anything = needs heavy content design anyway
 - Mobile = needs 10x more polish for discoverability
-- VR = tiny market, hardware barriers
+- VR = 0.27% success rate, tiny market, hardware barriers
+- 2D Platformer = 0.18% success rate, median revenue $467 - extreme caution
+- Multi-year first games have 95% failure rate
 
 === VALIDATION DIMENSIONS ===
 
-1. MARKET FIT (be harsh)
-- WHO specifically would play this? Not "gamers" — give demographics, comparable game audiences
-- Is the market oversaturated? (roguelikes, survival crafters, cozy sims)
-- Would this get lost in the Steam algorithm? App store?
-- Is there PROVEN demand or just assumed interest?
+1. MARKET FIT (use the real data above)
+- Reference the actual success rates and revenue data provided
+- WHO specifically would play this? Compare to the similar games listed
+- Is this in a Great Conjunction (demand > supply) or an oversaturated market?
+- Would this get lost among the 20,000+ games released on Steam this year?
 
 2. SCOPE REALITY CHECK
+- Compare their timeline to the "typical dev time" for this genre
 - What's the MINIMUM viable version that tests the core fun?
 - What features could be cut and still have a game?
-- What are they underestimating? (always: polish, content, QA)
-- Does their timeline match reality? (most devs estimate 3x too optimistic)
+- Does their team size match the minimum required for this genre?
 
 3. UNIQUENESS (brutal honesty)
-- Name 3+ games that already exist in this space
-- What EXACTLY makes this different? If you can't articulate it clearly, neither can they.
+- Reference the similar games/examples provided in the market data
+- What EXACTLY makes this different from those examples?
 - Is the "unique" part actually the fun part, or is it a gimmick?
 - Would anyone choose this over established competitors?
 
@@ -298,36 +311,41 @@ SCOPE DELUSIONS (be realistic):
 - Where's the skill expression or meaningful choice?
 - Is there progression? What makes hour 10 different from hour 1?
 
+5. VIRAL POTENTIAL (new dimension)
+- Is this streamable? Would it create clip-worthy moments?
+- Does it have "friend-slop" potential (co-op chaos)?
+- Horror games accept jank and have 3x the success rate of platformers
+
 === OUTPUT FORMAT ===
 
 {
   "overallScore": 5,
   "verdict": "needs_work",
-  "summary": "2-3 sentences. Be direct. Don't pad with niceties.",
-  "hardTruth": "The ONE thing they most need to hear but probably don't want to. Be direct but not cruel.",
+  "summary": "2-3 sentences referencing the actual market data. Be direct.",
+  "hardTruth": "The ONE thing they most need to hear. Reference real statistics if relevant.",
   "strengths": ["Only genuine strengths. 2-4 max. Don't pad this list."],
-  "concerns": ["Real concerns, not nitpicks. Be specific."],
-  "dealbreakers": ["Issues that MUST be addressed or project will fail. Empty array if none."],
-  "suggestions": ["Specific, actionable. 'Add a skill tree' not 'add more content'"],
-  "questions": ["Questions that expose gaps in their thinking. Make them uncomfortable (productively)."],
+  "concerns": ["Real concerns with data backing. Be specific."],
+  "dealbreakers": ["Issues that MUST be addressed or project will fail. Include genre warnings if applicable."],
+  "suggestions": ["Specific, actionable. Reference successful examples."],
+  "questions": ["Questions that expose gaps in their thinking."],
   "marketFit": {
     "score": 5,
-    "reasoning": "Honest assessment with examples",
-    "targetAudience": "Specific demographic, not 'people who like fun'",
+    "reasoning": "Reference the real success rates and market data provided",
+    "targetAudience": "Specific demographic, compare to similar game audiences",
     "competitorCount": "saturated",
-    "discoverabilityRisk": "How hard will it be to get noticed? Be specific."
+    "discoverabilityRisk": "Reference the games released vs success rate stats"
   },
   "scopeAssessment": {
     "score": 4,
-    "reasoning": "Reality check on what they're actually signing up for",
-    "timeEstimate": "Realistic range, e.g., 'Prototype: 1-2 months. Polished release: 12-18 months'",
-    "biggestRisks": ["Technical risk 1", "Content risk 2"],
+    "reasoning": "Compare to typical dev time for this genre",
+    "timeEstimate": "Realistic range based on genre benchmarks",
+    "biggestRisks": ["Risk based on team size vs genre requirements", "Content risk"],
     "mvpSuggestion": "The smallest possible version that proves the concept works"
   },
   "uniqueness": {
     "score": 3,
-    "reasoning": "How this compares to existing games",
-    "similarGames": ["Game 1", "Game 2", "Game 3"],
+    "reasoning": "Compare to the similar games listed in market data",
+    "similarGames": ["Use the examples from market data", "Plus any others you know"],
     "differentiator": "The ONE thing that's actually different, or null if nothing",
     "isGimmickOrCore": "gimmick"
   },
@@ -336,22 +354,41 @@ SCOPE DELUSIONS (be realistic):
     "reasoning": "Analysis of moment-to-moment gameplay",
     "missingElements": ["Clear rewards", "Meaningful progression"],
     "retentionPrediction": "low",
-    "sessionLength": "Predicted session: 10-15 minutes before boredom"
+    "sessionLength": "Predicted session length"
   },
   "prototypeTest": {
     "canTestIn48Hours": true,
     "whatToTest": "The ONE core mechanic to validate first",
     "successMetric": "How they'll know if it's working"
-  }
+  },
+  "genreAnalysis": {
+    "detectedGenre": "The primary genre detected from the concept",
+    "successRate": "The actual success rate from market data",
+    "lifecyclePhase": "proto/definer/variant_window/mature/oligopoly/dead",
+    "isGreatConjunction": false,
+    "trend": "rising/stable/declining"
+  },
+  "viralPotential": {
+    "score": 5,
+    "reasoning": "Assessment of streamability and viral mechanics",
+    "streamerAppeal": "low",
+    "clipWorthiness": "What moments would be shareable?"
+  },
+  "pricingAnalysis": {
+    "suggestedRange": "$X-$Y based on genre and scope",
+    "reasoning": "Reference price psychology data (impulse zone vs uncanny valley)",
+    "priceZone": "impulse"
+  },
+  "pivotSuggestions": ${JSON.stringify(pivotSuggestions)}
 }
 
-VERDICT THRESHOLDS (be strict):
-- "strong" (8-10): Would confidently tell a friend to make this. Has clear path to success.
-- "promising" (6-7): Good bones, needs work. Worth prototyping to test assumptions.
-- "needs_work" (4-5): Has potential but missing too much. Needs rethinking before building.
-- "rethink" (1-3): Fundamental issues. Would be doing them a disservice to encourage building this as-is.
+VERDICT THRESHOLDS (be strict, use data):
+- "strong" (8-10): In Great Conjunction OR >5% genre success rate with clear differentiation. Clear path to success.
+- "promising" (6-7): Decent genre (2-5% success rate), good bones, worth prototyping.
+- "needs_work" (4-5): Genre concerns OR missing key elements. Needs rethinking before building.
+- "rethink" (1-3): In a "dead" genre (<0.5% success) OR fundamental issues. Pivot strongly recommended.
 
-REMEMBER: A kind 4 is more valuable than a dishonest 7. Your job is to save them months of wasted effort.
+REMEMBER: A kind 4 is more valuable than a dishonest 7. Your job is to save them months of wasted effort. Use the real data to back up your assessment.
 
 Only output valid JSON. No markdown, no explanation outside the JSON.`;
 }
