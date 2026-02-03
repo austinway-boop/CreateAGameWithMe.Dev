@@ -61,13 +61,13 @@ export default function FinalizePage() {
             <Button
               onClick={() => {
                 updateProject({ currentPage: 'gameloop' });
-                router.push('/gameloop');
+                router.push('/journey?completed=finalize');
               }}
               disabled={!canContinue}
               className="w-full gap-2"
               size="lg"
             >
-              Continue to Game Loop
+              Continue
               <ArrowRight className="h-4 w-4" />
             </Button>
           </CardContent>

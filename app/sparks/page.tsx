@@ -224,7 +224,7 @@ ${spark.whyFun.map(r => `• ${r}`).join('\n')}
       updateProject({ currentPage: 'card' });
     }
 
-    router.push('/card');
+    router.push('/journey?completed=sparks');
   };
 
   const handleYesHaveIdea = () => {

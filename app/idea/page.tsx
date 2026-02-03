@@ -86,8 +86,8 @@ export default function IdeaPage() {
       // Use immediate save before navigation to avoid race condition
       await updateProjectAndSave({ conceptImage: imageData.imageUrl, currentPage: 'card' });
 
-      // Redirect to card page with reveal
-      router.push('/card');
+      // Redirect to journey with completion animation
+      router.push('/journey?completed=idea');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setLoadingStage('idle');

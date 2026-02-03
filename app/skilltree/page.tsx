@@ -319,7 +319,7 @@ export default function SkillTreePage() {
           <Button
             onClick={() => {
               updateProject({ currentPage: 'validation' });
-              router.push('/validation');
+              router.push('/journey?completed=skilltree');
             }}
             disabled={!canContinue}
             className="gap-2"

@@ -105,7 +105,7 @@ export default function QuestionsPage() {
 
   const handleContinue = () => {
     updateProject({ currentPage: 'skilltree', gameQuestions: questions });
-    router.push('/skilltree');
+    router.push('/journey?completed=questions');
   };
 
   return (

@@ -15,10 +15,10 @@ import {
   Lock,
   Play,
   Trophy,
-  ChevronRight,
-  LogOut
+  LogOut,
+  Star
 } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const JOURNEY_STEPS = [
   { path: 'create', label: 'Setup', icon: Play, color: '#ec4899' },
@@ -32,25 +32,77 @@ const JOURNEY_STEPS = [
   { path: 'validation', label: 'Validate', icon: CheckCircle2, color: '#FFD900' },
 ];
 
-export function JourneyView({ currentStep }: { currentStep?: string }) {
+interface JourneyViewProps {
+  currentStep?: string;
+  completedStep?: string | null;
+}
+
+export function JourneyView({ currentStep, completedStep }: JourneyViewProps) {
   const router = useRouter();
   const { project } = useProject();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [animatingIndex, setAnimatingIndex] = useState<number | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; color: string }>>([]);
 
   const activePath = currentStep || project?.currentPage || 'create';
   const currentIndex = JOURNEY_STEPS.findIndex(
     (step) => step.path === activePath || step.altPath === activePath
   );
 
+  // Handle completion animation
   useEffect(() => {
-    if (scrollRef.current) {
+    if (completedStep) {
+      const completedIndex = JOURNEY_STEPS.findIndex(
+        (step) => step.path === completedStep || step.altPath === completedStep
+      );
+      
+      if (completedIndex >= 0) {
+        // Start the animation sequence
+        setAnimatingIndex(completedIndex);
+        setShowCelebration(true);
+        
+        // Create celebration particles
+        const newParticles = Array.from({ length: 12 }, (_, i) => ({
+          id: i,
+          x: Math.random() * 100 - 50,
+          y: Math.random() * 100 - 50,
+          color: ['#ec4899', '#CE82FF', '#FFD900', '#1CB0F6'][Math.floor(Math.random() * 4)]
+        }));
+        setParticles(newParticles);
+        
+        // Clear animation after delay
+        const timer = setTimeout(() => {
+          setAnimatingIndex(null);
+          setShowCelebration(false);
+          setParticles([]);
+          // Clear the URL param
+          router.replace('/journey', { scroll: false });
+        }, 2000);
+        
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [completedStep, router]);
+
+  // Scroll to current position
+  useEffect(() => {
+    if (scrollRef.current && !completedStep) {
       const scrollPos = Math.max(0, (currentIndex * 140) - 100);
       scrollRef.current.scrollTo({ left: scrollPos, behavior: 'smooth' });
     }
-  }, [currentIndex]);
+  }, [currentIndex, completedStep]);
+
+  // Scroll to animating step during celebration
+  useEffect(() => {
+    if (scrollRef.current && animatingIndex !== null) {
+      const scrollPos = Math.max(0, (animatingIndex * 140) - 100);
+      scrollRef.current.scrollTo({ left: scrollPos, behavior: 'smooth' });
+    }
+  }, [animatingIndex]);
 
   const handleStepClick = (step: typeof JOURNEY_STEPS[0], index: number) => {
-    if (index <= currentIndex) {
+    if (index <= currentIndex && !showCelebration) {
       router.push(`/${step.path}`);
     }
   };
@@ -70,6 +122,17 @@ export function JourneyView({ currentStep }: { currentStep?: string }) {
 
       {/* Main */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-8">
+        {/* Celebration banner */}
+        {showCelebration && (
+          <div className="mb-4 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl text-white font-bold text-lg animate-bounce shadow-lg">
+            <div className="flex items-center gap-2">
+              <Star className="w-5 h-5" fill="currentColor" />
+              Step Complete!
+              <Star className="w-5 h-5" fill="currentColor" />
+            </div>
+          </div>
+        )}
+
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Journey</h2>
         <p className="text-gray-500 mb-8">Complete each step to build your game concept</p>
 
@@ -103,6 +166,7 @@ export function JourneyView({ currentStep }: { currentStep?: string }) {
                 strokeWidth="8"
                 strokeLinecap="round"
                 strokeDasharray={`${currentIndex * 140} 9999`}
+                className="transition-all duration-1000"
               />
             </svg>
 
@@ -112,6 +176,7 @@ export function JourneyView({ currentStep }: { currentStep?: string }) {
                 const isCompleted = index < currentIndex;
                 const isCurrent = index === currentIndex;
                 const isLocked = index > currentIndex;
+                const isAnimating = animatingIndex === index;
                 const Icon = step.icon;
                 
                 // Alternate up and down
@@ -120,26 +185,49 @@ export function JourneyView({ currentStep }: { currentStep?: string }) {
                 return (
                   <div 
                     key={step.path} 
-                    className="flex flex-col items-center"
+                    className="flex flex-col items-center relative"
                     style={{ marginTop: yOffset }}
                   >
+                    {/* Celebration particles */}
+                    {isAnimating && particles.map((p) => (
+                      <div
+                        key={p.id}
+                        className="absolute w-3 h-3 rounded-full animate-ping"
+                        style={{
+                          backgroundColor: p.color,
+                          left: `calc(50% + ${p.x}px)`,
+                          top: `calc(50% + ${p.y}px)`,
+                          animationDelay: `${p.id * 50}ms`,
+                        }}
+                      />
+                    ))}
+
                     <button
                       onClick={() => handleStepClick(step, index)}
-                      disabled={isLocked}
+                      disabled={isLocked || showCelebration}
                       className={`
                         relative w-16 h-16 rounded-full flex items-center justify-center
-                        transition-transform
-                        ${isCurrent ? 'scale-110' : ''}
-                        ${!isLocked ? 'hover:scale-105 cursor-pointer' : 'cursor-not-allowed'}
+                        ${isCurrent && !isAnimating ? 'scale-110' : ''}
+                        ${!isLocked && !showCelebration ? 'hover:scale-105 cursor-pointer' : 'cursor-not-allowed'}
+                        ${isAnimating ? 'animate-pulse scale-125' : ''}
+                        transition-all duration-500
                       `}
                       style={{
-                        backgroundColor: isLocked ? '#f3f4f6' : step.color,
-                        boxShadow: isLocked ? 'none' : `0 4px 0 ${darken(step.color, 40)}`,
+                        backgroundColor: isLocked ? '#f3f4f6' : isAnimating ? '#CE82FF' : step.color,
+                        boxShadow: isLocked ? 'none' : `0 4px 0 ${darken(isAnimating ? '#CE82FF' : step.color, 40)}`,
+                        transform: isAnimating ? 'scale(1.25)' : undefined,
                       }}
                     >
-                      {isCompleted && (
+                      {isCompleted && !isAnimating && (
                         <Crown 
                           className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 text-yellow-500" 
+                          fill="currentColor" 
+                        />
+                      )}
+
+                      {isAnimating && (
+                        <Crown 
+                          className="absolute -top-4 left-1/2 -translate-x-1/2 w-6 h-6 text-yellow-500 animate-bounce" 
                           fill="currentColor" 
                         />
                       )}
@@ -147,12 +235,22 @@ export function JourneyView({ currentStep }: { currentStep?: string }) {
                       {isLocked ? (
                         <Lock className="w-6 h-6 text-gray-400" />
                       ) : (
-                        <Icon className="w-6 h-6 text-white" />
+                        <Icon className={`w-6 h-6 text-white ${isAnimating ? 'animate-spin' : ''}`} />
+                      )}
+
+                      {/* Glow effect during animation */}
+                      {isAnimating && (
+                        <div 
+                          className="absolute inset-0 rounded-full animate-ping opacity-50"
+                          style={{ backgroundColor: '#CE82FF' }}
+                        />
                       )}
                     </button>
 
-                    <span className={`mt-2 text-xs font-semibold ${
-                      isCurrent ? 'text-gray-900' : isCompleted ? 'text-pink-500' : 'text-gray-400'
+                    <span className={`mt-2 text-xs font-semibold transition-colors duration-500 ${
+                      isAnimating ? 'text-purple-600 scale-110' : 
+                      isCurrent ? 'text-gray-900' : 
+                      isCompleted ? 'text-pink-500' : 'text-gray-400'
                     }`}>
                       {step.label}
                     </span>
@@ -180,8 +278,8 @@ export function JourneyView({ currentStep }: { currentStep?: string }) {
           </div>
         </div>
 
-        {/* Current step card */}
-        {JOURNEY_STEPS[currentIndex] && (
+        {/* Current step card - hide during celebration */}
+        {JOURNEY_STEPS[currentIndex] && !showCelebration && (
           <div 
             className="mt-6 p-3 rounded-xl bg-white max-w-sm w-full"
             style={{ boxShadow: '0 3px 0 #e5e7eb' }}
@@ -221,10 +319,25 @@ export function JourneyView({ currentStep }: { currentStep?: string }) {
             </div>
           </div>
         )}
+
+        {/* Next step preview during celebration */}
+        {showCelebration && JOURNEY_STEPS[currentIndex] && (
+          <div className="mt-6 text-center animate-fade-in">
+            <p className="text-gray-500 text-sm mb-2">Next up:</p>
+            <p className="text-lg font-bold text-gray-900">{JOURNEY_STEPS[currentIndex].label}</p>
+          </div>
+        )}
       </main>
 
       <style jsx>{`
         div::-webkit-scrollbar { display: none; }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.5s ease-out forwards;
+        }
       `}</style>
     </div>
   );

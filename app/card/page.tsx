@@ -405,7 +405,7 @@ export default function ConceptCardPage() {
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <Button onClick={() => {
               updateProject({ currentPage: 'finalize' });
-              router.push('/finalize');
+              router.push('/journey?completed=card');
             }} className="w-full gap-2" size="lg">
               Continue to Finalize
               <ArrowRight className="h-4 w-4" />

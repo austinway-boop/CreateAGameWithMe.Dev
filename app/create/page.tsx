@@ -53,7 +53,7 @@ export default function CreatePage() {
   const handleTimelineSelect = (value: string) => {
     const nextPage = hasIdea ? 'idea' : 'ikigai';
     updateProject({ timeHorizon: value, currentPage: nextPage });
-    router.push(`/${nextPage}`);
+    router.push('/journey?completed=create');
   };
 
   const steps: Step[] = ['idea', 'platform', 'timeline'];
