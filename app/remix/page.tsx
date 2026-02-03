@@ -20,7 +20,7 @@ import {
   SparkRound,
   RemixConstraints,
 } from '@/lib/types';
-import { LoadingScreen } from '@/components/LoadingScreen';
+import { CardSkeleton } from '@/components/LoadingScreen';
 
 export default function RemixPage() {
   const router = useRouter();
@@ -46,7 +46,7 @@ export default function RemixPage() {
   const aiEnabled = process.env.NEXT_PUBLIC_ENABLE_AI === 'true';
 
   if (loading || !project) {
-    return <LoadingScreen onRetry={retryLoad} message="Loading remix options..." />;
+    return <CardSkeleton />;
   }
 
   const previousSparks = project.sparkRounds.flatMap(r => r.sparks);

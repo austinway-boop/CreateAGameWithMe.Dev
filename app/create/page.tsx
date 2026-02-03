@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Lightbulb, Sparkles } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { Card, CardContent } from '@/components/ui/card';
-import { LoadingScreen } from '@/components/LoadingScreen';
+import { CreateSkeleton } from '@/components/LoadingScreen';
 import { PLATFORMS, TIME_HORIZONS } from '@/lib/types';
 
 type Step = 'idea' | 'platform' | 'timeline';
@@ -35,7 +35,7 @@ export default function CreatePage() {
   }, [project, router]);
 
   if (loading || !project) {
-    return <LoadingScreen onRetry={retryLoad} />;
+    return <CreateSkeleton />;
   }
 
   // Don't render if not onboarded

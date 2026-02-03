@@ -6,7 +6,7 @@ import { ArrowLeft, Loader2, CheckCircle2, AlertTriangle, XCircle, Sparkles, Tar
 import { useProject } from '@/hooks/useProject';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LoadingScreen } from '@/components/LoadingScreen';
+import { CardSkeleton } from '@/components/LoadingScreen';
 import { ValidationResult } from '@/lib/prompts';
 
 type ValidationState = 'idle' | 'validating' | 'complete' | 'error';
@@ -136,7 +136,7 @@ export default function ValidationPage() {
   };
 
   if (loading || !project) {
-    return <LoadingScreen onRetry={retryLoad} message="Loading your concept..." />;
+    return <CardSkeleton />;
   }
 
   if (!aiEnabled) {

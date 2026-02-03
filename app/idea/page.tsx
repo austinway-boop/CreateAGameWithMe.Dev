@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { LoadingScreen } from '@/components/LoadingScreen';
+import { FormSkeleton } from '@/components/LoadingScreen';
 import { VIBE_OPTIONS } from '@/lib/types';
 
 type LoadingStage = 'idle' | 'structuring' | 'creating-card';
@@ -20,7 +20,7 @@ export default function IdeaPage() {
   const [error, setError] = useState<string | null>(null);
 
   if (loading || !project) {
-    return <LoadingScreen onRetry={retryLoad} />;
+    return <FormSkeleton />;
   }
 
   const toggleVibe = (vibe: string) => {

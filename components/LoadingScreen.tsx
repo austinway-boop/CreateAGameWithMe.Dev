@@ -95,3 +95,89 @@ export function CardSkeleton() {
     </div>
   );
 }
+
+/** Journey page skeleton */
+export function JourneySkeleton() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <header className="px-6 py-3 flex justify-end">
+        <div className="h-5 w-20 bg-gray-200 rounded animate-pulse" />
+      </header>
+      
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-8">
+        <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2" />
+        <div className="h-5 w-72 bg-gray-200 rounded animate-pulse mb-8" />
+        
+        <div className="flex items-center gap-4 py-8">
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
+            <div key={i} className="flex flex-col items-center" style={{ marginTop: i % 2 === 0 ? 0 : 40 }}>
+              <div className="w-16 h-16 rounded-full bg-gray-200 animate-pulse" />
+              <div className="mt-2 h-3 w-12 bg-gray-200 rounded animate-pulse" />
+            </div>
+          ))}
+        </div>
+        
+        <div className="mt-6 p-4 rounded-2xl bg-white border border-gray-200 max-w-md w-full">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gray-200 animate-pulse" />
+            <div className="flex-1 space-y-2">
+              <div className="h-5 w-24 bg-gray-200 rounded animate-pulse" />
+              <div className="h-4 w-40 bg-gray-200 rounded animate-pulse" />
+            </div>
+            <div className="w-11 h-11 rounded-xl bg-gray-200 animate-pulse" />
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+/** Generic page skeleton */
+export function PageSkeleton() {
+  return (
+    <div className="flex-1 flex flex-col p-6 max-w-4xl mx-auto w-full">
+      <div className="h-8 w-64 bg-muted rounded animate-pulse mb-2" />
+      <div className="h-5 w-96 bg-muted rounded animate-pulse mb-8" />
+      <div className="space-y-4">
+        <div className="h-32 bg-muted rounded-lg animate-pulse" />
+        <div className="h-32 bg-muted rounded-lg animate-pulse" />
+      </div>
+    </div>
+  );
+}
+
+/** Create page skeleton */
+export function CreateSkeleton() {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-lg space-y-6">
+        <div className="text-center space-y-2">
+          <div className="h-8 w-64 bg-muted rounded animate-pulse mx-auto" />
+          <div className="h-5 w-48 bg-muted rounded animate-pulse mx-auto" />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="h-32 bg-muted rounded-xl animate-pulse" />
+          <div className="h-32 bg-muted rounded-xl animate-pulse" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Form page skeleton (ikigai, questions, etc) */
+export function FormSkeleton() {
+  return (
+    <div className="flex-1 flex flex-col p-6 max-w-4xl mx-auto w-full">
+      <div className="h-8 w-48 bg-muted rounded animate-pulse mb-2" />
+      <div className="h-5 w-72 bg-muted rounded animate-pulse mb-6" />
+      <div className="space-y-4">
+        <div className="h-24 bg-muted rounded-lg animate-pulse" />
+        <div className="h-24 bg-muted rounded-lg animate-pulse" />
+        <div className="h-24 bg-muted rounded-lg animate-pulse" />
+      </div>
+      <div className="mt-6 flex justify-end">
+        <div className="h-10 w-32 bg-muted rounded-lg animate-pulse" />
+      </div>
+    </div>
+  );
+}

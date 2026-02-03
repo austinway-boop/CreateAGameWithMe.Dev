@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { LoadingScreen } from '@/components/LoadingScreen';
+import { FormSkeleton } from '@/components/LoadingScreen';
 import { GameLoopNode, GameLoopNodeType, LoopType } from '@/lib/types';
 
 const NODE_TYPES: { type: GameLoopNodeType; label: string; color: string; borderColor: string; description: string }[] = [
@@ -142,7 +142,7 @@ export default function GameLoopPage() {
   }, [connectionDrag, hoveredInputHandle, project, updateProject]);
 
   if (loading || !project) {
-    return <LoadingScreen onRetry={retryLoad} message="Loading game loop..." />;
+    return <FormSkeleton />;
   }
 
   const nodes = project.gameLoop || [];

@@ -7,7 +7,7 @@ import { useProject } from '@/hooks/useProject';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { LoadingScreen } from '@/components/LoadingScreen';
+import { FormSkeleton } from '@/components/LoadingScreen';
 import { IkigaiCategory, IkigaiChip, getOverlapChips, isIkigaiComplete } from '@/lib/types';
 
 // Example items users can drag
@@ -125,7 +125,7 @@ export default function IkigaiPage() {
   const diagramRef = useRef<HTMLDivElement>(null);
 
   if (loading || !project) {
-    return <LoadingScreen onRetry={retryLoad} />;
+    return <FormSkeleton />;
   }
 
   const chips = project.ikigai.chips;

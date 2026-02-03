@@ -8,14 +8,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { LoadingScreen } from '@/components/LoadingScreen';
+import { FormSkeleton } from '@/components/LoadingScreen';
 
 export default function FinalizePage() {
   const router = useRouter();
   const { project, loading, updateProject, retryLoad } = useProject();
 
   if (loading || !project) {
-    return <LoadingScreen onRetry={retryLoad} message="Loading your concept..." />;
+    return <FormSkeleton />;
   }
 
   const canContinue = project.finalTitle.trim().length > 0 && project.finalConcept.trim().length > 10;

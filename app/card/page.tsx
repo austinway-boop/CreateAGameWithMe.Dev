@@ -7,7 +7,7 @@ import { useProject } from '@/hooks/useProject';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ElectricBorder from '@/components/ElectricBorder';
-import { LoadingScreen } from '@/components/LoadingScreen';
+import { CardSkeleton } from '@/components/LoadingScreen';
 import html2canvas from 'html2canvas';
 
 type Phase = 'idle' | 'flipping' | 'revealed';
@@ -223,7 +223,7 @@ export default function ConceptCardPage() {
   }, [phase, tiltEngine]);
 
   if (loading || !project) {
-    return <LoadingScreen onRetry={retryLoad} message="Loading your concept card..." />;
+    return <CardSkeleton />;
   }
 
   if (!project.conceptImage) {

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { IdeaSpark, SparkRound } from '@/lib/types';
-import { LoadingScreen } from '@/components/LoadingScreen';
+import { CardSkeleton } from '@/components/LoadingScreen';
 
 type ViewState = 'loading' | 'swiping' | 'review' | 'noLikes' | 'moreContext';
 
@@ -78,7 +78,7 @@ export default function SparksPage() {
   }, [currentIndex, likedSparks.length, sparks.length, viewState]);
 
   if (loading || !project) {
-    return <LoadingScreen onRetry={retryLoad} message="Loading your sparks..." />;
+    return <CardSkeleton />;
   }
 
   const generateSparks = async (withContext?: string) => {
