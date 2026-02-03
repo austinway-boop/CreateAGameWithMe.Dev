@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildValidationPrompt, ValidationResult } from '@/lib/prompts';
+import { buildJourneySummary } from '@/lib/validationRequirements';
+import { Project } from '@/lib/types';
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
@@ -12,7 +14,18 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { title, concept, platform, teamSize, timeHorizon, gameLoop, vibes } = await request.json();
+    const body = await request.json();
+    
+    // Support both old format (individual fields) and new format (full project)
+    const project = body.project as Project | undefined;
+    
+    const title = project?.finalTitle || body.title;
+    const concept = project?.finalConcept || body.concept;
+    const platform = project?.platform || body.platform || '';
+    const teamSize = project?.teamSize || body.teamSize || '';
+    const timeHorizon = project?.timeHorizon || body.timeHorizon || '';
+    const gameLoop = project?.gameLoop || body.gameLoop || [];
+    const vibes = project?.vibeChips || body.vibes || [];
 
     if (!title || typeof title !== 'string') {
       return NextResponse.json(
@@ -28,14 +41,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Build journey summary if we have the full project
+    const journeySummary = project ? buildJourneySummary(project) : null;
+
     const prompt = buildValidationPrompt(
       title,
       concept,
-      platform || '',
-      teamSize || '',
-      timeHorizon || '',
-      gameLoop || [],
-      vibes || []
+      platform,
+      teamSize,
+      timeHorizon,
+      gameLoop,
+      vibes,
+      journeySummary
     );
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {

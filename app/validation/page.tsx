@@ -1,15 +1,17 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Loader2, CheckCircle2, AlertTriangle, XCircle, Sparkles, Target, Clock, Lightbulb, HelpCircle, TrendingUp, Zap, RefreshCw, AlertOctagon, Flame, Beaker, Users, Gauge, TrendingDown, DollarSign, Tv, ArrowRight, BarChart3, Rocket } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { ArrowLeft, Loader2, CheckCircle2, AlertTriangle, XCircle, Sparkles, Target, Clock, Lightbulb, HelpCircle, TrendingUp, Zap, RefreshCw, AlertOctagon, Flame, Beaker, Users, Gauge, TrendingDown, DollarSign, Tv, ArrowRight, BarChart3, Rocket, AlertCircle, ChevronRight, CircleDot } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { CardSkeleton } from '@/components/LoadingScreen';
 import { ValidationResult } from '@/lib/prompts';
+import { checkValidationReadiness, ValidationReadiness } from '@/lib/validationRequirements';
 
-type ValidationState = 'idle' | 'validating' | 'complete' | 'error';
+type ValidationState = 'idle' | 'validating' | 'complete' | 'error' | 'incomplete';
 
 const VERDICT_CONFIG = {
   strong: {
@@ -93,12 +95,22 @@ export default function ValidationPage() {
 
   const aiEnabled = process.env.NEXT_PUBLIC_ENABLE_AI === 'true';
 
+  // Check validation readiness
+  const readiness: ValidationReadiness = useMemo(() => {
+    return checkValidationReadiness(project);
+  }, [project]);
+
   useEffect(() => {
     if (project && validationState === 'idle' && aiEnabled) {
-      runValidation();
+      // Only auto-run if ready
+      if (readiness.isReady) {
+        runValidation();
+      } else {
+        setValidationState('incomplete');
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project?.id]);
+  }, [project?.id, readiness.isReady]);
 
   const runValidation = async () => {
     if (!project) return;
@@ -107,17 +119,12 @@ export default function ValidationPage() {
     setError(null);
 
     try {
+      // Send the full project for comprehensive validation
       const response = await fetch('/api/validateIdea', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: project.finalTitle,
-          concept: project.finalConcept,
-          platform: project.platform,
-          teamSize: project.teamSize,
-          timeHorizon: project.timeHorizon,
-          gameLoop: project.gameLoop,
-          vibes: project.vibeChips,
+          project: project, // Send full project for journey context
         }),
       });
 
@@ -147,6 +154,143 @@ export default function ValidationPage() {
             <Sparkles className="h-12 w-12 mx-auto text-muted-foreground" />
             <h1 className="text-2xl font-semibold tracking-tight">AI Validation Disabled</h1>
             <p className="text-muted-foreground">Enable AI to get feedback on your game concept.</p>
+          </div>
+          <Button variant="outline" onClick={() => router.push('/skilltree')} className="w-full gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Skill Tree
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show requirements checklist if not ready
+  if (validationState === 'incomplete' || (validationState === 'idle' && !readiness.isReady)) {
+    return (
+      <div className="flex-1 overflow-auto">
+        <div className="max-w-[600px] mx-auto p-6 space-y-6">
+          {/* Header */}
+          <div className="text-center space-y-2">
+            <AlertCircle className="h-12 w-12 mx-auto text-amber-500" />
+            <h1 className="text-2xl font-semibold tracking-tight">Complete Your Journey First</h1>
+            <p className="text-muted-foreground">
+              To get the most accurate validation, we need more information about your game.
+            </p>
+          </div>
+
+          {/* Progress */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Journey Completion</span>
+                  <span className="font-medium">{readiness.completionPercentage}%</span>
+                </div>
+                <Progress value={readiness.completionPercentage} className="h-2" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Required Items */}
+          {readiness.requiredMissing.length > 0 && (
+            <Card className="border-red-200 bg-red-50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2 text-red-700">
+                  <AlertOctagon className="h-4 w-4" />
+                  Required Before Validation
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {readiness.requiredMissing.map((req) => (
+                  <button
+                    key={req.id}
+                    onClick={() => router.push(req.link)}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-white border border-red-200 hover:border-red-400 transition-colors text-left"
+                  >
+                    <CircleDot className="h-5 w-5 text-red-500 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm">{req.label}</p>
+                      <p className="text-xs text-muted-foreground">{req.description}</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  </button>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Recommended Items */}
+          {readiness.recommendedMissing.length > 0 && (
+            <Card className="border-amber-200 bg-amber-50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2 text-amber-700">
+                  <Lightbulb className="h-4 w-4" />
+                  Recommended for Better Validation
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {readiness.recommendedMissing.map((req) => (
+                  <button
+                    key={req.id}
+                    onClick={() => router.push(req.link)}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-white border border-amber-200 hover:border-amber-400 transition-colors text-left"
+                  >
+                    <CircleDot className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm">{req.label}</p>
+                      <p className="text-xs text-muted-foreground">{req.description}</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  </button>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Completed Items */}
+          {readiness.allRequirements.some(r => r.completed) && (
+            <Card className="border-green-200 bg-green-50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2 text-green-700">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Completed
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1">
+                {readiness.allRequirements.filter(r => r.completed).map((req) => (
+                  <div key={req.id} className="flex items-center gap-2 text-sm text-green-700">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span>{req.label}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Actions */}
+          <div className="flex flex-col gap-3 pt-4">
+            {readiness.isReady ? (
+              <Button onClick={() => { setValidationState('idle'); runValidation(); }} size="lg" className="gap-2">
+                <Sparkles className="h-5 w-5" />
+                Run Full Validation
+              </Button>
+            ) : (
+              <Button disabled size="lg" className="gap-2">
+                <AlertCircle className="h-5 w-5" />
+                Complete Required Items to Validate
+              </Button>
+            )}
+            
+            {readiness.isReady && readiness.recommendedMissing.length > 0 && (
+              <p className="text-xs text-center text-muted-foreground">
+                You can validate now, but completing recommended items will give better results.
+              </p>
+            )}
+            
+            <Button variant="outline" onClick={() => router.push('/skilltree')} className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Skill Tree
+            </Button>
           </div>
         </div>
       </div>

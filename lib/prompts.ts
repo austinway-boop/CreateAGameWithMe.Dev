@@ -204,7 +204,8 @@ export function buildValidationPrompt(
   teamSize: string,
   timeHorizon: string,
   gameLoop: GameLoopNode[],
-  vibes: string[]
+  vibes: string[],
+  journeySummary?: string | null
 ): string {
   // Build a readable game loop description
   const loopDescription = gameLoop.length > 0
@@ -225,6 +226,22 @@ export function buildValidationPrompt(
   // Get market analysis for pivot suggestions
   const marketAnalysis = analyzeMarket(concept, title, vibes, platform, teamSize);
   const pivotSuggestions = generatePivotSuggestions(marketAnalysis.matchedGenres);
+  
+  // Include journey summary if available
+  const journeySection = journeySummary ? `
+=== FULL JOURNEY CONTEXT (User's complete design journey) ===
+
+${journeySummary}
+
+Use this complete context to provide more accurate validation. Pay attention to:
+- Their self-identified risks and target audience
+- The skill tree they've defined (complexity indicator)
+- Their price point reasoning
+- What they say the game is NOT for
+- The emotions they want to evoke
+- Similar games they mentioned
+
+` : '';
 
   return `You are a BRUTALLY HONEST game design consultant who has shipped 20+ games and seen hundreds of indie projects fail. Your job is to give real, actionable validation — not encouragement theater.
 
@@ -235,8 +252,9 @@ YOUR MINDSET:
 - Be the friend who tells them their fly is down, not the one who lets them walk into a meeting.
 - If something is genuinely good, say so. But don't inflate praise.
 - USE THE REAL MARKET DATA BELOW to inform your analysis. Don't make up statistics.
+- Use the FULL JOURNEY CONTEXT to understand what the user has already thought through.
 
-${marketContext}
+${journeySection}${marketContext}
 
 GAME CONCEPT TO VALIDATE:
 
