@@ -231,77 +231,63 @@ export default function SkillTreePage() {
   if (showIntro) {
     return (
       <div className="flex-1 flex items-center justify-center p-6 overflow-auto">
-        <div className="w-full max-w-[600px] space-y-6">
-          <div className="text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">Skill Dependency Tree</h1>
-            <p className="text-muted-foreground mt-2">Map out every skill players need to master in your game</p>
+        <div className="w-full max-w-[480px] space-y-6">
+          {/* Header with skip option */}
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-semibold tracking-tight">Skill Tree</h1>
+            <button
+              onClick={() => setShowIntro(false)}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Skip intro →
+            </button>
           </div>
 
-          <Card>
-            <CardContent className="pt-6 space-y-5">
-              <div className="space-y-3">
-                <p className="font-medium">What is a Skill Tree?</p>
-                <p className="text-muted-foreground text-sm">
-                  Every game teaches players skills. A skill tree maps out what players learn and in what order — 
-                  showing which foundational skills must be mastered before advanced techniques become possible.
-                </p>
-              </div>
+          {/* What is it - super brief */}
+          <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/30 dark:to-blue-950/30 rounded-xl p-5 border">
+            <p className="text-sm text-muted-foreground mb-3">
+              Map out what players learn, from basics to mastery.
+            </p>
+            
+            {/* Visual progression */}
+            <div className="flex items-center gap-2 justify-center">
+              <div className="px-3 py-1.5 rounded-lg bg-green-500 text-white text-xs font-medium">Core</div>
+              <span className="text-muted-foreground">→</span>
+              <div className="px-3 py-1.5 rounded-lg bg-blue-500 text-white text-xs font-medium">Advanced</div>
+              <span className="text-muted-foreground">→</span>
+              <div className="px-3 py-1.5 rounded-lg bg-purple-500 text-white text-xs font-medium">Expert</div>
+            </div>
+          </div>
 
-              {/* Example */}
-              <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-                <p className="text-sm font-medium">Example: A Shooter Game</p>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-green-500"></div>
-                    <strong>Core:</strong> Move, Aim, Shoot
-                  </div>
-                  <div className="flex items-center gap-2 pl-4">
-                    <span className="text-muted-foreground">↓ builds to</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-blue-500"></div>
-                    <strong>Advanced:</strong> Track moving targets, Use cover, Reload timing
-                  </div>
-                  <div className="flex items-center gap-2 pl-4">
-                    <span className="text-muted-foreground">↓ builds to</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded bg-purple-500"></div>
-                    <strong>Expert:</strong> Predict enemy movement, Combo abilities, Map control
-                  </div>
-                </div>
-              </div>
+          {/* Quick start steps - numbered for clarity */}
+          <div className="space-y-3">
+            <div className="flex gap-3 items-start">
+              <div className="w-6 h-6 rounded-full bg-green-500/10 text-green-600 flex items-center justify-center text-xs font-semibold shrink-0">1</div>
+              <p className="text-sm">Start with <strong>Core skills</strong> — what must everyone learn first?</p>
+            </div>
+            <div className="flex gap-3 items-start">
+              <div className="w-6 h-6 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center text-xs font-semibold shrink-0">2</div>
+              <p className="text-sm">Add <strong>Advanced skills</strong> that build on the basics</p>
+            </div>
+            <div className="flex gap-3 items-start">
+              <div className="w-6 h-6 rounded-full bg-purple-500/10 text-purple-600 flex items-center justify-center text-xs font-semibold shrink-0">3</div>
+              <p className="text-sm"><strong>Connect them</strong> to show dependencies (drag between dots)</p>
+            </div>
+          </div>
 
-              {/* Instructions */}
-              <div className="space-y-2">
-                <p className="text-sm font-medium">How to build your tree:</p>
-                <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                  <li>Start with <strong className="text-green-600">Core skills</strong> — what does everyone need to learn first?</li>
-                  <li>Add <strong className="text-blue-600">Advanced skills</strong> that build on the basics</li>
-                  <li>Add <strong className="text-purple-600">Expert skills</strong> that separate good players from great</li>
-                  <li>Connect them: drag from a skill's top handle to show "this requires that"</li>
-                </ol>
-              </div>
+          {/* Example - minimal */}
+          <div className="text-xs text-muted-foreground border-t pt-4">
+            <span className="font-medium text-foreground">Example:</span> In a shooter, Core skills (Move, Aim) → Advanced (Use Cover) → Expert (Map Control)
+          </div>
 
-              {/* Skill Levels */}
-              <div className="flex flex-wrap gap-4 text-sm border-t pt-4">
-                {SKILL_LEVELS.map((level) => (
-                  <div key={level.level} className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded ${level.color}`}></div>
-                    <span><strong>{level.label}:</strong> {level.description}</span>
-                  </div>
-                ))}
-              </div>
-
-              <Button onClick={() => setShowIntro(false)} className="w-full gap-2" size="lg">
-                Start Building
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
-
-          <div className="flex justify-center">
-            <Button variant="ghost" onClick={() => router.push('/questions')} className="gap-2">
+          {/* Actions */}
+          <div className="space-y-3">
+            <Button onClick={() => setShowIntro(false)} className="w-full gap-2" size="lg">
+              Start Building
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+            
+            <Button variant="ghost" onClick={() => router.push('/questions')} className="w-full gap-2">
               <ArrowLeft className="h-4 w-4" />
               Back to Questions
             </Button>
@@ -332,8 +318,8 @@ export default function SkillTreePage() {
           </span>
           <Button
             onClick={() => {
-              updateProject({ currentPage: 'coming-soon' });
-              router.push('/coming-soon');
+              updateProject({ currentPage: 'validation' });
+              router.push('/validation');
             }}
             disabled={!canContinue}
             className="gap-2"

@@ -12,6 +12,10 @@ const protectedRoutes = [
   '/finalize',
   '/gameloop',
   '/card',
+  '/questions',
+  '/skilltree',
+  '/validation',
+  '/validation',
 ];
 
 export function middleware(request: NextRequest) {

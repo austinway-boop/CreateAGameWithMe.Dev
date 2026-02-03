@@ -182,10 +182,10 @@ export default function IdeaPage() {
 
         {/* Back Link */}
         <button
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/create')}
           className={`block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors ${isLoading ? 'pointer-events-none opacity-50' : ''}`}
         >
-          ← Back to start
+          ← Back to Setup
         </button>
       </div>
     </div>

@@ -419,7 +419,7 @@ export default function ConceptCardPage() {
               </button>
               <button onClick={() => {
                 updateProject({ currentPage: 'create' });
-                router.push('/');
+                router.push('/create');
               }} className="text-muted-foreground hover:text-foreground transition-colors">
                 Start New
               </button>

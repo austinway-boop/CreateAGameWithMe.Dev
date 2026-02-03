@@ -76,13 +76,13 @@ export default function FinalizePage() {
         {/* Back Links */}
         <div className="flex justify-center gap-4 text-sm">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push('/card')}
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            ← Back
+            ← Back to Concept Card
           </button>
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/create')}
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
             Start over

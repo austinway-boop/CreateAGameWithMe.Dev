@@ -70,7 +70,7 @@ app/
   sparks/page.tsx       # 10 idea sparks
   remix/page.tsx        # SCAMPER + Matrix Mix
   finalize/page.tsx     # Export concept
-  coming-soon/page.tsx  # Validation placeholder
+  validation/page.tsx   # AI validation results
   api/
     generateSparks/     # AI spark generation
     structureIdea/      # AI idea structuring

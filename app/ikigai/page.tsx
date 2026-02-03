@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useRef, DragEvent } from 'react';
-import { ArrowRight, Plus, X, Sparkles, GripVertical, Download } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Plus, X, Sparkles, GripVertical, Download } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -362,85 +362,84 @@ Overlaps: ${overlapChips.length}
   if (showIntro) {
     return (
       <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-[550px] space-y-6">
-          <div className="text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">What is Ikigai?</h1>
+        <div className="w-full max-w-[480px] space-y-6">
+          {/* Header with skip option */}
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-semibold tracking-tight">Build Your Ikigai</h1>
+            <button
+              onClick={() => setShowIntro(false)}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Skip intro →
+            </button>
           </div>
 
-          <Card className="border-2">
-            <CardContent className="pt-6 space-y-6">
-              {/* Diagram preview */}
-              <div className="flex justify-center">
-                <svg viewBox="0 0 200 200" className="w-48 h-48">
-                  <defs>
-                    <path id="introLovePath" d="M 30,75 A 40,40 0 0,1 75,30" fill="none" />
-                    <path id="introGoodPath" d="M 125,30 A 40,40 0 0,1 170,75" fill="none" />
-                    <path id="introShipPath" d="M 170,125 A 40,40 0 0,1 125,170" fill="none" />
-                    <path id="introWantPath" d="M 75,170 A 40,40 0 0,1 30,125" fill="none" />
-                  </defs>
-                  <circle cx="70" cy="70" r="55" fill="rgba(244, 63, 94, 0.15)" stroke="#f43f5e" strokeWidth="1.5" />
-                  <circle cx="130" cy="70" r="55" fill="rgba(59, 130, 246, 0.15)" stroke="#3b82f6" strokeWidth="1.5" />
-                  <circle cx="130" cy="130" r="55" fill="rgba(34, 197, 94, 0.15)" stroke="#22c55e" strokeWidth="1.5" />
-                  <circle cx="70" cy="130" r="55" fill="rgba(245, 158, 11, 0.15)" stroke="#f59e0b" strokeWidth="1.5" />
-                  {/* Curved text labels */}
-                  <text fontSize="11" fill="#be123c" fontWeight="600">
-                    <textPath href="#introLovePath" startOffset="50%" textAnchor="middle">I LOVE</textPath>
-                  </text>
-                  <text fontSize="11" fill="#1d4ed8" fontWeight="600">
-                    <textPath href="#introGoodPath" startOffset="50%" textAnchor="middle">GOOD AT</textPath>
-                  </text>
-                  <text fontSize="11" fill="#15803d" fontWeight="600">
-                    <textPath href="#introShipPath" startOffset="50%" textAnchor="middle">CAN SHIP</textPath>
-                  </text>
-                  <text fontSize="10" fill="#b45309" fontWeight="600">
-                    <textPath href="#introWantPath" startOffset="50%" textAnchor="middle">PLAYERS WANT</textPath>
-                  </text>
-                  {/* Center label - no circle, natural overlap forms the shape */}
-                  <text x="100" y="100" fontSize="8" fill="#6d28d9" fontWeight="600" textAnchor="middle">IKIGAI</text>
-                  <text x="100" y="110" fontSize="6" fill="#6d28d9" textAnchor="middle">✨</text>
-                </svg>
-              </div>
+          {/* Diagram preview - centered */}
+          <div className="flex justify-center">
+            <svg viewBox="0 0 200 200" className="w-44 h-44">
+              <defs>
+                <path id="introLovePath" d="M 30,75 A 40,40 0 0,1 75,30" fill="none" />
+                <path id="introGoodPath" d="M 125,30 A 40,40 0 0,1 170,75" fill="none" />
+                <path id="introShipPath" d="M 170,125 A 40,40 0 0,1 125,170" fill="none" />
+                <path id="introWantPath" d="M 75,170 A 40,40 0 0,1 30,125" fill="none" />
+              </defs>
+              <circle cx="70" cy="70" r="55" fill="rgba(244, 63, 94, 0.15)" stroke="#f43f5e" strokeWidth="1.5" />
+              <circle cx="130" cy="70" r="55" fill="rgba(59, 130, 246, 0.15)" stroke="#3b82f6" strokeWidth="1.5" />
+              <circle cx="130" cy="130" r="55" fill="rgba(34, 197, 94, 0.15)" stroke="#22c55e" strokeWidth="1.5" />
+              <circle cx="70" cy="130" r="55" fill="rgba(245, 158, 11, 0.15)" stroke="#f59e0b" strokeWidth="1.5" />
+              <text fontSize="11" fill="#be123c" fontWeight="600">
+                <textPath href="#introLovePath" startOffset="50%" textAnchor="middle">LOVE</textPath>
+              </text>
+              <text fontSize="11" fill="#1d4ed8" fontWeight="600">
+                <textPath href="#introGoodPath" startOffset="50%" textAnchor="middle">GOOD AT</textPath>
+              </text>
+              <text fontSize="11" fill="#15803d" fontWeight="600">
+                <textPath href="#introShipPath" startOffset="50%" textAnchor="middle">CAN SHIP</textPath>
+              </text>
+              <text fontSize="10" fill="#b45309" fontWeight="600">
+                <textPath href="#introWantPath" startOffset="50%" textAnchor="middle">WANT</textPath>
+              </text>
+              <text x="100" y="102" fontSize="9" fill="#6d28d9" fontWeight="600" textAnchor="middle">✨</text>
+            </svg>
+          </div>
 
-              <div className="space-y-4 text-sm">
-                <p className="text-muted-foreground">Add things to each circle. The more circles something fits, the better the idea.</p>
-                
-                <div className="space-y-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-rose-500 font-mono text-xs">●</span>
-                    <span className="text-rose-700 font-medium">Love</span>
-                    <span className="text-muted-foreground">— genres, themes, vibes you're drawn to</span>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-blue-500 font-mono text-xs">●</span>
-                    <span className="text-blue-700 font-medium">Good At</span>
-                    <span className="text-muted-foreground">— your actual skills and tools</span>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-green-500 font-mono text-xs">●</span>
-                    <span className="text-green-700 font-medium">Can Ship</span>
-                    <span className="text-muted-foreground">— what's realistic for your time/team</span>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-amber-500 font-mono text-xs">●</span>
-                    <span className="text-amber-700 font-medium">Players Want</span>
-                    <span className="text-muted-foreground">— what people actually play</span>
-                  </div>
-                </div>
-              </div>
+          {/* Brief explanation */}
+          <p className="text-sm text-muted-foreground text-center">
+            Drag items into circles. Items that fit <strong className="text-foreground">multiple circles</strong> = stronger ideas.
+          </p>
 
-              <Button onClick={() => setShowIntro(false)} className="w-full gap-2" size="lg">
-                Start Building
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Legend - compact row */}
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+              <span className="text-rose-700 font-medium">Love</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+              <span className="text-blue-700 font-medium">Good At</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+              <span className="text-green-700 font-medium">Can Ship</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+              <span className="text-amber-700 font-medium">Players Want</span>
+            </div>
+          </div>
 
-          <button
-            onClick={() => router.push('/')}
-            className="block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            ← Back
-          </button>
+          {/* Actions */}
+          <div className="space-y-3">
+            <Button onClick={() => setShowIntro(false)} className="w-full gap-2" size="lg">
+              Start Building
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+            
+            <Button variant="ghost" onClick={() => router.push('/create')} className="w-full gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Setup
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -616,10 +615,10 @@ Overlaps: ${overlapChips.length}
         {/* Footer */}
         <div className="flex items-center gap-4 pt-2">
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/create')}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            ← Back
+            ← Back to Setup
           </button>
           <Button
             onClick={handleContinue}

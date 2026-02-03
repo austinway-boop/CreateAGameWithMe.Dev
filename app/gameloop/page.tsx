@@ -283,100 +283,68 @@ export default function GameLoopPage() {
   if (showIntro) {
     return (
       <div className="flex-1 flex items-center justify-center p-6 overflow-auto">
-        <div className="w-full max-w-[500px] space-y-6">
-          <div className="text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">What&apos;s a Game Loop?</h1>
+        <div className="w-full max-w-[480px] space-y-6">
+          {/* Header with skip option */}
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-semibold tracking-tight">Game Loop Builder</h1>
+            <button
+              onClick={() => setShowIntro(false)}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Skip intro →
+            </button>
           </div>
 
-          <Card>
-            <CardContent className="pt-6 space-y-5">
-              <p className="text-muted-foreground">
-                A game loop is the repeating cycle that keeps players engaged — the &quot;one more turn&quot; feeling.
-              </p>
+          {/* What is it - super brief */}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-xl p-5 border">
+            <p className="text-sm text-muted-foreground mb-3">
+              A game loop is the cycle that keeps players coming back.
+            </p>
+            
+            {/* Visual example */}
+            <div className="flex items-center gap-1.5 justify-center flex-wrap">
+              <div className="px-3 py-1.5 rounded-lg bg-blue-500 text-white text-xs font-medium">Action</div>
+              <span className="text-muted-foreground">→</span>
+              <div className="px-3 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-medium">Challenge</div>
+              <span className="text-muted-foreground">→</span>
+              <div className="px-3 py-1.5 rounded-lg bg-green-500 text-white text-xs font-medium">Reward</div>
+              <span className="text-muted-foreground">→</span>
+              <div className="px-3 py-1.5 rounded-lg bg-pink-500 text-white text-xs font-medium">↺</div>
+            </div>
+          </div>
 
-              {/* Simple Example */}
-              <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-                <p className="text-sm font-medium">Example: Tetris</p>
-                <div className="flex items-center gap-1 text-xs flex-wrap justify-center">
-                  <div className="px-2 py-1.5 rounded bg-blue-500 text-white font-medium">Move Block</div>
-                  <span className="text-muted-foreground">→</span>
-                  <div className="px-2 py-1.5 rounded bg-orange-500 text-white font-medium">Clear Lines</div>
-                  <span className="text-muted-foreground">→</span>
-                  <div className="px-2 py-1.5 rounded bg-green-500 text-white font-medium">Score Points</div>
-                  <span className="text-muted-foreground">→</span>
-                  <div className="px-2 py-1.5 rounded bg-pink-500 text-white font-medium">Repeat</div>
-                </div>
-              </div>
+          {/* Quick start steps - numbered for clarity */}
+          <div className="space-y-3">
+            <div className="flex gap-3 items-start">
+              <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold shrink-0">1</div>
+              <p className="text-sm"><strong>Drag blocks</strong> from the left panel onto the canvas</p>
+            </div>
+            <div className="flex gap-3 items-start">
+              <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold shrink-0">2</div>
+              <p className="text-sm"><strong>Connect them</strong> by dragging from the right dot (○) to another block&apos;s left dot</p>
+            </div>
+            <div className="flex gap-3 items-start">
+              <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold shrink-0">3</div>
+              <p className="text-sm"><strong>Edit labels</strong> by clicking on the text</p>
+            </div>
+          </div>
 
-              {/* Quick instructions */}
-              <div className="space-y-2">
-                <p className="text-sm font-medium">How to build:</p>
-                <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                  <li>Drag blocks from the palette onto the canvas</li>
-                  <li>Connect them by dragging from one dot to another</li>
-                  <li>Click on text to edit what each step does</li>
-                </ol>
-              </div>
+          {/* Block types legend - minimal */}
+          <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground border-t pt-4">
+            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded bg-blue-500"></div> Action</div>
+            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded bg-orange-500"></div> Challenge</div>
+            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded bg-green-500"></div> Reward</div>
+            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded bg-purple-500"></div> Decision</div>
+          </div>
 
-              {/* Building blocks - compact */}
-              <div className="flex flex-wrap gap-3 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded bg-blue-500"></div>
-                  <span><strong>Action</strong></span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded bg-orange-500"></div>
-                  <span><strong>Challenge</strong></span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded bg-green-500"></div>
-                  <span><strong>Reward</strong></span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded bg-purple-500"></div>
-                  <span><strong>Decision</strong></span>
-                </div>
-              </div>
-
-              {/* Collapsible Advanced Section */}
-              <div className="border-t pt-3">
-                <button
-                  onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-full"
-                >
-                  {showAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  Advanced: Sub-loops (optional)
-                </button>
-                
-                {showAdvanced && (
-                  <div className="mt-3 space-y-3 text-sm text-muted-foreground">
-                    <p>
-                      Complex games have <strong>sub-loops</strong> — smaller cycles that support the main loop.
-                    </p>
-                    <div className="bg-muted/30 rounded p-3 space-y-2">
-                      <p className="text-xs font-medium text-foreground">Minecraft example:</p>
-                      <ul className="text-xs space-y-1">
-                        <li><strong>Main:</strong> Explore → Survive → Progress</li>
-                        <li><strong>Mining sub-loop:</strong> Dig → Find Ores → Better Tools</li>
-                        <li><strong>Combat sub-loop:</strong> Hunt → Fight → Loot</li>
-                      </ul>
-                    </div>
-                    <p className="text-xs">
-                      You can add sub-loops using the selector in the palette. Start with your main loop first!
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <Button onClick={() => setShowIntro(false)} className="w-full gap-2" size="lg">
-                Start Building
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
-
-          <div className="flex justify-center">
-            <Button variant="ghost" onClick={() => router.push('/finalize')} className="gap-2">
+          {/* Actions */}
+          <div className="space-y-3">
+            <Button onClick={() => setShowIntro(false)} className="w-full gap-2" size="lg">
+              Start Building
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+            
+            <Button variant="ghost" onClick={() => router.push('/finalize')} className="w-full gap-2">
               <ArrowLeft className="h-4 w-4" />
               Back to Concept
             </Button>
