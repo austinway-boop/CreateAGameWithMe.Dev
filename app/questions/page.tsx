@@ -243,8 +243,8 @@ export default function QuestionsPage() {
       case 'emotions':
         return (
           <div className="space-y-4">
-            {/* Selected emotions */}
-            <div className="flex flex-wrap gap-2 min-h-[40px]">
+            {/* Selected emotions - fixed height */}
+            <div className="flex flex-wrap gap-2 h-[44px] items-start">
               {questions.emotions.map((emotion) => (
                 <div
                   key={emotion}
@@ -258,27 +258,29 @@ export default function QuestionsPage() {
               ))}
             </div>
 
-            {/* Add custom emotion */}
-            {questions.emotions.length < 3 && (
-              <div className="flex items-center gap-2">
-                <Input
-                  placeholder={q.placeholder}
-                  value={newEmotion}
-                  onChange={(e) => setNewEmotion(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && addEmotion(newEmotion)}
-                  className="flex-1 h-11"
-                  autoFocus
-                />
-                <Button 
-                  variant="outline" 
-                  onClick={() => addEmotion(newEmotion)}
-                  disabled={!newEmotion.trim()}
-                  className="h-11"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
+            {/* Add custom emotion - fixed height container */}
+            <div className="h-[44px]">
+              {questions.emotions.length < 3 && (
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder={q.placeholder}
+                    value={newEmotion}
+                    onChange={(e) => setNewEmotion(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && addEmotion(newEmotion)}
+                    className="flex-1 h-11"
+                    autoFocus
+                  />
+                  <Button 
+                    variant="outline" 
+                    onClick={() => addEmotion(newEmotion)}
+                    disabled={!newEmotion.trim()}
+                    className="h-11"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
 
             {/* Suggestions */}
             <div className="flex flex-wrap gap-2">
@@ -364,10 +366,10 @@ export default function QuestionsPage() {
       </div>
 
       {/* Question content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
-        <div className="w-full max-w-xl space-y-6">
-          {/* Question header */}
-          <div className="text-center space-y-2">
+      <div className="flex-1 flex flex-col px-6 pt-8 pb-6 overflow-auto">
+        <div className="w-full max-w-xl mx-auto space-y-6">
+          {/* Question header - fixed height area */}
+          <div className="text-center space-y-2 min-h-[80px]">
             <h1 className="text-2xl font-bold text-gray-900">
               {currentQuestion.title}
               {currentQuestion.required && <span className="text-pink-500 ml-1">*</span>}
@@ -375,12 +377,12 @@ export default function QuestionsPage() {
             <p className="text-gray-500">{currentQuestion.subtitle}</p>
           </div>
 
-          {/* Question input */}
-          <div className="bg-white rounded-2xl p-6 shadow-[0_3px_0_#e5e7eb]">
+          {/* Question input - fixed minimum height to prevent jumping */}
+          <div className="bg-white rounded-2xl p-6 shadow-[0_3px_0_#e5e7eb] min-h-[200px]">
             {renderQuestionInput()}
           </div>
 
-          {/* Navigation */}
+          {/* Navigation - fixed at bottom of content area */}
           <div className="flex items-center justify-between pt-4">
             <Button
               variant="ghost"
@@ -402,12 +404,14 @@ export default function QuestionsPage() {
             </Button>
           </div>
 
-          {/* Skip hint for optional questions */}
-          {!currentQuestion.required && !isCurrentAnswered() && (
-            <p className="text-center text-sm text-gray-400">
-              This question is optional — you can skip it
-            </p>
-          )}
+          {/* Skip hint for optional questions - fixed height */}
+          <div className="h-6 text-center">
+            {!currentQuestion.required && !isCurrentAnswered() && (
+              <p className="text-sm text-gray-400">
+                This question is optional — you can skip it
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
