@@ -355,41 +355,52 @@ export default function GameLoopPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col p-4 h-screen">
+    <div className="flex-1 flex flex-col p-4 h-screen bg-gray-50">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={() => router.push('/finalize')} className="gap-2">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.push('/finalize')}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white text-gray-600 font-bold text-sm
+              shadow-[0_2px_0_#e5e7eb] hover:bg-gray-50 active:translate-y-0.5 active:shadow-none transition-all"
+          >
             <ArrowLeft className="h-4 w-4" />
-            Back to Concept
-          </Button>
-          <h1 className="text-xl font-semibold tracking-tight">Game Loop Builder</h1>
-          <Button variant="outline" size="sm" onClick={() => setShowIntro(true)} className="gap-2">
+            Back
+          </button>
+          <h1 className="text-xl font-bold text-gray-900">Game Loop Builder</h1>
+          <button
+            onClick={() => setShowIntro(true)}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white text-gray-500 font-medium text-sm
+              shadow-[0_2px_0_#e5e7eb] hover:bg-gray-50 active:translate-y-0.5 active:shadow-none transition-all"
+          >
             <HelpCircle className="h-4 w-4" />
-            How it works
-          </Button>
+            Help
+          </button>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">
+        <div className="flex items-center gap-4">
+          <span className="text-sm font-bold text-gray-500">
             {nodes.length} block{nodes.length !== 1 ? 's' : ''}
           </span>
-          <Button
+          <button
             onClick={() => {
               updateProject({ currentPage: 'questions' });
               router.push('/journey?completed=gameloop');
             }}
             disabled={!canContinue}
-            className="gap-2"
+            className={`flex items-center gap-2 px-5 py-2 rounded-xl font-bold text-sm transition-all
+              ${canContinue 
+                ? 'bg-pink-500 text-white shadow-[0_3px_0_#be185d] hover:bg-pink-600 active:translate-y-0.5 active:shadow-none' 
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
           >
             Continue
             <ArrowRight className="h-4 w-4" />
-          </Button>
+          </button>
         </div>
       </div>
 
       {/* Progress Hint Banner */}
       {getProgressHint() && (
-        <div className="mb-3 px-4 py-2 bg-muted/50 rounded-lg border border-muted text-sm text-muted-foreground">
+        <div className="mb-3 px-4 py-2.5 bg-white rounded-xl shadow-[0_2px_0_#e5e7eb] text-sm font-medium text-gray-600">
           {getProgressHint()}
         </div>
       )}
@@ -399,24 +410,24 @@ export default function GameLoopPage() {
         <div className="w-52 flex-shrink-0 space-y-4 overflow-y-auto">
           {/* Loop Type Selector */}
           <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">Loop Type</Label>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Loop Type</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setSelectedLoopType('main')}
-                className={`flex-1 px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                className={`flex-1 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
                   selectedLoopType === 'main' 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-muted hover:bg-muted/80'
+                    ? 'bg-pink-500 text-white shadow-[0_2px_0_#be185d]' 
+                    : 'bg-white text-gray-600 shadow-[0_2px_0_#e5e7eb] hover:bg-gray-50'
                 }`}
               >
                 Main Loop
               </button>
               <button
                 onClick={() => setSelectedLoopType('sub')}
-                className={`flex-1 px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                className={`flex-1 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
                   selectedLoopType === 'sub' 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-muted hover:bg-muted/80'
+                    ? 'bg-pink-500 text-white shadow-[0_2px_0_#be185d]' 
+                    : 'bg-white text-gray-600 shadow-[0_2px_0_#e5e7eb] hover:bg-gray-50'
                 }`}
               >
                 Sub-Loop
@@ -427,13 +438,13 @@ export default function GameLoopPage() {
                 placeholder="Loop name (e.g., Mining)"
                 value={subLoopName}
                 onChange={(e) => setSubLoopName(e.target.value)}
-                className="text-xs h-8"
+                className="text-xs h-9"
               />
             )}
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Drag to canvas →</p>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Drag to canvas</p>
             {NODE_TYPES.map((nodeType) => (
               <div
                 key={nodeType.type}
@@ -445,10 +456,11 @@ export default function GameLoopPage() {
                     e.dataTransfer.setData('loop-name', subLoopName);
                   }
                 }}
-                className={`${nodeType.color} text-white px-3 py-2 rounded-lg cursor-grab active:cursor-grabbing text-sm font-medium shadow-sm hover:shadow-md transition-shadow`}
+                className={`${nodeType.color} text-white px-3 py-2.5 rounded-xl cursor-grab active:cursor-grabbing 
+                  shadow-[0_3px_0_rgba(0,0,0,0.2)] hover:brightness-110 active:translate-y-0.5 active:shadow-none transition-all`}
               >
-                <div>{nodeType.label}</div>
-                <div className="text-xs opacity-80">{nodeType.description}</div>
+                <div className="font-bold text-sm">{nodeType.label}</div>
+                <div className="text-xs opacity-90 font-medium">{nodeType.description}</div>
               </div>
             ))}
           </div>
@@ -462,7 +474,7 @@ export default function GameLoopPage() {
           onDrop={handleCanvasDrop}
           onDoubleClick={handleCanvasDoubleClick}
           onClick={handleCanvasClick}
-          className="flex-1 bg-muted/30 rounded-xl border-2 border-dashed relative overflow-hidden"
+          className="flex-1 bg-white rounded-2xl border-2 border-dashed border-gray-200 relative overflow-hidden shadow-[0_2px_0_#e5e7eb]"
           style={{ minHeight: '400px', cursor: connectionDrag ? 'crosshair' : 'default' }}
         >
           {/* Connection Lines (Bezier Curves) */}
@@ -625,40 +637,40 @@ export default function GameLoopPage() {
           {/* Context Menu for adding nodes */}
           {contextMenuPos && (
             <div
-              className="absolute bg-white rounded-lg shadow-xl border p-2 z-50"
-              style={{ left: contextMenuPos.x, top: contextMenuPos.y }}
+              className="absolute bg-white rounded-xl shadow-lg border-0 p-2 z-50"
+              style={{ left: contextMenuPos.x, top: contextMenuPos.y, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}
             >
-              <div className="text-xs font-medium text-muted-foreground mb-2 px-2">Add Block</div>
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2 px-2">Add Block</div>
               <div className="space-y-1">
                 {NODE_TYPES.map((nodeType) => (
                   <button
                     key={nodeType.type}
                     onClick={() => addNode(nodeType.type, contextMenuPos.x - 75, contextMenuPos.y - 25, selectedLoopType, selectedLoopType === 'sub' ? subLoopName : undefined)}
-                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-muted transition-colors`}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
                   >
-                    <div className={`w-3 h-3 rounded ${nodeType.color}`}></div>
+                    <div className={`w-3 h-3 rounded-full ${nodeType.color}`}></div>
                     <span>{nodeType.label}</span>
                   </button>
                 ))}
               </div>
               <button
                 onClick={() => setContextMenuPos(null)}
-                className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80"
+                className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
               >
-                <X className="h-3 w-3" />
+                <X className="h-3.5 w-3.5 text-gray-500" />
               </button>
             </div>
           )}
 
           {/* Empty State */}
           {nodes.length === 0 && !contextMenuPos && (
-            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground pointer-events-none">
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center space-y-2">
-                <p className="text-lg font-medium">Start building your game loop!</p>
-                <p className="text-sm">
-                  Drag blocks from the left, or <strong>double-click</strong> here to add
+                <p className="text-xl font-bold text-gray-400">Start building your game loop!</p>
+                <p className="text-sm text-gray-400">
+                  Drag blocks from the left, or <span className="font-bold">double-click</span> here to add
                 </p>
-                <p className="text-xs">Begin with an Action — what does the player DO?</p>
+                <p className="text-xs text-gray-400">Begin with an Action — what does the player DO?</p>
               </div>
             </div>
           )}
@@ -669,12 +681,12 @@ export default function GameLoopPage() {
       <div className="flex justify-between items-center mt-4">
         <button
           onClick={() => router.push('/idea')}
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors"
         >
           ← Edit Original Idea
         </button>
         {!canContinue && (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm font-medium text-gray-400">
             Add at least 3 blocks to continue
           </p>
         )}
