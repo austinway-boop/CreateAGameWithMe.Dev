@@ -183,37 +183,37 @@ export function JourneyView({ currentStep }: { currentStep?: string }) {
         {/* Current step card */}
         {JOURNEY_STEPS[currentIndex] && (
           <div 
-            className="mt-6 p-5 rounded-2xl bg-white max-w-md w-full"
-            style={{ boxShadow: '0 4px 0 #e5e7eb' }}
+            className="mt-6 p-3 rounded-xl bg-white max-w-sm w-full"
+            style={{ boxShadow: '0 3px 0 #e5e7eb' }}
           >
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <div 
-                className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                className="w-11 h-11 rounded-xl flex items-center justify-center"
                 style={{ 
                   backgroundColor: JOURNEY_STEPS[currentIndex].color,
-                  boxShadow: `0 4px 0 ${darken(JOURNEY_STEPS[currentIndex].color, 40)}`
+                  boxShadow: `0 3px 0 ${darken(JOURNEY_STEPS[currentIndex].color, 40)}`
                 }}
               >
                 {(() => {
                   const CurrentIcon = JOURNEY_STEPS[currentIndex].icon;
-                  return <CurrentIcon className="w-7 h-7 text-white" />;
+                  return <CurrentIcon className="w-5 h-5 text-white" />;
                 })()}
               </div>
-              <div className="flex-1">
-                <h3 className="text-gray-900 font-bold text-lg">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-gray-900 font-bold text-sm">
                   {JOURNEY_STEPS[currentIndex].label}
                 </h3>
-                <p className="text-gray-500 text-sm">
+                <p className="text-gray-500 text-xs truncate">
                   {getDescription(JOURNEY_STEPS[currentIndex].path)}
                 </p>
               </div>
               <button
                 onClick={() => router.push(`/${JOURNEY_STEPS[currentIndex].path}`)}
-                className="px-6 py-3 rounded-2xl text-white font-bold text-sm uppercase tracking-wide
-                  active:translate-y-1 active:shadow-none transition-all"
+                className="px-4 py-2 rounded-xl text-white font-bold text-xs uppercase tracking-wide
+                  active:translate-y-0.5 active:shadow-none transition-all"
                 style={{ 
                   backgroundColor: JOURNEY_STEPS[currentIndex].color,
-                  boxShadow: `0 4px 0 ${darken(JOURNEY_STEPS[currentIndex].color, 40)}`
+                  boxShadow: `0 3px 0 ${darken(JOURNEY_STEPS[currentIndex].color, 40)}`
                 }}
               >
                 Start
