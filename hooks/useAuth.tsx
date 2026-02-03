@@ -19,35 +19,17 @@ const MOCK_SESSION_DATA = {
   expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
 };
 
-interface SessionData {
-  user?: {
-    id?: string;
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
-    username?: string;
-    onboardingComplete?: boolean;
-  };
-  expires?: string;
-}
-
-interface UseAuthReturn {
-  data: SessionData | null;
-  status: 'authenticated' | 'loading' | 'unauthenticated';
-  update: () => Promise<any>;
-}
-
 // Hook for mock mode - always returns mock session
-function useMockAuth(): UseAuthReturn {
+function useMockAuth() {
   return {
     data: MOCK_SESSION_DATA,
-    status: 'authenticated',
-    update: async () => {},
+    status: 'authenticated' as const,
+    update: async () => null,
   };
 }
 
 // Hook for real mode - wraps next-auth's useSession
-function useRealAuth(): UseAuthReturn {
+function useRealAuth() {
   return useSession();
 }
 
