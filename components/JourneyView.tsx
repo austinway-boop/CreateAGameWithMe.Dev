@@ -15,18 +15,32 @@ import {
   Lock,
   Play,
   Trophy,
-  LogOut
+  LogOut,
+  FileText
 } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 
 // Colors: Pink = completed, Orange = current, Gray = locked
 const PINK = '#ec4899';
 const ORANGE = '#FF9600';
 const GRAY = '#e5e7eb';
 
-const JOURNEY_STEPS = [
+// Steps when user HAS an idea (skip ikigai/sparks)
+const STEPS_WITH_IDEA = [
   { path: 'create', label: 'Setup', icon: Play },
-  { path: 'ikigai', altPath: 'idea', label: 'Ideate', icon: Lightbulb },
+  { path: 'idea', label: 'Your Idea', icon: FileText },
+  { path: 'card', label: 'Concept', icon: CreditCard },
+  { path: 'finalize', label: 'Refine', icon: Pencil },
+  { path: 'gameloop', label: 'Loop', icon: RefreshCw },
+  { path: 'questions', label: 'Details', icon: HelpCircle },
+  { path: 'skilltree', label: 'Skills', icon: GitBranch },
+  { path: 'validation', label: 'Validate', icon: CheckCircle2 },
+];
+
+// Steps when user DOESN'T have an idea (brainstorming flow)
+const STEPS_NO_IDEA = [
+  { path: 'create', label: 'Setup', icon: Play },
+  { path: 'ikigai', label: 'Discover', icon: Lightbulb },
   { path: 'sparks', label: 'Sparks', icon: Sparkles },
   { path: 'card', label: 'Concept', icon: CreditCard },
   { path: 'finalize', label: 'Refine', icon: Pencil },
@@ -46,9 +60,14 @@ export function JourneyView({ currentStep, completedStep }: JourneyViewProps) {
   const { project } = useProject();
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Choose steps based on whether user has an idea
+  const JOURNEY_STEPS = useMemo(() => {
+    return project?.hasIdea ? STEPS_WITH_IDEA : STEPS_NO_IDEA;
+  }, [project?.hasIdea]);
+
   const activePath = currentStep || project?.currentPage || 'create';
   const currentIndex = JOURNEY_STEPS.findIndex(
-    (step) => step.path === activePath || step.altPath === activePath
+    (step) => step.path === activePath
   );
 
   // Clear completed param after a moment
@@ -293,6 +312,7 @@ function darken(color: string, amount: number): string {
 function getDescription(path: string): string {
   const desc: Record<string, string> = {
     'create': 'Choose platform and timeline',
+    'idea': 'Describe your game idea',
     'ikigai': 'Build your ideation canvas',
     'sparks': 'Generate AI game ideas',
     'card': 'Reveal your concept card',

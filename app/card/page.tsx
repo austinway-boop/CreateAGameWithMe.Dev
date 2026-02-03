@@ -226,12 +226,15 @@ export default function ConceptCardPage() {
     return <CardSkeleton />;
   }
 
-  if (!project.conceptImage) {
+  // Need either an image OR concept data to show the card
+  if (!project.conceptImage && !project.finalTitle && !project.selectedSpark) {
     return (
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="text-center space-y-4">
           <p className="text-muted-foreground">No concept card generated yet.</p>
-          <Button onClick={() => router.push('/idea')}>Go to Idea Page</Button>
+          <Button onClick={() => router.push(project.hasIdea ? '/idea' : '/sparks')}>
+            {project.hasIdea ? 'Go to Idea Page' : 'Go to Sparks'}
+          </Button>
         </div>
       </div>
     );

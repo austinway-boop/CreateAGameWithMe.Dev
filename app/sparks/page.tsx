@@ -17,7 +17,7 @@ const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 export default function SparksPage() {
   const router = useRouter();
-  const { project, loading, updateProject, retryLoad } = useProject();
+  const { project, loading, updateProject, updateProjectAndSave, retryLoad } = useProject();
   const [viewState, setViewState] = useState<ViewState>('loading');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [likedSparks, setLikedSparks] = useState<IdeaSpark[]>([]);
@@ -195,14 +195,8 @@ ${spark.whyFun.map(r => `• ${r}`).join('\n')}
 
 *Scope: ${spark.scopeLevel} | Platform: ${spark.targetPlatform}*`;
 
-    updateProject({
-      selectedSpark: { ...spark, isSelected: true },
-      finalTitle: spark.title,
-      finalConcept: concept,
-    });
-
     try {
-      // Generate the concept card image
+      // Generate the concept card image first
       const imageResponse = await fetch('/api/generateImage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -213,15 +207,29 @@ ${spark.whyFun.map(r => `• ${r}`).join('\n')}
         }),
       });
 
+      let conceptImage = null;
       if (imageResponse.ok) {
         const imageData = await imageResponse.json();
-        updateProject({ conceptImage: imageData.imageUrl, currentPage: 'card' });
-      } else {
-        updateProject({ currentPage: 'card' });
+        conceptImage = imageData.imageUrl;
       }
+
+      // Save everything at once and wait for it to complete
+      await updateProjectAndSave({
+        selectedSpark: { ...spark, isSelected: true },
+        finalTitle: spark.title,
+        finalConcept: concept,
+        conceptImage: conceptImage,
+        currentPage: 'card',
+      });
     } catch (err) {
       console.error('Failed to generate image:', err);
-      updateProject({ currentPage: 'card' });
+      // Still save the spark data even if image fails
+      await updateProjectAndSave({
+        selectedSpark: { ...spark, isSelected: true },
+        finalTitle: spark.title,
+        finalConcept: concept,
+        currentPage: 'card',
+      });
     }
 
     router.push('/journey?completed=sparks');
