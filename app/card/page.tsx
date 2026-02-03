@@ -410,23 +410,9 @@ export default function ConceptCardPage() {
               updateProject({ currentPage: 'finalize' });
               router.push('/journey?completed=card');
             }} className="w-full gap-2" size="lg">
-              Continue to Finalize
+              Continue
               <ArrowRight className="h-4 w-4" />
             </Button>
-            <div className="flex justify-center gap-4 text-sm">
-              <button onClick={() => {
-                updateProject({ currentPage: 'idea' });
-                router.push('/idea');
-              }} className="text-muted-foreground hover:text-foreground transition-colors">
-                ← Edit Concept
-              </button>
-              <button onClick={() => {
-                updateProject({ currentPage: 'create' });
-                router.push('/create');
-              }} className="text-muted-foreground hover:text-foreground transition-colors">
-                Start New
-              </button>
-            </div>
           </div>
         )}
       </div>

@@ -112,13 +112,7 @@ export default function QuestionsPage() {
     <div className="flex-1 flex flex-col p-6 max-w-3xl mx-auto w-full overflow-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={() => router.push('/gameloop')} className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-          <h1 className="text-xl font-semibold tracking-tight">About Your Game</h1>
-        </div>
+        <h1 className="text-xl font-semibold tracking-tight">About Your Game</h1>
         <Button
           onClick={handleContinue}
           disabled={!canContinue}

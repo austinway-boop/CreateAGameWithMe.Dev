@@ -434,11 +434,6 @@ Overlaps: ${overlapChips.length}
               Start Building
               <ArrowRight className="h-4 w-4" />
             </Button>
-            
-            <Button variant="ghost" onClick={() => router.push('/create')} className="w-full gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Setup
-            </Button>
           </div>
         </div>
       </div>
@@ -614,12 +609,6 @@ Overlaps: ${overlapChips.length}
 
         {/* Footer */}
         <div className="flex items-center gap-4 pt-2">
-          <button
-            onClick={() => router.push('/create')}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            ← Back to Setup
-          </button>
           <Button
             onClick={handleContinue}
             disabled={!isComplete}

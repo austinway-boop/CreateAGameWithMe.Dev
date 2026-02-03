@@ -3,6 +3,7 @@
 // ============================================
 
 import { IkigaiChip, RemixConstraints, IdeaSpark, GameLoopNode } from './types';
+import { buildMarketContext, analyzeMarket, generatePivotSuggestions, getPriceInsights } from './marketData';
 
 export function buildStructureIdeaPrompt(
   ideaDescription: string,
@@ -174,6 +175,26 @@ export interface ValidationResult {
     whatToTest: string;
     successMetric: string;
   };
+  // New fields from market data integration
+  genreAnalysis?: {
+    detectedGenre: string;
+    successRate: string;
+    lifecyclePhase: string;
+    isGreatConjunction: boolean;
+    trend: string;
+  };
+  viralPotential?: {
+    score: number;
+    reasoning: string;
+    streamerAppeal: 'high' | 'medium' | 'low';
+    clipWorthiness: string;
+  };
+  pricingAnalysis?: {
+    suggestedRange: string;
+    reasoning: string;
+    priceZone: 'impulse' | 'uncanny_valley' | 'premium';
+  };
+  pivotSuggestions?: string[];
 }
 
 export function buildValidationPrompt(

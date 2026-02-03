@@ -286,11 +286,6 @@ export default function SkillTreePage() {
               Start Building
               <ArrowRight className="h-4 w-4" />
             </Button>
-            
-            <Button variant="ghost" onClick={() => router.push('/questions')} className="w-full gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Questions
-            </Button>
           </div>
         </div>
       </div>
@@ -301,17 +296,7 @@ export default function SkillTreePage() {
     <div className="flex-1 flex flex-col p-4 h-screen">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={() => router.push('/questions')} className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Questions
-          </Button>
-          <h1 className="text-xl font-semibold tracking-tight">Skill Dependency Tree</h1>
-          <Button variant="outline" size="sm" onClick={() => setShowIntro(true)} className="gap-2">
-            <HelpCircle className="h-4 w-4" />
-            How it works
-          </Button>
-        </div>
+        <h1 className="text-xl font-semibold tracking-tight">Skill Dependency Tree</h1>
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground">
             {nodes.length} skill{nodes.length !== 1 ? 's' : ''}
@@ -581,20 +566,6 @@ export default function SkillTreePage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="flex justify-between items-center mt-4">
-        <button
-          onClick={() => router.push('/questions')}
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          ← Back to Questions
-        </button>
-        {!canContinue && (
-          <p className="text-sm text-muted-foreground">
-            Add at least 3 skills to continue
-          </p>
-        )}
-      </div>
     </div>
   );
 }

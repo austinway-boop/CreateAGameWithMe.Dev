@@ -148,10 +148,6 @@ export default function ValidationPage() {
             <h1 className="text-2xl font-semibold tracking-tight">AI Validation Disabled</h1>
             <p className="text-muted-foreground">Enable AI to get feedback on your game concept.</p>
           </div>
-          <Button variant="outline" onClick={() => router.push('/skilltree')} className="w-full gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Skill Tree
-          </Button>
         </div>
       </div>
     );
@@ -187,10 +183,6 @@ export default function ValidationPage() {
               </Button>
             </CardContent>
           </Card>
-          <Button variant="outline" onClick={() => router.push('/skilltree')} className="w-full gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Skill Tree
-          </Button>
         </div>
       </div>
     );
@@ -546,13 +538,6 @@ export default function ValidationPage() {
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3 pt-4 pb-8">
-          <Button variant="outline" onClick={() => router.push('/skilltree')} className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Skill Tree
-          </Button>
-          <Button variant="outline" onClick={() => router.push('/finalize')} className="gap-2">
-            Edit Concept
-          </Button>
           <Button onClick={runValidation} variant="outline" className="gap-2">
             <RefreshCw className="h-4 w-4" />
             Re-validate

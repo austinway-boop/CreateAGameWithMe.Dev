@@ -73,21 +73,6 @@ export default function FinalizePage() {
           </CardContent>
         </Card>
 
-        {/* Back Links */}
-        <div className="flex justify-center gap-4 text-sm">
-          <button
-            onClick={() => router.push('/card')}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            ← Back to Concept Card
-          </button>
-          <button
-            onClick={() => router.push('/create')}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Start over
-          </button>
-        </div>
       </div>
     </div>
   );

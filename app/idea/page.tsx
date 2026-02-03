@@ -180,13 +180,6 @@ export default function IdeaPage() {
           </CardContent>
         </Card>
 
-        {/* Back Link */}
-        <button
-          onClick={() => router.push('/create')}
-          className={`block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors ${isLoading ? 'pointer-events-none opacity-50' : ''}`}
-        >
-          ← Back to Setup
-        </button>
       </div>
     </div>
   );

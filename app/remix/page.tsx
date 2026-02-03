@@ -263,13 +263,6 @@ export default function RemixPage() {
 
         {/* Actions */}
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.push('/sparks')}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            ← Back to Sparks
-          </button>
-          
           {aiEnabled ? (
             <Button
               onClick={generateRemixedSparks}

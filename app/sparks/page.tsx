@@ -269,12 +269,6 @@ ${spark.whyFun.map(r => `• ${r}`).join('\n')}
             </CardContent>
           </Card>
 
-          <button
-            onClick={() => router.push('/ikigai')}
-            className="block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            ← Back to Ikigai
-          </button>
         </div>
       </div>
     );
@@ -311,12 +305,6 @@ ${spark.whyFun.map(r => `• ${r}`).join('\n')}
             </CardContent>
           </Card>
 
-          <button
-            onClick={() => router.push('/ikigai')}
-            className="block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            ← Back to Ikigai
-          </button>
         </div>
       </div>
     );
@@ -397,12 +385,6 @@ ${spark.whyFun.map(r => `• ${r}`).join('\n')}
             </Button>
           </div>
 
-          <button
-            onClick={() => router.push('/ikigai')}
-            className="block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            ← Back to Ikigai
-          </button>
         </div>
       </div>
     );
@@ -472,12 +454,6 @@ ${spark.whyFun.map(r => `• ${r}`).join('\n')}
             </Button>
           </div>
 
-          <button
-            onClick={() => router.push('/ikigai')}
-            className="block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            ← Back to Ikigai
-          </button>
         </div>
       </div>
     );
@@ -522,12 +498,6 @@ ${spark.whyFun.map(r => `• ${r}`).join('\n')}
             </p>
           )}
 
-          <button
-            onClick={() => router.push('/ikigai')}
-            className="block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            ← Back to Ikigai
-          </button>
         </div>
       </div>
     );
