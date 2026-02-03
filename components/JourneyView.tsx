@@ -14,103 +14,40 @@ import {
   Crown,
   Lock,
   Play,
-  ChevronRight,
-  Trophy
+  Trophy,
+  ChevronRight
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { UserMenu } from '@/components/UserMenu';
+import { useEffect, useRef } from 'react';
 
-// Define the user journey steps with icons
 const JOURNEY_STEPS = [
-  { 
-    path: 'create', 
-    label: 'Setup', 
-    description: 'Choose your platform and timeline',
-    icon: Play, 
-    color: 'from-blue-400 to-blue-600',
-    bgColor: 'bg-blue-500'
-  },
-  { 
-    path: 'ikigai', 
-    altPath: 'idea',
-    label: 'Ideate', 
-    description: 'Build your game ideation canvas',
-    icon: Lightbulb, 
-    color: 'from-rose-400 to-rose-600',
-    bgColor: 'bg-rose-500'
-  },
-  { 
-    path: 'sparks', 
-    label: 'Sparks', 
-    description: 'Generate AI-powered game ideas',
-    icon: Sparkles, 
-    color: 'from-amber-400 to-amber-600',
-    bgColor: 'bg-amber-500',
-    optional: true
-  },
-  { 
-    path: 'card', 
-    label: 'Concept', 
-    description: 'Reveal your concept card',
-    icon: CreditCard, 
-    color: 'from-purple-400 to-purple-600',
-    bgColor: 'bg-purple-500'
-  },
-  { 
-    path: 'finalize', 
-    label: 'Refine', 
-    description: 'Polish your game concept',
-    icon: Pencil, 
-    color: 'from-cyan-400 to-cyan-600',
-    bgColor: 'bg-cyan-500'
-  },
-  { 
-    path: 'gameloop', 
-    label: 'Game Loop', 
-    description: 'Design your core gameplay loop',
-    icon: RefreshCw, 
-    color: 'from-green-400 to-green-600',
-    bgColor: 'bg-green-500'
-  },
-  { 
-    path: 'questions', 
-    label: 'Details', 
-    description: 'Answer key design questions',
-    icon: HelpCircle, 
-    color: 'from-orange-400 to-orange-600',
-    bgColor: 'bg-orange-500'
-  },
-  { 
-    path: 'skilltree', 
-    label: 'Skills', 
-    description: 'Map player skill progression',
-    icon: GitBranch, 
-    color: 'from-indigo-400 to-indigo-600',
-    bgColor: 'bg-indigo-500'
-  },
-  { 
-    path: 'validation', 
-    label: 'Validate', 
-    description: 'Get AI feedback on your concept',
-    icon: CheckCircle2, 
-    color: 'from-emerald-400 to-emerald-600',
-    bgColor: 'bg-emerald-500'
-  },
+  { path: 'create', label: 'Setup', icon: Play, color: '#58CC02' },
+  { path: 'ikigai', altPath: 'idea', label: 'Ideate', icon: Lightbulb, color: '#FF9600' },
+  { path: 'sparks', label: 'Sparks', icon: Sparkles, color: '#CE82FF' },
+  { path: 'card', label: 'Concept', icon: CreditCard, color: '#1CB0F6' },
+  { path: 'finalize', label: 'Refine', icon: Pencil, color: '#FF4B4B' },
+  { path: 'gameloop', label: 'Loop', icon: RefreshCw, color: '#58CC02' },
+  { path: 'questions', label: 'Details', icon: HelpCircle, color: '#FF9600' },
+  { path: 'skilltree', label: 'Skills', icon: GitBranch, color: '#CE82FF' },
+  { path: 'validation', label: 'Validate', icon: CheckCircle2, color: '#FFD900' },
 ];
 
-interface JourneyViewProps {
-  currentStep?: string;
-}
-
-export function JourneyView({ currentStep }: JourneyViewProps) {
+export function JourneyView({ currentStep }: { currentStep?: string }) {
   const router = useRouter();
   const { project } = useProject();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Determine current step index from project's currentPage or prop
   const activePath = currentStep || project?.currentPage || 'create';
   const currentIndex = JOURNEY_STEPS.findIndex(
     (step) => step.path === activePath || step.altPath === activePath
   );
+
+  // Auto-scroll to current step
+  useEffect(() => {
+    if (scrollRef.current) {
+      const scrollPos = Math.max(0, (currentIndex * 120) - 100);
+      scrollRef.current.scrollTo({ left: scrollPos, behavior: 'smooth' });
+    }
+  }, [currentIndex]);
 
   const handleStepClick = (step: typeof JOURNEY_STEPS[0], index: number) => {
     if (index <= currentIndex) {
@@ -118,42 +55,42 @@ export function JourneyView({ currentStep }: JourneyViewProps) {
     }
   };
 
-  const progressPercent = Math.round((currentIndex / (JOURNEY_STEPS.length - 1)) * 100);
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
+    <div className="min-h-screen bg-[#131F24] flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-sm border-b border-slate-700">
-        <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+      <header className="px-6 py-4 border-b border-[#2a3f4a]">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center">
-              <Trophy className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-[#FFD900] flex items-center justify-center">
+              <Trophy className="w-5 h-5 text-[#131F24]" />
             </div>
             <div>
-              <h1 className="font-bold text-lg">Your Journey</h1>
-              <p className="text-xs text-slate-400">{progressPercent}% complete</p>
+              <h1 className="text-white font-bold">Game Creator</h1>
+              <span className="text-gray-500 text-sm">{currentIndex + 1} of {JOURNEY_STEPS.length}</span>
             </div>
           </div>
-          <UserMenu />
+          
+          <button 
+            onClick={() => window.location.href = '/'}
+            className="text-gray-500 hover:text-white text-sm"
+          >
+            Sign Out
+          </button>
         </div>
       </header>
 
-      {/* Progress bar */}
-      <div className="h-1 bg-slate-700">
-        <div 
-          className="h-full bg-gradient-to-r from-green-400 to-emerald-500 transition-all duration-500"
-          style={{ width: `${progressPercent}%` }}
-        />
-      </div>
+      {/* Main */}
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-8">
+        <h2 className="text-2xl font-bold text-white mb-2">Your Journey</h2>
+        <p className="text-gray-500 mb-8">Complete each step to build your game concept</p>
 
-      {/* Journey Path */}
-      <div className="max-w-lg mx-auto px-4 py-8">
-        <div className="relative">
-          {/* Connecting line */}
-          <div className="absolute left-8 top-0 bottom-0 w-1 bg-slate-700" />
-          
-          {/* Steps */}
-          <div className="space-y-4">
+        {/* Horizontal scrolling path */}
+        <div 
+          ref={scrollRef}
+          className="w-full max-w-4xl overflow-x-auto pb-4"
+          style={{ scrollbarWidth: 'none' }}
+        >
+          <div className="flex items-center gap-2 px-8 min-w-max">
             {JOURNEY_STEPS.map((step, index) => {
               const isCompleted = index < currentIndex;
               const isCurrent = index === currentIndex;
@@ -161,117 +98,146 @@ export function JourneyView({ currentStep }: JourneyViewProps) {
               const Icon = step.icon;
 
               return (
-                <div
-                  key={step.path}
-                  className={`relative flex items-center gap-4 ${
-                    isLocked ? 'opacity-50' : ''
-                  }`}
-                >
+                <div key={step.path} className="flex items-center">
                   {/* Node */}
-                  <button
-                    onClick={() => handleStepClick(step, index)}
-                    disabled={isLocked}
-                    className={`
-                      relative z-10 w-16 h-16 rounded-2xl flex items-center justify-center
-                      transition-all duration-300 transform
-                      ${isCompleted 
-                        ? 'bg-gradient-to-br from-green-400 to-emerald-600 shadow-lg shadow-green-500/30' 
-                        : isCurrent 
-                          ? `bg-gradient-to-br ${step.color} shadow-xl ring-4 ring-white/20 scale-110`
-                          : 'bg-slate-700'
-                      }
-                      ${!isLocked ? 'hover:scale-105 cursor-pointer' : 'cursor-not-allowed'}
-                    `}
-                  >
-                    {isCompleted ? (
-                      <Crown className="w-7 h-7" />
-                    ) : isLocked ? (
-                      <Lock className="w-6 h-6 text-slate-500" />
-                    ) : (
-                      <Icon className="w-7 h-7" />
-                    )}
-                    
-                    {/* Pulse animation for current */}
-                    {isCurrent && (
-                      <span className="absolute inset-0 rounded-2xl animate-ping opacity-20 bg-white" />
-                    )}
-                  </button>
-
-                  {/* Content */}
-                  <div 
-                    className={`flex-1 ${!isLocked ? 'cursor-pointer' : ''}`}
-                    onClick={() => !isLocked && handleStepClick(step, index)}
-                  >
-                    <div className={`
-                      p-4 rounded-xl transition-all
-                      ${isCurrent 
-                        ? 'bg-slate-700/80 border border-slate-600' 
-                        : isCompleted 
-                          ? 'bg-slate-800/50'
-                          : 'bg-slate-800/30'
-                      }
-                    `}>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className={`font-semibold ${isCurrent ? 'text-white' : isCompleted ? 'text-green-400' : 'text-slate-400'}`}>
-                            {step.label}
-                          </h3>
-                          <p className="text-sm text-slate-400 mt-0.5">{step.description}</p>
-                        </div>
-                        {!isLocked && (
-                          <ChevronRight className={`w-5 h-5 ${isCurrent ? 'text-white' : 'text-slate-500'}`} />
-                        )}
-                      </div>
-                      
-                      {/* Current step CTA */}
-                      {isCurrent && (
-                        <Button 
-                          onClick={() => router.push(`/${step.path}`)}
-                          className={`mt-3 w-full bg-gradient-to-r ${step.color} hover:opacity-90`}
-                        >
-                          {isCompleted ? 'Review' : index === 0 ? 'Start' : 'Continue'}
-                          <ChevronRight className="w-4 h-4 ml-1" />
-                        </Button>
+                  <div className="flex flex-col items-center">
+                    <button
+                      onClick={() => handleStepClick(step, index)}
+                      disabled={isLocked}
+                      className={`
+                        relative w-16 h-16 rounded-full flex items-center justify-center
+                        transition-transform
+                        ${isCurrent ? 'scale-110' : ''}
+                        ${!isLocked ? 'hover:scale-105 cursor-pointer' : 'cursor-not-allowed'}
+                      `}
+                      style={{
+                        backgroundColor: isLocked ? '#2a3f4a' : step.color,
+                        boxShadow: isLocked ? 'none' : `0 4px 0 ${darken(step.color, 40)}`,
+                      }}
+                    >
+                      {isCompleted && (
+                        <Crown 
+                          className="absolute -top-2 left-1/2 -translate-x-1/2 w-5 h-5 text-yellow-400" 
+                          fill="currentColor" 
+                        />
                       )}
-                    </div>
+                      
+                      {isLocked ? (
+                        <Lock className="w-6 h-6 text-gray-600" />
+                      ) : (
+                        <Icon className="w-6 h-6 text-white" />
+                      )}
+                    </button>
+
+                    <span className={`mt-2 text-xs font-medium ${
+                      isCurrent ? 'text-white' : isCompleted ? 'text-green-400' : 'text-gray-600'
+                    }`}>
+                      {step.label}
+                    </span>
+
+                    {isCurrent && (
+                      <button
+                        onClick={() => router.push(`/${step.path}`)}
+                        className="mt-2 px-4 py-1.5 rounded-lg text-white text-xs font-bold"
+                        style={{ backgroundColor: step.color }}
+                      >
+                        {currentIndex === 0 ? 'START' : 'GO'}
+                      </button>
+                    )}
                   </div>
 
-                  {/* Completion badge */}
-                  {isCompleted && (
-                    <div className="absolute left-12 top-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center border-2 border-slate-900">
-                      <CheckCircle2 className="w-4 h-4" />
-                    </div>
+                  {/* Connector line */}
+                  {index < JOURNEY_STEPS.length - 1 && (
+                    <div 
+                      className="w-8 h-1 mx-1 rounded-full"
+                      style={{
+                        backgroundColor: index < currentIndex ? '#58CC02' : '#2a3f4a'
+                      }}
+                    />
                   )}
                 </div>
               );
             })}
-          </div>
 
-          {/* Final destination */}
-          <div className="relative flex items-center gap-4 mt-8 pt-4 border-t border-slate-700">
-            <div className="z-10 w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg shadow-yellow-500/30">
-              <Trophy className="w-8 h-8" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-yellow-400">Ready to Build!</h3>
-              <p className="text-sm text-slate-400">Complete all steps to export your game design document</p>
+            {/* Final trophy */}
+            <div className="flex items-center">
+              <div 
+                className="w-8 h-1 mx-1 rounded-full"
+                style={{ backgroundColor: currentIndex >= JOURNEY_STEPS.length - 1 ? '#58CC02' : '#2a3f4a' }}
+              />
+              <div className="flex flex-col items-center">
+                <div 
+                  className="w-16 h-16 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: currentIndex >= JOURNEY_STEPS.length ? '#FFD900' : '#2a3f4a' }}
+                >
+                  <Trophy className={`w-6 h-6 ${currentIndex >= JOURNEY_STEPS.length ? 'text-[#131F24]' : 'text-gray-600'}`} />
+                </div>
+                <span className="mt-2 text-xs font-medium text-gray-600">Done</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Custom animations */}
+        {/* Current step card */}
+        {JOURNEY_STEPS[currentIndex] && (
+          <div className="mt-8 p-5 rounded-xl bg-[#1a2f38] border border-[#2a3f4a] max-w-md w-full">
+            <div className="flex items-center gap-4">
+              <div 
+                className="w-12 h-12 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: JOURNEY_STEPS[currentIndex].color }}
+              >
+                {(() => {
+                  const CurrentIcon = JOURNEY_STEPS[currentIndex].icon;
+                  return <CurrentIcon className="w-6 h-6 text-white" />;
+                })()}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-bold">
+                  {JOURNEY_STEPS[currentIndex].label}
+                </h3>
+                <p className="text-gray-500 text-sm">
+                  {getDescription(JOURNEY_STEPS[currentIndex].path)}
+                </p>
+              </div>
+              <button
+                onClick={() => router.push(`/${JOURNEY_STEPS[currentIndex].path}`)}
+                className="p-3 rounded-lg text-white"
+                style={{ backgroundColor: JOURNEY_STEPS[currentIndex].color }}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
+      </main>
+
       <style jsx>{`
-        @keyframes ping {
-          75%, 100% {
-            transform: scale(1.5);
-            opacity: 0;
-          }
-        }
-        .animate-ping {
-          animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
+        div::-webkit-scrollbar { display: none; }
       `}</style>
     </div>
   );
+}
+
+function darken(color: string, amount: number): string {
+  const hex = color.replace('#', '');
+  const num = parseInt(hex, 16);
+  const r = Math.max(0, (num >> 16) - amount);
+  const g = Math.max(0, ((num >> 8) & 0xFF) - amount);
+  const b = Math.max(0, (num & 0xFF) - amount);
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+}
+
+function getDescription(path: string): string {
+  const desc: Record<string, string> = {
+    'create': 'Choose platform and timeline',
+    'ikigai': 'Build your ideation canvas',
+    'sparks': 'Generate AI game ideas',
+    'card': 'Reveal your concept card',
+    'finalize': 'Polish your concept',
+    'gameloop': 'Design the core loop',
+    'questions': 'Answer design questions',
+    'skilltree': 'Map skill progression',
+    'validation': 'Validate your concept',
+  };
+  return desc[path] || '';
 }
