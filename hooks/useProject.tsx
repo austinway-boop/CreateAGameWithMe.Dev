@@ -12,6 +12,7 @@ import {
 interface UseProjectReturn {
   project: Project | null;
   loading: boolean;
+  isInitialLoad: boolean;
   updateProject: (updates: Partial<Project>) => void;
   updateProjectAndSave: (updates: Partial<Project>) => Promise<void>;
   resetProject: () => Promise<void>;
@@ -21,36 +22,38 @@ interface UseProjectReturn {
 // Context for sharing project state across all pages
 const ProjectContext = createContext<UseProjectReturn | null>(null);
 
+// In-memory cache for instant loads on navigation
+let projectCache: Project | null = null;
+let cacheUserId: string | null = null;
+
 interface ProjectProviderProps {
   children: ReactNode;
 }
 
 export function ProjectProvider({ children }: ProjectProviderProps) {
   const { data: session, status } = useSession();
-  const [project, setProject] = useState<Project | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [showLoading, setShowLoading] = useState(false);
+  const [project, setProject] = useState<Project | null>(() => {
+    // Initialize from cache if available for same user
+    if (projectCache && cacheUserId === session?.user?.id) {
+      return projectCache;
+    }
+    return null;
+  });
+  const [loading, setLoading] = useState(!projectCache);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   
-  // Track if we've already loaded for this session to prevent re-fetching
+  // Track loading state
   const hasLoadedRef = useRef(false);
   const lastUserIdRef = useRef<string | null>(null);
   const isLoadingRef = useRef(false);
-
-  // Delay showing loading indicator by 300ms to avoid flash for fast loads
-  useEffect(() => {
-    if (loading) {
-      const timer = setTimeout(() => setShowLoading(true), 300);
-      return () => clearTimeout(timer);
-    } else {
-      setShowLoading(false);
-    }
-  }, [loading]);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingSaveRef = useRef<Partial<Project> | null>(null);
 
   // Load project on mount and when user changes
   useEffect(() => {
     const userId = session?.user?.id;
     
-    // Wait for session to resolve before doing anything
+    // Wait for session to resolve
     if (status === 'loading') {
       return;
     }
@@ -58,31 +61,41 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     // Reset state if logged out
     if (status === 'unauthenticated') {
       setProject(null);
+      projectCache = null;
+      cacheUserId = null;
       setLoading(false);
+      setIsInitialLoad(false);
       hasLoadedRef.current = false;
       lastUserIdRef.current = null;
       return;
     }
     
-    // From here, status is 'authenticated'
-    
-    // Reset if user changed to a DIFFERENT user
+    // Reset if user changed
     if (userId && lastUserIdRef.current && userId !== lastUserIdRef.current) {
       hasLoadedRef.current = false;
+      projectCache = null;
+      cacheUserId = null;
       setProject(null);
     }
     if (userId) {
       lastUserIdRef.current = userId;
     }
     
-    // Currently loading, let it finish
-    if (isLoadingRef.current) {
+    // Skip if already loading or loaded
+    if (isLoadingRef.current || hasLoadedRef.current) {
+      if (hasLoadedRef.current && loading) {
+        setLoading(false);
+        setIsInitialLoad(false);
+      }
       return;
     }
-    
-    // Already loaded
-    if (hasLoadedRef.current) {
-      if (loading) setLoading(false);
+
+    // Check cache first - instant load!
+    if (projectCache && cacheUserId === userId) {
+      setProject(projectCache);
+      setLoading(false);
+      setIsInitialLoad(false);
+      hasLoadedRef.current = true;
       return;
     }
 
@@ -93,54 +106,90 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
       try {
         const loaded = await getOrCreateCurrentProject();
         setProject(loaded);
+        // Update cache
+        projectCache = loaded;
+        cacheUserId = userId || null;
         hasLoadedRef.current = true;
       } catch (err) {
         console.error('Failed to load project:', err);
         setProject(null);
       } finally {
         setLoading(false);
+        setIsInitialLoad(false);
         isLoadingRef.current = false;
       }
     }
     
     loadProject();
-  }, [status, session?.user?.id]);
+  }, [status, session?.user?.id, loading]);
 
-  // Debounced save - only save the fields that can be updated
+  // Optimized debounced save with batching
+  const flushSave = useCallback(async () => {
+    if (!project || !pendingSaveRef.current) return;
+    
+    const { id, createdAt, updatedAt, ...savableFields } = project;
+    pendingSaveRef.current = null;
+    
+    try {
+      await saveProjectAction(id, savableFields);
+    } catch (err) {
+      console.error('Failed to save project:', err);
+    }
+  }, [project]);
+
+  // Schedule save with debouncing
+  const scheduleSave = useCallback(() => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = setTimeout(flushSave, 800);
+  }, [flushSave]);
+
+  // Cleanup on unmount
   useEffect(() => {
-    if (!project) return;
-
-    const timer = setTimeout(async () => {
-      // Extract only the fields that should be saved (exclude id, createdAt, updatedAt)
-      const { id, createdAt, updatedAt, ...savableFields } = project;
-      
-      try {
-        await saveProjectAction(id, savableFields);
-      } catch (err) {
-        console.error('Failed to save project:', err);
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        // Flush any pending saves
+        if (pendingSaveRef.current && project) {
+          const { id, createdAt, updatedAt, ...savableFields } = project;
+          saveProjectAction(id, savableFields).catch(console.error);
+        }
       }
-    }, 500);
-
-    return () => clearTimeout(timer);
+    };
   }, [project]);
 
   const updateProject = useCallback((updates: Partial<Project>) => {
     setProject((prev) => {
       if (!prev) return prev;
-      return { ...prev, ...updates };
+      const updated = { ...prev, ...updates };
+      // Update cache immediately
+      projectCache = updated;
+      pendingSaveRef.current = updates;
+      return updated;
     });
-  }, []);
+    scheduleSave();
+  }, [scheduleSave]);
 
   // Immediate save - use when navigating away
   const updateProjectAndSave = useCallback(async (updates: Partial<Project>) => {
+    // Clear any pending debounced save
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+    
     setProject((prev) => {
       if (!prev) return prev;
       const updatedProject = { ...prev, ...updates };
       
-      // Extract only the fields that should be saved (exclude id, createdAt, updatedAt)
+      // Update cache immediately
+      projectCache = updatedProject;
+      
+      // Extract only the fields that should be saved
       const { id, createdAt, updatedAt, ...savableFields } = updatedProject;
       
-      // Save immediately without debounce (fire and forget from state update)
+      // Save immediately
       saveProjectAction(id, savableFields).catch((err) => {
         console.error('Failed to save project:', err);
       });
@@ -152,25 +201,28 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   const resetProject = useCallback(async () => {
     setLoading(true);
     try {
-      // Create a new project
       const fresh = await createProjectAction();
       setProject(fresh);
+      projectCache = fresh;
+      cacheUserId = session?.user?.id || null;
     } catch (err) {
       console.error('Failed to reset project:', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [session?.user?.id]);
 
   const retryLoad = useCallback(async () => {
-    // Reset state and try loading again
     hasLoadedRef.current = false;
     isLoadingRef.current = false;
+    projectCache = null;
     setLoading(true);
     
     try {
       const loaded = await getOrCreateCurrentProject();
       setProject(loaded);
+      projectCache = loaded;
+      cacheUserId = session?.user?.id || null;
       hasLoadedRef.current = true;
     } catch (err) {
       console.error('Failed to load project:', err);
@@ -179,11 +231,12 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
       setLoading(false);
       isLoadingRef.current = false;
     }
-  }, []);
+  }, [session?.user?.id]);
 
   const value: UseProjectReturn = {
     project,
-    loading: showLoading, // Only show loading for initial fetch, NOT for background saves
+    loading,
+    isInitialLoad,
     updateProject,
     updateProjectAndSave,
     resetProject,

@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { AppHeader } from './AppHeader';
-import { ProgressIndicator } from './ProgressIndicator';
+import { ProgressPath } from './ProgressPath';
 
 // Routes that should show the app header and progress
 const PROTECTED_ROUTES = [
@@ -16,7 +16,6 @@ const PROTECTED_ROUTES = [
   '/card',
   '/questions',
   '/skilltree',
-  '/validation',
   '/validation',
 ];
 
@@ -32,7 +31,6 @@ const PROGRESS_ROUTES = [
   '/questions',
   '/skilltree',
   '/validation',
-  '/validation',
 ];
 
 export function PageWrapper({ children }: { children: React.ReactNode }) {
@@ -44,7 +42,7 @@ export function PageWrapper({ children }: { children: React.ReactNode }) {
   return (
     <>
       {showHeader && <AppHeader />}
-      {showProgress && <ProgressIndicator />}
+      {showProgress && <ProgressPath />}
       <div className="flex-1 flex flex-col">
         {children}
       </div>
