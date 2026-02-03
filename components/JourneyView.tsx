@@ -156,16 +156,6 @@ export function JourneyView({ currentStep }: { currentStep?: string }) {
                     }`}>
                       {step.label}
                     </span>
-
-                    {isCurrent && (
-                      <button
-                        onClick={() => router.push(`/${step.path}`)}
-                        className="mt-2 px-4 py-1.5 rounded-full text-white text-xs font-bold"
-                        style={{ backgroundColor: step.color }}
-                      >
-                        {currentIndex === 0 ? 'START' : 'GO'}
-                      </button>
-                    )}
                   </div>
                 );
               })}
