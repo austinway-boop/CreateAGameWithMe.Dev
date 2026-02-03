@@ -40,7 +40,6 @@ export default function SkillTreePage() {
   const [connectionDrag, setConnectionDrag] = useState<ConnectionDragState | null>(null);
   const [hoveredInputHandle, setHoveredInputHandle] = useState<string | null>(null);
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
-  const [selectedLevel, setSelectedLevel] = useState<SkillLevel>('core');
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Handle mouse move for node dragging
@@ -335,26 +334,6 @@ export default function SkillTreePage() {
       <div className="flex gap-4 flex-1 min-h-0">
         {/* Skill Palette */}
         <div className="w-52 flex-shrink-0 space-y-4 overflow-y-auto">
-          {/* Level Selector */}
-          <div className="space-y-2">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Skill Level</p>
-            <div className="flex flex-col gap-2">
-              {SKILL_LEVELS.map((level) => (
-                <button
-                  key={level.level}
-                  onClick={() => setSelectedLevel(level.level)}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-                    selectedLevel === level.level 
-                      ? level.color + ' text-white shadow-[0_2px_0_rgba(0,0,0,0.2)]' 
-                      : 'bg-white text-gray-600 shadow-[0_2px_0_#e5e7eb] hover:bg-gray-50'
-                  }`}
-                >
-                  {level.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div className="space-y-2">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Drag to canvas</p>
             {SKILL_LEVELS.map((level) => (
@@ -367,7 +346,7 @@ export default function SkillTreePage() {
                 className={`${level.color} text-white px-3 py-2.5 rounded-xl cursor-grab active:cursor-grabbing 
                   shadow-[0_3px_0_rgba(0,0,0,0.2)] hover:brightness-110 active:translate-y-0.5 active:shadow-none transition-all`}
               >
-                <div className="font-bold text-sm">{level.label} Skill</div>
+                <div className="font-bold text-sm">{level.label}</div>
                 <div className="text-xs opacity-90 font-medium">{level.description}</div>
               </div>
             ))}
