@@ -182,19 +182,25 @@ export function JourneyView({ currentStep }: { currentStep?: string }) {
 
         {/* Current step card */}
         {JOURNEY_STEPS[currentIndex] && (
-          <div className="mt-6 p-4 rounded-2xl bg-white border border-gray-200 shadow-sm max-w-md w-full">
+          <div 
+            className="mt-6 p-5 rounded-2xl bg-white max-w-md w-full"
+            style={{ boxShadow: '0 4px 0 #e5e7eb' }}
+          >
             <div className="flex items-center gap-4">
               <div 
-                className="w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{ backgroundColor: JOURNEY_STEPS[currentIndex].color }}
+                className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                style={{ 
+                  backgroundColor: JOURNEY_STEPS[currentIndex].color,
+                  boxShadow: `0 4px 0 ${darken(JOURNEY_STEPS[currentIndex].color, 40)}`
+                }}
               >
                 {(() => {
                   const CurrentIcon = JOURNEY_STEPS[currentIndex].icon;
-                  return <CurrentIcon className="w-6 h-6 text-white" />;
+                  return <CurrentIcon className="w-7 h-7 text-white" />;
                 })()}
               </div>
               <div className="flex-1">
-                <h3 className="text-gray-900 font-bold">
+                <h3 className="text-gray-900 font-bold text-lg">
                   {JOURNEY_STEPS[currentIndex].label}
                 </h3>
                 <p className="text-gray-500 text-sm">
@@ -203,7 +209,7 @@ export function JourneyView({ currentStep }: { currentStep?: string }) {
               </div>
               <button
                 onClick={() => router.push(`/${JOURNEY_STEPS[currentIndex].path}`)}
-                className="px-5 py-3 rounded-xl text-white font-bold text-sm uppercase tracking-wide
+                className="px-6 py-3 rounded-2xl text-white font-bold text-sm uppercase tracking-wide
                   active:translate-y-1 active:shadow-none transition-all"
                 style={{ 
                   backgroundColor: JOURNEY_STEPS[currentIndex].color,
