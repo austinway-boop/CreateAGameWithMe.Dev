@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 import { Lightbulb, Sparkles } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,7 +13,7 @@ type Step = 'idea' | 'platform' | 'timeline';
 
 export default function CreatePage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: session, status } = useAuth();
   const { project, loading, updateProject, retryLoad } = useProject();
   const [step, setStep] = useState<Step>('idea');
   const [hasIdea, setHasIdea] = useState<boolean | null>(null);

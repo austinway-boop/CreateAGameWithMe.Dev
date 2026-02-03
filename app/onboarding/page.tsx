@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 import { User, Users, ArrowRight, Loader2 } from 'lucide-react';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,7 +13,7 @@ type Step = 'username' | 'organization';
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { data: session, status, update: updateSession } = useSession();
+  const { data: session, status, update: updateSession } = useAuth();
   const [step, setStep] = useState<Step>('username');
   const [username, setUsername] = useState('');
   const [usernameError, setUsernameError] = useState<string | null>(null);
@@ -24,7 +24,7 @@ export default function OnboardingPage() {
   // Redirect if already onboarded
   useEffect(() => {
     if (status === 'authenticated' && session?.user?.onboardingComplete) {
-      router.push('/create');
+      router.push('/journey');
     }
   }, [status, session, router]);
 
@@ -131,8 +131,8 @@ export default function OnboardingPage() {
       // Update the session to reflect new data
       await updateSession();
 
-      // Navigate to create page
-      router.push('/create');
+      // Navigate to journey page
+      router.push('/journey');
     } catch (error) {
       console.error('Failed to complete onboarding:', error);
       setUsernameError('Something went wrong. Please try again.');

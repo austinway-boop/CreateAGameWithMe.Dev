@@ -15,10 +15,16 @@ const protectedRoutes = [
   '/questions',
   '/skilltree',
   '/validation',
-  '/validation',
+  '/journey',
 ];
 
 export function middleware(request: NextRequest) {
+  // Skip auth check if mock auth is enabled (development only)
+  const mockAuthEnabled = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true';
+  if (mockAuthEnabled) {
+    return NextResponse.next();
+  }
+
   const isProtectedRoute = protectedRoutes.some(route => 
     request.nextUrl.pathname.startsWith(route)
   );

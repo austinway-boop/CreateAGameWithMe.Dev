@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, createContext, useContext, useRef, ReactNode } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from './useAuth';
 import { Project } from '@/lib/types';
 import { 
   getOrCreateCurrentProject, 
@@ -26,15 +26,21 @@ const ProjectContext = createContext<UseProjectReturn | null>(null);
 let projectCache: Project | null = null;
 let cacheUserId: string | null = null;
 
+// Check if mock auth is enabled
+const USE_MOCK_AUTH = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true';
+const MOCK_USER_ID = 'dev-user-123';
+
 interface ProjectProviderProps {
   children: ReactNode;
 }
 
 export function ProjectProvider({ children }: ProjectProviderProps) {
-  const { data: session, status } = useSession();
+  // Use the unified auth hook that handles both mock and real auth
+  const { data: session, status } = useAuth();
+  
   const [project, setProject] = useState<Project | null>(() => {
-    // Initialize from cache if available for same user
-    if (projectCache && cacheUserId === session?.user?.id) {
+    const userId = USE_MOCK_AUTH ? MOCK_USER_ID : session?.user?.id;
+    if (projectCache && cacheUserId === userId) {
       return projectCache;
     }
     return null;
@@ -51,15 +57,16 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
 
   // Load project on mount and when user changes
   useEffect(() => {
-    const userId = session?.user?.id;
+    // For mock auth, always use mock user ID
+    const userId = USE_MOCK_AUTH ? MOCK_USER_ID : session?.user?.id;
     
-    // Wait for session to resolve
-    if (status === 'loading') {
+    // For real auth, wait for session to resolve
+    if (!USE_MOCK_AUTH && status === 'loading') {
       return;
     }
     
-    // Reset state if logged out
-    if (status === 'unauthenticated') {
+    // Reset state if logged out (only for real auth)
+    if (!USE_MOCK_AUTH && status === 'unauthenticated') {
       setProject(null);
       projectCache = null;
       cacheUserId = null;
@@ -99,6 +106,11 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
       return;
     }
 
+    // For mock auth or authenticated users, load the project
+    if (USE_MOCK_AUTH || userId) {
+      loadProject();
+    }
+
     async function loadProject() {
       if (isLoadingRef.current) return;
       isLoadingRef.current = true;
@@ -119,8 +131,6 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
         isLoadingRef.current = false;
       }
     }
-    
-    loadProject();
   }, [status, session?.user?.id, loading]);
 
   // Optimized debounced save with batching
@@ -204,7 +214,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
       const fresh = await createProjectAction();
       setProject(fresh);
       projectCache = fresh;
-      cacheUserId = session?.user?.id || null;
+      cacheUserId = USE_MOCK_AUTH ? MOCK_USER_ID : session?.user?.id || null;
     } catch (err) {
       console.error('Failed to reset project:', err);
     } finally {
@@ -222,7 +232,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
       const loaded = await getOrCreateCurrentProject();
       setProject(loaded);
       projectCache = loaded;
-      cacheUserId = session?.user?.id || null;
+      cacheUserId = USE_MOCK_AUTH ? MOCK_USER_ID : session?.user?.id || null;
       hasLoadedRef.current = true;
     } catch (err) {
       console.error('Failed to load project:', err);

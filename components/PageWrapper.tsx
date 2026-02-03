@@ -2,10 +2,9 @@
 
 import { usePathname } from 'next/navigation';
 import { AppHeader } from './AppHeader';
-import { ProgressPath } from './ProgressPath';
 
-// Routes that should show the app header and progress
-const PROTECTED_ROUTES = [
+// Routes that should show the app header (activity pages)
+const ACTIVITY_ROUTES = [
   '/create',
   '/idea',
   '/ikigai',
@@ -19,30 +18,27 @@ const PROTECTED_ROUTES = [
   '/validation',
 ];
 
-// Routes that show progress but might have different header behavior
-const PROGRESS_ROUTES = [
-  '/create',
-  '/idea',
-  '/ikigai',
-  '/sparks',
-  '/card',
-  '/finalize',
-  '/gameloop',
-  '/questions',
-  '/skilltree',
-  '/validation',
+// Routes that handle their own layout (no wrapper)
+const SELF_CONTAINED_ROUTES = [
+  '/journey',
+  '/onboarding',
 ];
 
 export function PageWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   
-  const showHeader = PROTECTED_ROUTES.some(route => pathname?.startsWith(route));
-  const showProgress = PROGRESS_ROUTES.some(route => pathname?.startsWith(route));
+  // Check if this is a self-contained route (handles its own layout)
+  const isSelfContained = SELF_CONTAINED_ROUTES.some(route => pathname?.startsWith(route));
+  if (isSelfContained) {
+    return <>{children}</>;
+  }
+
+  // Check if this is an activity route (show header, no progress path)
+  const isActivity = ACTIVITY_ROUTES.some(route => pathname?.startsWith(route));
 
   return (
     <>
-      {showHeader && <AppHeader />}
-      {showProgress && <ProgressPath />}
+      {isActivity && <AppHeader />}
       <div className="flex-1 flex flex-col">
         {children}
       </div>

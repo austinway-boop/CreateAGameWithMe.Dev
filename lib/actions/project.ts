@@ -5,6 +5,41 @@ import { prisma } from '@/lib/prisma';
 import { Project as ProjectType } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
+// Mock user ID for development
+const MOCK_USER_ID = 'dev-user-123';
+const USE_MOCK_AUTH = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true';
+
+// Get authenticated user ID (or mock user in development)
+async function getAuthenticatedUserId(): Promise<string | null> {
+  if (USE_MOCK_AUTH) {
+    return MOCK_USER_ID;
+  }
+  
+  const session = await auth();
+  return session?.user?.id || null;
+}
+
+// Ensure mock user exists in database (for development)
+async function ensureMockUserExists(): Promise<void> {
+  if (!USE_MOCK_AUTH) return;
+  
+  const existingUser = await prisma.user.findUnique({
+    where: { id: MOCK_USER_ID },
+  });
+  
+  if (!existingUser) {
+    await prisma.user.create({
+      data: {
+        id: MOCK_USER_ID,
+        email: 'dev@example.com',
+        name: 'Dev User',
+        username: 'devuser',
+        onboardingComplete: true,
+      },
+    });
+  }
+}
+
 // Convert Prisma Project to App Project type
 function toAppProject(dbProject: {
   id: string;
@@ -61,13 +96,17 @@ function toAppProject(dbProject: {
 }
 
 export async function getProjects(): Promise<ProjectType[]> {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) {
     return [];
   }
 
+  if (USE_MOCK_AUTH) {
+    await ensureMockUserExists();
+  }
+
   const projects = await prisma.project.findMany({
-    where: { userId: session.user.id },
+    where: { userId },
     orderBy: { updatedAt: 'desc' },
   });
 
@@ -75,15 +114,19 @@ export async function getProjects(): Promise<ProjectType[]> {
 }
 
 export async function getProject(id: string): Promise<ProjectType | null> {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) {
     return null;
+  }
+
+  if (USE_MOCK_AUTH) {
+    await ensureMockUserExists();
   }
 
   const project = await prisma.project.findFirst({
     where: { 
       id,
-      userId: session.user.id,
+      userId,
     },
   });
 
@@ -91,14 +134,18 @@ export async function getProject(id: string): Promise<ProjectType | null> {
 }
 
 export async function createProject(): Promise<ProjectType> {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) {
     throw new Error('Not authenticated');
+  }
+
+  if (USE_MOCK_AUTH) {
+    await ensureMockUserExists();
   }
 
   const project = await prisma.project.create({
     data: {
-      userId: session.user.id,
+      userId,
       ikigai: { chips: [] },
       sparkRounds: [],
       regenerationAttempts: [],
@@ -111,14 +158,14 @@ export async function createProject(): Promise<ProjectType> {
 }
 
 export async function saveProject(id: string, updates: Partial<ProjectType>): Promise<ProjectType> {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) {
     throw new Error('Not authenticated');
   }
 
   // Verify ownership
   const existing = await prisma.project.findFirst({
-    where: { id, userId: session.user.id },
+    where: { id, userId },
   });
 
   if (!existing) {
@@ -159,15 +206,15 @@ export async function saveProject(id: string, updates: Partial<ProjectType>): Pr
 }
 
 export async function deleteProject(id: string): Promise<void> {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) {
     throw new Error('Not authenticated');
   }
 
   await prisma.project.deleteMany({
     where: { 
       id,
-      userId: session.user.id,
+      userId,
     },
   });
 
@@ -175,14 +222,18 @@ export async function deleteProject(id: string): Promise<void> {
 }
 
 export async function getOrCreateCurrentProject(): Promise<ProjectType> {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) {
     throw new Error('Not authenticated');
+  }
+
+  if (USE_MOCK_AUTH) {
+    await ensureMockUserExists();
   }
 
   // Get most recent project or create one
   const existingProject = await prisma.project.findFirst({
-    where: { userId: session.user.id },
+    where: { userId },
     orderBy: { updatedAt: 'desc' },
   });
 
@@ -193,7 +244,7 @@ export async function getOrCreateCurrentProject(): Promise<ProjectType> {
   // Create new project
   const project = await prisma.project.create({
     data: {
-      userId: session.user.id,
+      userId,
       ikigai: { chips: [] },
       sparkRounds: [],
       regenerationAttempts: [],

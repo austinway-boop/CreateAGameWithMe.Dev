@@ -1,14 +1,26 @@
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 import { LogOut, User } from 'lucide-react';
 
+const USE_MOCK_AUTH = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true';
+
 export function UserMenu() {
-  const { data: session } = useSession();
+  const { data: session } = useAuth();
 
   if (!session?.user) {
     return null;
   }
+
+  const handleSignOut = () => {
+    if (USE_MOCK_AUTH) {
+      // In mock mode, just reload the page (or you could redirect to landing)
+      window.location.href = '/';
+    } else {
+      signOut({ callbackUrl: '/' });
+    }
+  };
 
   return (
     <div className="flex items-center gap-3">
@@ -29,7 +41,7 @@ export function UserMenu() {
         </span>
       </div>
       <button
-        onClick={() => signOut({ callbackUrl: '/' })}
+        onClick={handleSignOut}
         className="p-2 rounded-lg hover:bg-muted transition-colors"
         title="Sign out"
       >
