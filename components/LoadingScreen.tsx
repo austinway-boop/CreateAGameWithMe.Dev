@@ -149,17 +149,20 @@ export function PageSkeleton() {
 /** Create page skeleton */
 export function CreateSkeleton() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-lg space-y-6">
-        <div className="text-center space-y-2">
-          <div className="h-8 w-64 bg-muted rounded animate-pulse mx-auto" />
-          <div className="h-5 w-48 bg-muted rounded animate-pulse mx-auto" />
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <header className="px-4 py-3">
+        <div className="h-9 w-9 bg-gray-200 rounded-xl animate-pulse" />
+      </header>
+      <main className="flex-1 flex flex-col items-center justify-center px-4 pb-8">
+        <div className="w-full max-w-xs mb-8">
+          <div className="h-3 bg-gray-200 rounded-full animate-pulse" />
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="h-32 bg-muted rounded-xl animate-pulse" />
-          <div className="h-32 bg-muted rounded-xl animate-pulse" />
+        <div className="h-8 w-64 bg-gray-200 rounded animate-pulse mb-8" />
+        <div className="w-full max-w-sm space-y-3">
+          <div className="h-20 bg-white rounded-xl shadow-[0_3px_0_#e5e7eb] animate-pulse" />
+          <div className="h-20 bg-white rounded-xl shadow-[0_3px_0_#e5e7eb] animate-pulse" />
         </div>
-      </div>
+      </main>
     </div>
   );
 }

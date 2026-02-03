@@ -21,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased min-h-screen bg-gradient-to-b from-background to-muted/20`}>
+      <body className={`${inter.variable} font-sans antialiased min-h-screen bg-gray-50`}>
         <Providers>
           <main className="min-h-screen flex flex-col">
             <PageWrapper>

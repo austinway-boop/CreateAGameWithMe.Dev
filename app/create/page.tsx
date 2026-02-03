@@ -3,9 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Lightbulb, Sparkles } from 'lucide-react';
+import { Lightbulb, Sparkles, ArrowLeft } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
-import { Card, CardContent } from '@/components/ui/card';
 import { CreateSkeleton } from '@/components/LoadingScreen';
 import { PLATFORMS, TIME_HORIZONS } from '@/lib/types';
 
@@ -14,19 +13,17 @@ type Step = 'idea' | 'platform' | 'timeline';
 export default function CreatePage() {
   const router = useRouter();
   const { data: session, status } = useAuth();
-  const { project, loading, updateProject, retryLoad } = useProject();
+  const { project, loading, updateProject } = useProject();
   const [step, setStep] = useState<Step>('idea');
   const [hasIdea, setHasIdea] = useState<boolean | null>(null);
   const hasRedirected = useRef(false);
 
-  // Redirect to onboarding if not complete
   useEffect(() => {
     if (status === 'authenticated' && !session?.user?.onboardingComplete) {
       router.push('/onboarding');
     }
   }, [status, session, router]);
 
-  // Auto-redirect to saved page if user has progress (only once)
   useEffect(() => {
     if (!hasRedirected.current && project && project.currentPage && project.currentPage !== 'create') {
       hasRedirected.current = true;
@@ -38,7 +35,6 @@ export default function CreatePage() {
     return <CreateSkeleton />;
   }
 
-  // Don't render if not onboarded
   if (!session?.user?.onboardingComplete) {
     return null;
   }
@@ -60,122 +56,101 @@ export default function CreatePage() {
     router.push(`/${nextPage}`);
   };
 
-  const renderStep = () => {
-    switch (step) {
-      case 'idea':
-        return (
-          <>
-            <h2 className="text-xl font-medium text-center">Do you have a game idea?</h2>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => handleIdeaSelect(true)}
-                className="p-6 rounded-lg border-2 border-border hover:border-primary transition-all flex flex-col items-center gap-3"
-              >
-                <Lightbulb className="h-8 w-8 text-muted-foreground" />
-                <span className="font-medium">Yes</span>
-              </button>
-              <button
-                onClick={() => handleIdeaSelect(false)}
-                className="p-6 rounded-lg border-2 border-border hover:border-primary transition-all flex flex-col items-center gap-3"
-              >
-                <Sparkles className="h-8 w-8 text-muted-foreground" />
-                <span className="font-medium">No, help me</span>
-              </button>
-            </div>
-          </>
-        );
-
-      case 'platform':
-        return (
-          <>
-            <h2 className="text-xl font-medium text-center">What platform?</h2>
-            <div className="grid grid-cols-2 gap-2">
-              {PLATFORMS.map((platform) => (
-                <button
-                  key={platform}
-                  onClick={() => handlePlatformSelect(platform)}
-                  className={`p-4 rounded-lg border-2 transition-all text-center ${
-                    project.platform === platform
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                >
-                  {platform}
-                </button>
-              ))}
-            </div>
-          </>
-        );
-
-      case 'timeline':
-        return (
-          <>
-            <h2 className="text-xl font-medium text-center">Timeline?</h2>
-            <div className="grid grid-cols-2 gap-2">
-              {TIME_HORIZONS.map((horizon) => (
-                <button
-                  key={horizon}
-                  onClick={() => handleTimelineSelect(horizon)}
-                  className={`p-4 rounded-lg border-2 transition-all text-center ${
-                    project.timeHorizon === horizon
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                >
-                  {horizon}
-                </button>
-              ))}
-            </div>
-          </>
-        );
-    }
-  };
-
   const steps: Step[] = ['idea', 'platform', 'timeline'];
   const stepIndex = steps.indexOf(step);
 
   return (
-    <div className="flex-1 flex items-center justify-center p-6">
-      <div className="w-full max-w-[400px] space-y-8">
-        {/* Header */}
-        <div className="text-center">
-          <p className="text-muted-foreground">Let&apos;s get started</p>
-        </div>
-
-        {/* Progress dots */}
-        <div className="flex justify-center gap-2">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className={`h-2 w-2 rounded-full transition-colors ${
-                i <= stepIndex ? 'bg-primary' : 'bg-border'
-              }`}
-            />
-          ))}
-        </div>
-
-        {/* Step Card */}
-        <Card className="border-2">
-          <CardContent className="pt-6 space-y-6">
-            {renderStep()}
-          </CardContent>
-        </Card>
-
-        {/* Back button */}
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Header */}
+      <header className="px-4 py-3 flex items-center">
         {step !== 'idea' && (
           <button
             onClick={() => {
               const currentIndex = steps.indexOf(step);
-              if (currentIndex > 0) {
-                setStep(steps[currentIndex - 1]);
-              }
+              if (currentIndex > 0) setStep(steps[currentIndex - 1]);
             }}
-            className="block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="p-2 rounded-xl hover:bg-gray-100 text-gray-500"
           >
-            ← Back
+            <ArrowLeft className="w-5 h-5" />
           </button>
         )}
-      </div>
+      </header>
+
+      {/* Main */}
+      <main className="flex-1 flex flex-col items-center justify-center px-4 pb-8">
+        {/* Progress bar */}
+        <div className="w-full max-w-xs mb-8">
+          <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-pink-500 rounded-full transition-all duration-300"
+              style={{ width: `${((stepIndex + 1) / 3) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Question */}
+        <h1 className="text-2xl font-bold text-gray-900 mb-8 text-center">
+          {step === 'idea' && 'Do you have a game idea?'}
+          {step === 'platform' && 'What platform?'}
+          {step === 'timeline' && 'How much time do you have?'}
+        </h1>
+
+        {/* Options */}
+        <div className="w-full max-w-sm space-y-3">
+          {step === 'idea' && (
+            <>
+              <button
+                onClick={() => handleIdeaSelect(true)}
+                className="w-full p-4 rounded-xl bg-white shadow-[0_3px_0_#e5e7eb] 
+                  hover:bg-gray-50 active:translate-y-0.5 active:shadow-none transition-all
+                  flex items-center gap-4"
+              >
+                <div className="w-12 h-12 rounded-xl bg-amber-400 shadow-[0_3px_0_#b45309] flex items-center justify-center">
+                  <Lightbulb className="w-6 h-6 text-white" />
+                </div>
+                <span className="font-bold text-gray-900">Yes, I have an idea</span>
+              </button>
+              <button
+                onClick={() => handleIdeaSelect(false)}
+                className="w-full p-4 rounded-xl bg-white shadow-[0_3px_0_#e5e7eb] 
+                  hover:bg-gray-50 active:translate-y-0.5 active:shadow-none transition-all
+                  flex items-center gap-4"
+              >
+                <div className="w-12 h-12 rounded-xl bg-purple-500 shadow-[0_3px_0_#7c3aed] flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-white" />
+                </div>
+                <span className="font-bold text-gray-900">No, help me brainstorm</span>
+              </button>
+            </>
+          )}
+
+          {step === 'platform' && PLATFORMS.map((platform) => (
+            <button
+              key={platform}
+              onClick={() => handlePlatformSelect(platform)}
+              className={`w-full p-4 rounded-xl bg-white shadow-[0_3px_0_#e5e7eb] 
+                hover:bg-gray-50 active:translate-y-0.5 active:shadow-none transition-all
+                flex items-center justify-center font-bold
+                ${project.platform === platform ? 'ring-2 ring-pink-500' : ''}`}
+            >
+              {platform}
+            </button>
+          ))}
+
+          {step === 'timeline' && TIME_HORIZONS.map((horizon) => (
+            <button
+              key={horizon}
+              onClick={() => handleTimelineSelect(horizon)}
+              className={`w-full p-4 rounded-xl bg-white shadow-[0_3px_0_#e5e7eb] 
+                hover:bg-gray-50 active:translate-y-0.5 active:shadow-none transition-all
+                flex items-center justify-center font-bold
+                ${project.timeHorizon === horizon ? 'ring-2 ring-pink-500' : ''}`}
+            >
+              {horizon}
+            </button>
+          ))}
+        </div>
+      </main>
     </div>
   );
 }
