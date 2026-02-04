@@ -83,9 +83,10 @@ export default function ConverterPage() {
     const feeAmount = Math.floor(gross * fee.rate);
     const net = gross - feeAmount;
     const netUsd = net * DEVEX_RATE;
+    const netLocal = netUsd * (selectedCurrency.rate / CURRENCY_RATES.USD.rate);
     
-    return { gross, feeRate: fee.rate, feeAmount, net, netUsd };
-  }, [numericAmount, marketplaceType]);
+    return { gross, feeRate: fee.rate, feeAmount, net, netUsd, netLocal };
+  }, [numericAmount, marketplaceType, selectedCurrency]);
 
   const formatNum = (value: number) => {
     if (['JPY', 'KRW', 'IDR'].includes(currency)) {
@@ -205,11 +206,11 @@ export default function ConverterPage() {
                   <div className="text-xs text-gray-400 mt-1">Purchase price</div>
                 </div>
                 <div className="bg-white rounded-2xl p-5" style={{ boxShadow: '0 4px 0 #e5e7eb' }}>
-                  <div className="text-xs font-semibold text-green-500 uppercase mb-1">DevEx Value</div>
+                  <div className="text-xs font-semibold text-green-500 uppercase mb-1">DevEx Payout</div>
                   <div className="text-2xl font-bold text-green-600">
-                    ${calculations.devExValue.toFixed(2)}
+                    {selectedCurrency.symbol}{formatNum(calculations.devExInCurrency)}
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">Developer payout</div>
+                  <div className="text-xs text-gray-400 mt-1">${calculations.devExValue.toFixed(2)} USD</div>
                 </div>
               </div>
 
@@ -244,12 +245,10 @@ export default function ConverterPage() {
 
                 <div className="mt-5 p-4 bg-green-50 rounded-xl">
                   <div className="text-xs font-semibold text-green-600 uppercase mb-1">You Receive</div>
-                  <div className="text-3xl font-bold text-green-600">${(numericAmount * DEVEX_RATE).toFixed(2)}</div>
-                  {currency !== 'USD' && (
-                    <div className="text-sm text-green-500 mt-1">
-                      ≈ {selectedCurrency.symbol}{formatNum((numericAmount * DEVEX_RATE) * (selectedCurrency.rate / CURRENCY_RATES.USD.rate))} {currency}
-                    </div>
-                  )}
+                  <div className="text-3xl font-bold text-green-600">
+                    {selectedCurrency.symbol}{formatNum((numericAmount * DEVEX_RATE) * (selectedCurrency.rate / CURRENCY_RATES.USD.rate))}
+                  </div>
+                  <div className="text-sm text-green-500 mt-1">${(numericAmount * DEVEX_RATE).toFixed(2)} USD</div>
                 </div>
               </div>
 
@@ -257,18 +256,22 @@ export default function ConverterPage() {
               <div className="bg-white rounded-2xl p-5" style={{ boxShadow: '0 4px 0 #e5e7eb' }}>
                 <div className="text-xs font-semibold text-gray-400 uppercase mb-3">Quick Reference</div>
                 <div className="grid grid-cols-2 gap-2">
-                  {[30000, 100000, 500000, 1000000].map((robux) => (
-                    <button
-                      key={robux}
-                      onClick={() => setAmount(robux.toString())}
-                      className={`p-3 rounded-xl text-left transition-colors ${
-                        numericAmount === robux ? 'bg-pink-50 border-2 border-pink-200' : 'bg-gray-50 border-2 border-transparent hover:border-gray-200'
-                      }`}
-                    >
-                      <div className="text-sm font-bold text-gray-900">R${robux.toLocaleString()}</div>
-                      <div className="text-xs text-green-600">${(robux * DEVEX_RATE).toLocaleString()}</div>
-                    </button>
-                  ))}
+                  {[30000, 100000, 500000, 1000000].map((robux) => {
+                    const usdValue = robux * DEVEX_RATE;
+                    const localValue = usdValue * (selectedCurrency.rate / CURRENCY_RATES.USD.rate);
+                    return (
+                      <button
+                        key={robux}
+                        onClick={() => setAmount(robux.toString())}
+                        className={`p-3 rounded-xl text-left transition-colors ${
+                          numericAmount === robux ? 'bg-pink-50 border-2 border-pink-200' : 'bg-gray-50 border-2 border-transparent hover:border-gray-200'
+                        }`}
+                      >
+                        <div className="text-sm font-bold text-gray-900">R${robux.toLocaleString()}</div>
+                        <div className="text-xs text-green-600">{selectedCurrency.symbol}{formatNum(localValue)}</div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -335,7 +338,7 @@ export default function ConverterPage() {
                     <span className="font-semibold text-gray-900">You Keep</span>
                     <div className="text-right">
                       <div className="font-bold text-lg text-gray-900">R${marketplaceCalc.net.toLocaleString()}</div>
-                      <div className="text-sm text-green-600">${marketplaceCalc.netUsd.toFixed(2)} DevEx</div>
+                      <div className="text-sm text-green-600">{selectedCurrency.symbol}{formatNum(marketplaceCalc.netLocal)} DevEx</div>
                     </div>
                   </div>
                 </div>
