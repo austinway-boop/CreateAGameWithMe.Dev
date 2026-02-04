@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, RefreshCw, ChevronRight, Users, Eye, Zap, Target, Clock, AlertTriangle, Trophy, Gamepad2, DollarSign, TrendingUp } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { Button } from '@/components/ui/button';
@@ -165,18 +165,18 @@ export default function ValidationPage() {
     }
   }, [validation]);
 
-  // Run validation with custom project data (for dev testing)
-  const runValidationWithData = useCallback(async (projectData: Partial<Project>) => {
+  // Dev test function - validates with test data
+  const runDevTest = async (testData: Partial<Project>) => {
     setValidationState('validating');
     setError(null);
     setDevMode(true);
 
     try {
-      const testProject = { ...project, ...projectData };
+      // Use test data directly - don't need current project
       const response = await fetch('/api/validateIdea', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project: testProject }),
+        body: JSON.stringify({ project: { id: 'dev-test', ...testData } }),
       });
 
       if (!response.ok) {
@@ -191,35 +191,30 @@ export default function ValidationPage() {
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setValidationState('error');
     }
-  }, [project]);
+  };
 
-  // Expose dev helpers (always, not just in development)
+  // Expose dev helpers immediately on mount
   useEffect(() => {
-    window.devTestBadGame = () => {
-      console.log('%c🎮 DEV: Loading BAD game data...', 'color: #FF4444; font-weight: bold;');
-      runValidationWithData(BAD_GAME_DATA);
+    // Define directly on window
+    (window as any).devTestBadGame = () => {
+      console.log('%c🎮 Testing BAD game: "Super Jump Obby 2"', 'color: #FF4444; font-weight: bold;');
+      runDevTest(BAD_GAME_DATA);
     };
 
-    window.devTestGoodGame = () => {
-      console.log('%c🎮 DEV: Loading GOOD game data...', 'color: #00FF00; font-weight: bold;');
-      runValidationWithData(GOOD_GAME_DATA);
+    (window as any).devTestGoodGame = () => {
+      console.log('%c🎮 Testing GOOD game: "Possessed Academy"', 'color: #00FF00; font-weight: bold;');
+      runDevTest(GOOD_GAME_DATA);
     };
 
-    window.devClearGame = () => {
-      console.log('%c🎮 DEV: Clearing test data...', 'color: #00A2FF; font-weight: bold;');
+    (window as any).devClearGame = () => {
+      console.log('%c🎮 Cleared test data', 'color: #00A2FF; font-weight: bold;');
       setValidation(null);
       setValidationState('idle');
       setDevMode(false);
     };
 
-    console.log('%c🎮 Dev Commands: devTestBadGame() | devTestGoodGame() | devClearGame()', 'color: #888;');
-
-    return () => {
-      delete window.devTestBadGame;
-      delete window.devTestGoodGame;
-      delete window.devClearGame;
-    };
-  }, [runValidationWithData]);
+    console.log('%c🎮 Dev Commands Ready: devTestBadGame() | devTestGoodGame() | devClearGame()', 'color: #58cc02; font-weight: bold;');
+  }, []); // Empty deps - run once on mount
 
   // Auto-run validation
   useEffect(() => {
