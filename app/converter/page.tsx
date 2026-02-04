@@ -34,7 +34,7 @@ export default function ConverterPage() {
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
 
   const selectedCurrency = CURRENCY_RATES[currency];
-  const numericAmount = parseFloat(amount) || 0;
+  const numericAmount = Math.min(parseFloat(amount) || 0, 999999999999);
 
   const calculations = useMemo(() => {
     const currencyRate = selectedCurrency.rate;
@@ -47,10 +47,14 @@ export default function ConverterPage() {
   }, [numericAmount, selectedCurrency]);
 
   const formatNum = (value: number) => {
+    // Cap at reasonable max to prevent overflow display
+    if (!isFinite(value) || value > 999999999999) {
+      return '∞';
+    }
     if (['JPY', 'KRW', 'IDR'].includes(currency)) {
       return Math.round(value).toLocaleString();
     }
-    return value.toFixed(2);
+    return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
   return (
@@ -129,7 +133,7 @@ export default function ConverterPage() {
             <div className="text-3xl font-bold text-green-600">
               {selectedCurrency.symbol}{formatNum(calculations.devExInCurrency)}
             </div>
-            <div className="text-sm text-gray-400 mt-2">${calculations.devExValue.toFixed(2)} USD</div>
+            <div className="text-sm text-gray-400 mt-2">${calculations.devExValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</div>
           </div>
         </div>
 
