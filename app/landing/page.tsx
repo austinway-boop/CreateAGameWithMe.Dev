@@ -6,18 +6,15 @@ import {
   TrendingUp, 
   Target, 
   BarChart3, 
-  Zap, 
-  Shield, 
   Database,
   ArrowRight,
-  CheckCircle2,
   ChevronRight,
-  Play,
-  Star,
   Users,
   DollarSign,
-  Clock,
-  AlertTriangle
+  AlertTriangle,
+  Flame,
+  XCircle,
+  CheckCircle
 } from 'lucide-react';
 
 // Animated counter component
@@ -73,587 +70,419 @@ function AnimatedCounter({
   );
 }
 
-// Floating particle background
-function ParticleBackground() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute top-1/2 right-1/4 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
-      <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-500" />
-    </div>
-  );
-}
-
-// Data source badge
-function DataSourceBadge({ name }: { name: string }) {
-  return (
-    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-gray-400">
-      <Database className="w-3 h-3" />
-      {name}
-    </div>
-  );
-}
-
-// Feature card
-function FeatureCard({ 
-  icon: Icon, 
-  title, 
-  description, 
-  color 
+// Genre card for the demo
+function GenreCard({ 
+  name, 
+  status, 
+  competition, 
+  trend, 
+  revenue,
+  isSelected,
+  onClick 
 }: { 
-  icon: any; 
-  title: string; 
-  description: string; 
-  color: string;
+  name: string;
+  status: 'hot' | 'caution' | 'avoid';
+  competition: string;
+  trend: string;
+  revenue: string;
+  isSelected: boolean;
+  onClick: () => void;
 }) {
-  return (
-    <div className="group relative p-6 rounded-2xl bg-gradient-to-b from-white/5 to-transparent border border-white/10 hover:border-white/20 transition-all duration-300 hover:-translate-y-1">
-      <div className={`absolute inset-0 rounded-2xl bg-gradient-to-b ${color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-      <div className="relative">
-        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center mb-4`}>
-          <Icon className="w-6 h-6 text-white" />
-        </div>
-        <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-        <p className="text-gray-400 text-sm leading-relaxed">{description}</p>
-      </div>
-    </div>
-  );
-}
-
-// Prediction showcase card
-function PredictionShowcase() {
-  const [activeTab, setActiveTab] = useState<'horror' | 'simulator' | 'obby'>('horror');
-  
-  const predictions = {
-    horror: {
-      genre: 'Horror',
-      verdict: 'HIGH POTENTIAL',
-      verdictColor: 'text-emerald-400',
-      bgColor: 'from-emerald-500/20',
-      competition: 'Moderate',
-      trend: 'Rising Fast',
-      d1Target: '30%+',
-      revenue: '$300K-2M/mo',
-      recommendation: 'Excellent timing. Horror games are highly streamable and accept "jank" - meaning faster dev time to market.',
-      signals: ['Jump scares', 'Unique monsters', 'Multiplayer survival', 'Streamable moments']
-    },
-    simulator: {
-      genre: 'Pet Simulator',
-      verdict: 'PROCEED WITH CAUTION',
-      verdictColor: 'text-amber-400',
-      bgColor: 'from-amber-500/20',
-      competition: 'Very High',
-      trend: 'Stable',
-      d1Target: '35%+',
-      revenue: '$500K-4M/mo',
-      recommendation: 'Saturated market dominated by Pet Simulator X. Requires exceptional unique hook and significant marketing budget.',
-      signals: ['Daily rewards', 'Pet collecting', 'Rebirth mechanics', 'Social trading']
-    },
-    obby: {
-      genre: 'Obby / Platformer',
-      verdict: 'NOT RECOMMENDED',
-      verdictColor: 'text-red-400',
-      bgColor: 'from-red-500/20',
-      competition: 'Extreme',
-      trend: 'Declining',
-      d1Target: '20%+',
-      revenue: '$50K-200K/mo',
-      recommendation: 'OVERSATURATED. Thousands of generic obbies. Only tower-style mechanics or unique twists succeed now.',
-      signals: ['Procedural towers', 'Competitive boards', 'Must be different']
-    }
+  const statusConfig = {
+    hot: { icon: Flame, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', label: 'High Potential' },
+    caution: { icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', label: 'Saturated' },
+    avoid: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', label: 'Oversaturated' }
   };
 
-  const current = predictions[activeTab];
+  const config = statusConfig[status];
+  const Icon = config.icon;
 
   return (
-    <div className="relative rounded-2xl bg-gradient-to-b from-white/5 to-black/20 border border-white/10 overflow-hidden">
-      {/* Tab selector */}
-      <div className="flex border-b border-white/10">
-        {(['horror', 'simulator', 'obby'] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 px-6 py-4 text-sm font-medium transition-all ${
-              activeTab === tab 
-                ? 'text-white bg-white/5 border-b-2 border-emerald-400' 
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            {tab === 'horror' ? '🎃 Horror Game' : tab === 'simulator' ? '🐾 Pet Simulator' : '🏃 Obby'}
-          </button>
-        ))}
-      </div>
-
-      {/* Prediction content */}
-      <div className={`p-8 bg-gradient-to-br ${current.bgColor} to-transparent`}>
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <div className="text-sm text-gray-400 mb-1">AI PREDICTION</div>
-            <div className={`text-3xl font-bold ${current.verdictColor}`}>
-              {current.verdict}
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-sm text-gray-400">Revenue Potential</div>
-            <div className="text-xl font-semibold text-white">{current.revenue}</div>
-          </div>
-        </div>
-
-        {/* Stats grid */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="p-4 rounded-xl bg-black/30 border border-white/5">
-            <div className="text-xs text-gray-500 mb-1">Competition</div>
-            <div className="text-white font-medium">{current.competition}</div>
-          </div>
-          <div className="p-4 rounded-xl bg-black/30 border border-white/5">
-            <div className="text-xs text-gray-500 mb-1">Trend</div>
-            <div className="text-white font-medium flex items-center gap-1">
-              <TrendingUp className={`w-4 h-4 ${current.trend.includes('Rising') ? 'text-emerald-400' : current.trend === 'Declining' ? 'text-red-400' : 'text-gray-400'}`} />
-              {current.trend}
-            </div>
-          </div>
-          <div className="p-4 rounded-xl bg-black/30 border border-white/5">
-            <div className="text-xs text-gray-500 mb-1">D1 Retention Target</div>
-            <div className="text-white font-medium">{current.d1Target}</div>
-          </div>
-        </div>
-
-        {/* Recommendation */}
-        <div className="p-4 rounded-xl bg-black/30 border border-white/5 mb-4">
-          <div className="text-sm text-gray-300 leading-relaxed">{current.recommendation}</div>
-        </div>
-
-        {/* Success signals */}
-        <div className="flex flex-wrap gap-2">
-          {current.signals.map((signal, i) => (
-            <span key={i} className="px-3 py-1 rounded-full bg-white/5 text-xs text-gray-400">
-              {signal}
-            </span>
-          ))}
+    <button
+      onClick={onClick}
+      className={`w-full text-left p-5 rounded-2xl border-2 transition-all ${
+        isSelected 
+          ? `${config.bg} ${config.border} shadow-sm` 
+          : 'bg-white border-gray-100 hover:border-gray-200'
+      }`}
+    >
+      <div className="flex items-start justify-between mb-3">
+        <span className="font-semibold text-gray-900">{name}</span>
+        <div className={`flex items-center gap-1 text-xs font-medium ${config.color}`}>
+          <Icon className="w-3.5 h-3.5" />
+          {config.label}
         </div>
       </div>
-    </div>
-  );
-}
-
-// Testimonial card
-function TestimonialCard({ 
-  quote, 
-  author, 
-  role, 
-  revenue 
-}: { 
-  quote: string; 
-  author: string; 
-  role: string; 
-  revenue: string;
-}) {
-  return (
-    <div className="p-6 rounded-2xl bg-gradient-to-b from-white/5 to-transparent border border-white/10">
-      <div className="flex gap-1 mb-4">
-        {[...Array(5)].map((_, i) => (
-          <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-        ))}
-      </div>
-      <p className="text-gray-300 mb-4 leading-relaxed">"{quote}"</p>
-      <div className="flex items-center justify-between">
+      <div className="grid grid-cols-3 gap-3 text-sm">
         <div>
-          <div className="text-white font-medium">{author}</div>
-          <div className="text-sm text-gray-500">{role}</div>
+          <div className="text-gray-400 text-xs">Competition</div>
+          <div className="text-gray-700">{competition}</div>
         </div>
-        <div className="text-right">
-          <div className="text-xs text-gray-500">Revenue after launch</div>
-          <div className="text-emerald-400 font-semibold">{revenue}</div>
+        <div>
+          <div className="text-gray-400 text-xs">Trend</div>
+          <div className="text-gray-700">{trend}</div>
+        </div>
+        <div>
+          <div className="text-gray-400 text-xs">Top Revenue</div>
+          <div className="text-gray-700">{revenue}</div>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 
 export default function LandingPage() {
-  const [scrollY, setScrollY] = useState(0);
+  const [selectedGenre, setSelectedGenre] = useState<'horror' | 'simulator' | 'obby'>('horror');
 
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const genreDetails = {
+    horror: {
+      name: 'Horror',
+      d1: '30%',
+      devTime: '1-4 months',
+      teamSize: '1+',
+      topGames: [
+        { name: 'DOORS', visits: '5.2B', revenue: '$1-2M/mo' },
+        { name: 'Piggy', visits: '4.5B', revenue: '$500K-1M/mo' },
+        { name: 'The Mimic', visits: '1.8B', revenue: '$300-600K/mo' },
+      ],
+      notes: 'Horror games are highly streamable and players are forgiving of rough edges. DOORS changed what\'s possible here.',
+      signals: ['Jump scares', 'Unique monster designs', 'Multiplayer survival', 'Streaming moments']
+    },
+    simulator: {
+      name: 'Simulator',
+      d1: '35%',
+      devTime: '2-6 months',
+      teamSize: '1+',
+      topGames: [
+        { name: 'Pet Simulator X', visits: '8.9B', revenue: '$2-4M/mo' },
+        { name: 'Bee Swarm Simulator', visits: '7.5B', revenue: '$1-2M/mo' },
+        { name: 'Mining Simulator 2', visits: '1.2B', revenue: '$500K-1M/mo' },
+      ],
+      notes: 'Extremely popular but crowded. The top games have been dominating for years. You need a genuinely unique hook.',
+      signals: ['Daily rewards', 'Pet/item collecting', 'Rebirth mechanics', 'Social trading']
+    },
+    obby: {
+      name: 'Obby / Platformer',
+      d1: '20%',
+      devTime: '1-4 weeks',
+      teamSize: '1',
+      topGames: [
+        { name: 'Tower of Hell', visits: '26.8B', revenue: '$1-2M/mo' },
+        { name: 'Escape Room', visits: '1.2B', revenue: '$200-400K/mo' },
+      ],
+      notes: 'There are thousands of generic obbies on Roblox. Only procedural/tower-style or genuinely unique concepts break through now.',
+      signals: ['Procedural generation', 'Competitive leaderboards', 'Must have unique twist']
+    }
+  };
+
+  const details = genreDetails[selectedGenre];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center">
-              <Target className="w-5 h-5 text-black" />
+            <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center">
+              <Target className="w-5 h-5 text-white" />
             </div>
             <span className="font-bold text-lg">RobloxPredict</span>
           </div>
-          <div className="hidden md:flex items-center gap-8 text-sm text-gray-400">
-            <a href="#features" className="hover:text-white transition-colors">Features</a>
-            <a href="#data" className="hover:text-white transition-colors">Our Data</a>
-            <a href="#demo" className="hover:text-white transition-colors">See It Work</a>
-          </div>
           <Link 
             href="/"
-            className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 text-black font-semibold text-sm hover:opacity-90 transition-opacity"
+            className="px-5 py-2.5 rounded-lg bg-gray-900 text-white font-medium text-sm hover:bg-gray-800 transition-colors"
           >
-            Get Started Free
+            Try It Free
           </Link>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center pt-20">
-        <ParticleBackground />
-        
-        <div className="relative z-10 max-w-6xl mx-auto px-6 py-20 text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm mb-8">
-            <Zap className="w-4 h-4" />
-            Powered by 40M+ game analytics
+      <section className="relative pt-20 pb-32">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 text-sm mb-8">
+            <Database className="w-4 h-4" />
+            Built on Roblox market data
           </div>
 
-          {/* Headline */}
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-gray-400">
-              Know If Your Game Will
-            </span>
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight tracking-tight">
+            Validate your Roblox game
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400 animate-gradient">
-              Succeed on Roblox
-            </span>
+            <span className="text-gray-400">before you build it</span>
           </h1>
 
-          {/* Subheadline */}
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8 leading-relaxed">
-            Stop guessing. Our AI analyzes real market data, genre trends, and competitor performance 
-            to predict your game's success <span className="text-white font-medium">before you build it</span>.
+          <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
+            We analyze your game concept against genre benchmarks, competition levels, 
+            and retention data to tell you what you're up against.
           </p>
 
-          {/* Stats row */}
-          <div className="flex flex-wrap justify-center gap-8 mb-12">
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-white">
+          <Link 
+            href="/"
+            className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gray-900 text-white font-semibold text-lg hover:bg-gray-800 transition-all"
+          >
+            Analyze Your Idea
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-16 border-y border-gray-200 bg-white">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="grid md:grid-cols-4 gap-8 text-center">
+            <div>
+              <div className="text-4xl font-bold text-gray-900 mb-1">
                 <AnimatedCounter end={111.8} suffix="M" decimals={1} />
               </div>
-              <div className="text-sm text-gray-500">Daily Active Users Analyzed</div>
+              <div className="text-sm text-gray-500">Roblox Daily Active Users</div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-white">
-                <AnimatedCounter end={13} suffix=" Genres" />
+            <div>
+              <div className="text-4xl font-bold text-gray-900 mb-1">
+                <AnimatedCounter end={40} suffix="M+" />
               </div>
-              <div className="text-sm text-gray-500">Deep Market Intelligence</div>
+              <div className="text-sm text-gray-500">Total Experiences</div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-white">
+            <div>
+              <div className="text-4xl font-bold text-gray-900 mb-1">
                 <AnimatedCounter end={923} prefix="$" suffix="M" />
               </div>
-              <div className="text-sm text-gray-500">Creator Revenue Tracked</div>
+              <div className="text-sm text-gray-500">Creator Earnings (2024)</div>
             </div>
-          </div>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
-              href="/"
-              className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-black font-semibold text-lg hover:opacity-90 transition-all hover:scale-105"
-            >
-              Predict My Game's Success
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <a 
-              href="#demo"
-              className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl border border-white/20 text-white font-medium hover:bg-white/5 transition-all"
-            >
-              <Play className="w-5 h-5" />
-              See Live Demo
-            </a>
-          </div>
-
-          {/* Trust indicators */}
-          <div className="mt-16 pt-8 border-t border-white/10">
-            <div className="text-xs text-gray-500 mb-4">DATA SOURCED FROM</div>
-            <div className="flex flex-wrap justify-center gap-3">
-              <DataSourceBadge name="Roblox Official Charts" />
-              <DataSourceBadge name="GameAnalytics 2025 Report" />
-              <DataSourceBadge name="GGAID Statistics" />
-              <DataSourceBadge name="BloxPrices Revenue" />
-            </div>
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <ChevronRight className="w-6 h-6 text-gray-500 rotate-90" />
-        </div>
-      </section>
-
-      {/* Problem Section */}
-      <section className="relative py-24 bg-gradient-to-b from-transparent via-red-500/5 to-transparent">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-8">
-            <AlertTriangle className="w-4 h-4" />
-            The Hard Truth
-          </div>
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            <span className="text-red-400">99.9%</span> of Roblox Games Fail
-          </h2>
-          <p className="text-xl text-gray-400 mb-12 leading-relaxed">
-            Out of 40+ million experiences, only the top 0.1% make meaningful revenue. 
-            Most developers spend months building games that never find an audience—not because 
-            they lack skill, but because they picked the wrong genre, wrong timing, or wrong approach.
-          </p>
-          
-          <div className="grid md:grid-cols-3 gap-6 text-left">
-            <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/10">
-              <div className="text-4xl font-bold text-red-400 mb-2">6+</div>
-              <div className="text-white font-medium mb-2">Months Wasted</div>
-              <div className="text-sm text-gray-500">Average dev time on failed games that could've been validated in days</div>
-            </div>
-            <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/10">
-              <div className="text-4xl font-bold text-red-400 mb-2">$10K+</div>
-              <div className="text-white font-medium mb-2">Lost Investment</div>
-              <div className="text-sm text-gray-500">Typical cost of building a game that enters oversaturated markets</div>
-            </div>
-            <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/10">
-              <div className="text-4xl font-bold text-red-400 mb-2">0</div>
-              <div className="text-white font-medium mb-2">Players</div>
-              <div className="text-sm text-gray-500">Result of building without market validation or competitive analysis</div>
+            <div>
+              <div className="text-4xl font-bold text-gray-900 mb-1">0.1%</div>
+              <div className="text-sm text-gray-500">Make Meaningful Revenue</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Solution Section */}
-      <section className="relative py-24">
+      {/* Interactive Demo Section */}
+      <section className="py-24">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm mb-6">
-              <CheckCircle2 className="w-4 h-4" />
-              The Solution
-            </div>
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">
-              Predict Success <span className="text-emerald-400">Before</span> You Build
-            </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              Our AI analyzes your game concept against real Roblox market data, giving you 
-              actionable predictions and recommendations in seconds.
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">See how genres compare</h2>
+            <p className="text-gray-500 max-w-xl mx-auto">
+              Different genres have wildly different competition levels and success rates. 
+              Click to explore.
             </p>
           </div>
 
-          <div id="features" className="grid md:grid-cols-3 gap-6">
-            <FeatureCard
-              icon={BarChart3}
-              title="Genre Intelligence"
-              description="Real-time analysis of 13+ Roblox genres with competition levels, growth trends, and revenue benchmarks from top performers."
-              color="from-emerald-500/20 to-transparent"
-            />
-            <FeatureCard
-              icon={Target}
-              title="Retention Predictions"
-              description="Know your D1, D7, D30 retention targets before launch. Our benchmarks come from the top 10% of Roblox games."
-              color="from-cyan-500/20 to-transparent"
-            />
-            <FeatureCard
-              icon={TrendingUp}
-              title="Trend Detection"
-              description="Identify hot genres with rising momentum and avoid oversaturated markets before investing time and resources."
-              color="from-purple-500/20 to-transparent"
-            />
-            <FeatureCard
-              icon={Users}
-              title="Competitor Analysis"
-              description="See top games in your genre, their visit counts, estimated monthly revenue, and what makes them successful."
-              color="from-amber-500/20 to-transparent"
-            />
-            <FeatureCard
-              icon={DollarSign}
-              title="Revenue Modeling"
-              description="Estimate potential revenue based on CCU targets, monetization strategies, and payer conversion benchmarks."
-              color="from-pink-500/20 to-transparent"
-            />
-            <FeatureCard
-              icon={Clock}
-              title="Dev Time Estimates"
-              description="Get realistic development timelines based on genre complexity and team size to plan your project properly."
-              color="from-blue-500/20 to-transparent"
-            />
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Genre selector */}
+            <div className="space-y-3">
+              <GenreCard
+                name="Horror"
+                status="hot"
+                competition="Moderate"
+                trend="Rising Fast"
+                revenue="$1-2M/mo"
+                isSelected={selectedGenre === 'horror'}
+                onClick={() => setSelectedGenre('horror')}
+              />
+              <GenreCard
+                name="Pet Simulator"
+                status="caution"
+                competition="Very High"
+                trend="Stable"
+                revenue="$2-4M/mo"
+                isSelected={selectedGenre === 'simulator'}
+                onClick={() => setSelectedGenre('simulator')}
+              />
+              <GenreCard
+                name="Obby / Platformer"
+                status="avoid"
+                competition="Extreme"
+                trend="Declining"
+                revenue="$200K-2M/mo"
+                isSelected={selectedGenre === 'obby'}
+                onClick={() => setSelectedGenre('obby')}
+              />
+            </div>
+
+            {/* Details panel */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold">{details.name} Genre</h3>
+                <div className="text-sm text-gray-500">D1 Retention Target: {details.d1}</div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="p-4 rounded-xl bg-gray-50">
+                  <div className="text-xs text-gray-400 mb-1">Typical Dev Time</div>
+                  <div className="font-medium">{details.devTime}</div>
+                </div>
+                <div className="p-4 rounded-xl bg-gray-50">
+                  <div className="text-xs text-gray-400 mb-1">Min Team Size</div>
+                  <div className="font-medium">{details.teamSize}</div>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <div className="text-sm font-medium text-gray-700 mb-3">Top Games in Genre</div>
+                <div className="space-y-2">
+                  {details.topGames.map((game, i) => (
+                    <div key={i} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                      <span className="text-gray-900">{game.name}</span>
+                      <div className="text-right">
+                        <div className="text-sm text-gray-500">{game.visits} visits</div>
+                        <div className="text-xs text-gray-400">{game.revenue}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl bg-gray-50 mb-4">
+                <div className="text-sm text-gray-600 leading-relaxed">{details.notes}</div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {details.signals.map((signal, i) => (
+                  <span key={i} className="px-3 py-1 rounded-full bg-gray-100 text-xs text-gray-600">
+                    {signal}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Data Section */}
-      <section id="data" className="relative py-24 bg-gradient-to-b from-transparent via-white/5 to-transparent">
-        <div className="max-w-6xl mx-auto px-6">
+      {/* What We Track Section */}
+      <section className="py-24 bg-white border-y border-gray-200">
+        <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-sm mb-6">
-              <Database className="w-4 h-4" />
-              Real Data, Real Accuracy
-            </div>
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">
-              Powered by Comprehensive <span className="text-cyan-400">Market Intelligence</span>
-            </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              We don't guess. Our predictions are based on real data from Roblox's ecosystem, 
-              updated continuously to reflect current market conditions.
+            <h2 className="text-3xl font-bold mb-4">What we analyze</h2>
+            <p className="text-gray-500">
+              Data points we use to evaluate your concept
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Left column - Key metrics */}
-            <div className="space-y-4">
-              <div className="p-6 rounded-2xl bg-gradient-to-r from-white/5 to-transparent border border-white/10">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-gray-400">Daily Active Users Tracked</span>
-                  <span className="text-2xl font-bold text-white">111.8M</span>
-                </div>
-                <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                  <div className="h-full w-full bg-gradient-to-r from-emerald-500 to-cyan-500 animate-pulse" />
-                </div>
-              </div>
-              
-              <div className="p-6 rounded-2xl bg-gradient-to-r from-white/5 to-transparent border border-white/10">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-gray-400">Creator Revenue Analyzed (2024)</span>
-                  <span className="text-2xl font-bold text-white">$923M</span>
-                </div>
-                <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                  <div className="h-full w-[92%] bg-gradient-to-r from-amber-500 to-orange-500" />
-                </div>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-gradient-to-r from-white/5 to-transparent border border-white/10">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-gray-400">Quarterly Platform Bookings</span>
-                  <span className="text-2xl font-bold text-white">$1.4B</span>
-                </div>
-                <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                  <div className="h-full w-[85%] bg-gradient-to-r from-purple-500 to-pink-500" />
-                </div>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-gradient-to-r from-white/5 to-transparent border border-white/10">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-gray-400">Top 1000 Creator Avg Earnings</span>
-                  <span className="text-2xl font-bold text-emerald-400">$1M/year</span>
-                </div>
-                <div className="text-sm text-gray-500">This is who we help you become</div>
-              </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-2xl bg-gray-50">
+              <BarChart3 className="w-8 h-8 text-gray-700 mb-4" />
+              <h3 className="font-semibold mb-2">Genre Competition</h3>
+              <p className="text-sm text-gray-500">
+                How crowded is your genre? We track competition levels from 13 major Roblox genres.
+              </p>
             </div>
-
-            {/* Right column - Benchmarks preview */}
-            <div className="p-8 rounded-2xl bg-gradient-to-b from-white/5 to-transparent border border-white/10">
-              <h3 className="text-xl font-semibold mb-6">Success Benchmarks We Track</h3>
-              
-              <div className="space-y-6">
-                <div>
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-gray-400">Breakout Hit</span>
-                    <span className="text-emerald-400 font-medium">50,000+ CCU</span>
-                  </div>
-                  <div className="text-xs text-gray-500">$500K-2M/month • Top 0.01% of games</div>
-                </div>
-                
-                <div>
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-gray-400">Successful Game</span>
-                    <span className="text-emerald-400 font-medium">10,000+ CCU</span>
-                  </div>
-                  <div className="text-xs text-gray-500">$100K-500K/month • Top 0.1% of games</div>
-                </div>
-                
-                <div>
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-gray-400">Viable Game</span>
-                    <span className="text-amber-400 font-medium">1,000+ CCU</span>
-                  </div>
-                  <div className="text-xs text-gray-500">$10K-50K/month • Sustainable income</div>
-                </div>
-                
-                <div>
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-gray-400">Growing Game</span>
-                    <span className="text-gray-400 font-medium">100+ CCU</span>
-                  </div>
-                  <div className="text-xs text-gray-500">$1K-5K/month • Promising but needs work</div>
-                </div>
-              </div>
-
-              <div className="mt-8 pt-6 border-t border-white/10">
-                <div className="text-sm text-gray-400 mb-3">Retention Targets for Viability:</div>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div className="p-3 rounded-lg bg-white/5">
-                    <div className="text-xl font-bold text-white">30%+</div>
-                    <div className="text-xs text-gray-500">D1</div>
-                  </div>
-                  <div className="p-3 rounded-lg bg-white/5">
-                    <div className="text-xl font-bold text-white">12%+</div>
-                    <div className="text-xs text-gray-500">D7</div>
-                  </div>
-                  <div className="p-3 rounded-lg bg-white/5">
-                    <div className="text-xl font-bold text-white">5%+</div>
-                    <div className="text-xs text-gray-500">D30</div>
-                  </div>
-                </div>
-              </div>
+            <div className="p-6 rounded-2xl bg-gray-50">
+              <TrendingUp className="w-8 h-8 text-gray-700 mb-4" />
+              <h3 className="font-semibold mb-2">Growth Trends</h3>
+              <p className="text-sm text-gray-500">
+                Is the genre rising, stable, or declining? Timing matters more than most realize.
+              </p>
+            </div>
+            <div className="p-6 rounded-2xl bg-gray-50">
+              <Target className="w-8 h-8 text-gray-700 mb-4" />
+              <h3 className="font-semibold mb-2">Retention Benchmarks</h3>
+              <p className="text-sm text-gray-500">
+                D1, D7, D30 targets by genre. Know what numbers you need to hit.
+              </p>
+            </div>
+            <div className="p-6 rounded-2xl bg-gray-50">
+              <Users className="w-8 h-8 text-gray-700 mb-4" />
+              <h3 className="font-semibold mb-2">Top Competitors</h3>
+              <p className="text-sm text-gray-500">
+                Who dominates your space? Visit counts and estimated revenue of market leaders.
+              </p>
+            </div>
+            <div className="p-6 rounded-2xl bg-gray-50">
+              <DollarSign className="w-8 h-8 text-gray-700 mb-4" />
+              <h3 className="font-semibold mb-2">Monetization Fit</h3>
+              <p className="text-sm text-gray-500">
+                Different genres monetize differently. We flag what works where.
+              </p>
+            </div>
+            <div className="p-6 rounded-2xl bg-gray-50">
+              <AlertTriangle className="w-8 h-8 text-gray-700 mb-4" />
+              <h3 className="font-semibold mb-2">Red Flags</h3>
+              <p className="text-sm text-gray-500">
+                Common mistakes that tank Roblox games. We call them out before you make them.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Live Demo Section */}
-      <section id="demo" className="relative py-24">
+      {/* Success Benchmarks */}
+      <section className="py-24">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">What success looks like</h2>
+            <p className="text-gray-500">CCU benchmarks from the Roblox ecosystem</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-6 p-6 rounded-2xl bg-white border border-gray-200">
+              <div className="w-20 text-right">
+                <div className="text-2xl font-bold text-emerald-600">50K+</div>
+                <div className="text-xs text-gray-400">CCU</div>
+              </div>
+              <div className="flex-1">
+                <div className="font-medium">Breakout Hit</div>
+                <div className="text-sm text-gray-500">$500K-2M/month • Top 0.01% of games</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-6 p-6 rounded-2xl bg-white border border-gray-200">
+              <div className="w-20 text-right">
+                <div className="text-2xl font-bold text-emerald-600">10K+</div>
+                <div className="text-xs text-gray-400">CCU</div>
+              </div>
+              <div className="flex-1">
+                <div className="font-medium">Successful Game</div>
+                <div className="text-sm text-gray-500">$100K-500K/month • Top 0.1% of games</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-6 p-6 rounded-2xl bg-white border border-gray-200">
+              <div className="w-20 text-right">
+                <div className="text-2xl font-bold text-amber-600">1K+</div>
+                <div className="text-xs text-gray-400">CCU</div>
+              </div>
+              <div className="flex-1">
+                <div className="font-medium">Viable Game</div>
+                <div className="text-sm text-gray-500">$10K-50K/month • Sustainable for a small team</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-6 p-6 rounded-2xl bg-white border border-gray-200">
+              <div className="w-20 text-right">
+                <div className="text-2xl font-bold text-gray-400">100+</div>
+                <div className="text-xs text-gray-400">CCU</div>
+              </div>
+              <div className="flex-1">
+                <div className="font-medium">Growing</div>
+                <div className="text-sm text-gray-500">$1K-5K/month • Promising but needs iteration</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 p-6 rounded-2xl bg-gray-100">
+            <div className="text-sm text-gray-600">
+              <strong>Data sources:</strong> Roblox Official Charts, GameAnalytics 2025 Roblox Benchmark Report, 
+              GGAID Player Statistics, BloxPrices Revenue Tracking
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Hot Genres */}
+      <section className="py-24 bg-white border-t border-gray-200">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-sm mb-6">
-              <Play className="w-4 h-4" />
-              Live Demo
-            </div>
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">
-              See It <span className="text-purple-400">In Action</span>
-            </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              Click through these example predictions to see how we analyze different game concepts.
-            </p>
-          </div>
-
-          <PredictionShowcase />
-
-          <div className="text-center mt-12">
-            <Link 
-              href="/"
-              className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-black font-semibold text-lg hover:opacity-90 transition-all hover:scale-105"
-            >
-              Get Your Free Prediction
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Hot Genres Section */}
-      <section className="relative py-24 bg-gradient-to-b from-transparent via-emerald-500/5 to-transparent">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              🔥 Hot Genres Right Now
-            </h2>
-            <p className="text-gray-400">Markets with high growth potential and moderate competition</p>
+            <h2 className="text-3xl font-bold mb-4">Genres with momentum right now</h2>
+            <p className="text-gray-500">Lower competition, growing player interest</p>
           </div>
 
           <div className="grid md:grid-cols-5 gap-4">
             {[
-              { name: 'Horror', trend: '+47%', note: 'Streamable, accepts jank' },
-              { name: 'Social Co-opetition', trend: '+62%', note: 'Fashion, voting games' },
-              { name: 'Anime RPG', trend: '+38%', note: 'Gacha mechanics work' },
-              { name: 'Open World', trend: '+55%', note: 'High demand, low supply' },
-              { name: 'Sports', trend: '+41%', note: 'Underserved market' },
+              { name: 'Horror', note: 'Streamable, forgiving of rough edges' },
+              { name: 'Social Co-opetition', note: 'Fashion shows, voting games' },
+              { name: 'Anime RPG', note: 'Gacha mechanics perform well' },
+              { name: 'Open World', note: 'High search demand, few quality games' },
+              { name: 'Sports', note: 'Underserved, especially regional' },
             ].map((genre, i) => (
-              <div key={i} className="p-5 rounded-2xl bg-gradient-to-b from-emerald-500/10 to-transparent border border-emerald-500/20 text-center hover:border-emerald-500/40 transition-colors">
-                <div className="text-lg font-semibold text-white mb-1">{genre.name}</div>
-                <div className="text-emerald-400 font-bold mb-2">{genre.trend}</div>
+              <div key={i} className="p-5 rounded-xl bg-gray-50 text-center">
+                <div className="font-medium text-gray-900 mb-2">{genre.name}</div>
                 <div className="text-xs text-gray-500">{genre.note}</div>
               </div>
             ))}
@@ -661,99 +490,44 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Social Proof Section */}
-      <section className="relative py-24">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Developers Trust Our Data
-            </h2>
-            <p className="text-gray-400">Real results from creators who validated before building</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            <TestimonialCard
-              quote="I was about to build another obby until the analysis showed me horror games had way better odds. Three months later, I hit 5K CCU."
-              author="DevStudio_Max"
-              role="Solo Developer"
-              revenue="$15K/mo"
-            />
-            <TestimonialCard
-              quote="The retention benchmarks alone saved us from launching too early. We hit the D1 targets and saw organic growth immediately."
-              author="PixelForge Team"
-              role="3-Person Studio"
-              revenue="$45K/mo"
-            />
-            <TestimonialCard
-              quote="Knowing the competition level and what success signals to include changed everything. Our simulator actually stood out."
-              author="SimMaster_Jay"
-              role="Part-time Creator"
-              revenue="$8K/mo"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA Section */}
-      <section className="relative py-32">
-        <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/10 via-transparent to-transparent" />
-        
-        <div className="relative max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-4xl md:text-6xl font-bold mb-6">
-            Stop Building Blind
-          </h2>
-          <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-            Join thousands of Roblox developers who validate their ideas with real market data 
-            before investing months of development time.
+      {/* Final CTA */}
+      <section className="py-24">
+        <div className="max-w-2xl mx-auto px-6 text-center">
+          <h2 className="text-3xl font-bold mb-4">See where your idea stands</h2>
+          <p className="text-gray-500 mb-8">
+            Get genre analysis, competition data, and benchmarks for your game concept.
           </p>
           
           <Link 
             href="/"
-            className="group inline-flex items-center justify-center gap-3 px-10 py-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-black font-bold text-xl hover:opacity-90 transition-all hover:scale-105 shadow-2xl shadow-emerald-500/25"
+            className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gray-900 text-white font-semibold text-lg hover:bg-gray-800 transition-all"
           >
-            Get Your Free Game Prediction
-            <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+            Analyze Your Idea
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Link>
           
-          <div className="mt-6 text-sm text-gray-500">
-            No credit card required • Takes 30 seconds • Instant results
+          <div className="mt-4 text-sm text-gray-400">
+            Free to use
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 py-12">
+      <footer className="border-t border-gray-200 py-8">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center">
-                <Target className="w-5 h-5 text-black" />
+              <div className="w-6 h-6 rounded bg-gray-900 flex items-center justify-center">
+                <Target className="w-4 h-4 text-white" />
               </div>
-              <span className="font-bold">RobloxPredict</span>
+              <span className="font-medium text-gray-700">RobloxPredict</span>
             </div>
-            
-            <div className="text-sm text-gray-500 text-center">
-              Data sourced from Roblox Official Charts, GameAnalytics, GGAID & BloxPrices
-            </div>
-            
-            <div className="text-sm text-gray-500">
-              © 2026 RobloxPredict. All rights reserved.
+            <div>
+              Data from Roblox Charts, GameAnalytics, GGAID, BloxPrices
             </div>
           </div>
         </div>
       </footer>
-
-      {/* Custom styles */}
-      <style jsx>{`
-        @keyframes gradient {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-        .animate-gradient {
-          background-size: 200% 200%;
-          animation: gradient 3s ease infinite;
-        }
-      `}</style>
     </div>
   );
 }
