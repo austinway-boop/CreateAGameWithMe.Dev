@@ -7,7 +7,7 @@ import { useProject } from '@/hooks/useProject';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { CardSkeleton } from '@/components/LoadingScreen';
-import { ValidationResult } from '@/lib/prompts';
+import { ComprehensiveValidation } from '@/lib/validationAgents';
 import { checkValidationReadiness, ValidationReadiness } from '@/lib/validationRequirements';
 import { Project } from '@/lib/types';
 
@@ -183,9 +183,10 @@ export default function ValidationPage() {
   const router = useRouter();
   const { project, loading } = useProject();
   const [validationState, setValidationState] = useState<ValidationState>('idle');
-  const [validation, setValidation] = useState<ValidationResult | null>(null);
+  const [validation, setValidation] = useState<ComprehensiveValidation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [devMode, setDevMode] = useState(false);
+  const [agentStatus, setAgentStatus] = useState<string>('');
 
   const aiEnabled = process.env.NEXT_PUBLIC_ENABLE_AI === 'true';
 
@@ -248,10 +249,12 @@ export default function ValidationPage() {
     // Standalone test function that doesn't depend on React state
     const testWithData = async (testData: Partial<Project>, name: string) => {
       console.log(`%c🎮 Testing: "${name}"`, 'color: #ff6b00; font-weight: bold;');
-      console.log('Sending data:', testData);
+      setValidationState('validating');
+      setAgentStatus('Running 4-agent analysis...');
+      setDevMode(true);
       
       try {
-        const res = await fetch('/api/validateIdea', {
+        const res = await fetch('/api/validateComprehensive', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ project: { id: 'dev-test', ...testData } }),
@@ -260,24 +263,26 @@ export default function ValidationPage() {
         if (!res.ok) {
           const err = await res.json();
           console.error('%c❌ API Error:', 'color: red;', err);
+          setValidationState('error');
+          setError(err.message || 'API Error');
           return;
         }
         
         const result = await res.json();
-        console.log('%c✅ Validation Result:', 'color: green; font-weight: bold;');
-        console.log('Overall Score:', result.overallScore);
-        console.log('Verdict:', result.verdict);
-        console.log('Genre:', result.genreAnalysis?.detectedGenre);
-        console.log('Summary:', result.summary);
-        console.log('Hard Truth:', result.hardTruth);
-        console.log('Full result:', result);
+        console.log('%c✅ Comprehensive Validation Result:', 'color: green; font-weight: bold;');
+        console.log('Overall Score:', result.finalVerdict?.overallScore);
+        console.log('Verdict:', result.finalVerdict?.verdict);
+        console.log('Market Score:', result.marketAnalysis?.score);
+        console.log('Loop Score:', result.loopAnalysis?.score);
+        console.log('Competitor Score:', result.competitorAnalysis?.score);
         
-        // Also update the UI
         setValidation(result);
         setValidationState('complete');
-        setDevMode(true);
+        setAgentStatus('');
       } catch (err) {
         console.error('%c❌ Fetch Error:', 'color: red;', err);
+        setValidationState('error');
+        setError(err instanceof Error ? err.message : 'Unknown error');
       }
     };
 
@@ -287,6 +292,7 @@ export default function ValidationPage() {
       setValidation(null);
       setValidationState('idle');
       setDevMode(false);
+      setAgentStatus('');
       console.log('%c🎮 Cleared', 'color: #00A2FF;');
     };
 
@@ -312,9 +318,12 @@ export default function ValidationPage() {
     if (!project) return;
     setValidationState('validating');
     setError(null);
+    setAgentStatus('Starting 4-agent analysis...');
 
     try {
-      const response = await fetch('/api/validateIdea', {
+      setAgentStatus('Running Market, Loop & Competitor agents...');
+      
+      const response = await fetch('/api/validateComprehensive', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project }),
@@ -325,9 +334,10 @@ export default function ValidationPage() {
         throw new Error(err.message || 'Failed to validate');
       }
 
-      const result: ValidationResult = await response.json();
+      const result: ComprehensiveValidation = await response.json();
       setValidation(result);
       setValidationState('complete');
+      setAgentStatus('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
       setValidationState('error');
@@ -403,8 +413,14 @@ export default function ValidationPage() {
             <Gamepad2 className="absolute inset-0 m-auto w-8 h-8 text-pink-500" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Analyzing Your Game</h2>
-            <p className="text-gray-500 text-sm">Comparing against Roblox market data...</p>
+            <h2 className="text-lg font-bold text-gray-900">Deep Analysis in Progress</h2>
+            <p className="text-gray-500 text-sm">{agentStatus || 'Running 4 specialized AI agents...'}</p>
+            <div className="mt-3 flex justify-center gap-2">
+              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Market</span>
+              <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">Loop</span>
+              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">Competitor</span>
+              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Verdict</span>
+            </div>
           </div>
         </div>
       </div>
@@ -430,17 +446,21 @@ export default function ValidationPage() {
 
   if (!validation) return null;
 
-  // Safe access to all validation properties
-  const verdict = validation.verdict || 'needs_work';
-  const overallScore = validation.overallScore || 0;
-  const marketScore = validation.marketFit?.score || 0;
+  // Safe access to comprehensive validation properties
+  const finalVerdict = validation.finalVerdict;
+  const verdict = finalVerdict?.verdict || 'needs_work';
+  const overallScore = finalVerdict?.overallScore || 0;
+  const marketScore = validation.marketAnalysis?.score || 0;
   const loopScore = validation.loopAnalysis?.score || 0;
-  const summary = validation.summary || '';
-  const hardTruth = validation.hardTruth || '';
-  const strengths = validation.strengths || [];
-  const concerns = validation.concerns || [];
-  const dealbreakers = validation.dealbreakers || [];
-  const suggestions = validation.suggestions || [];
+  const competitorScore = validation.competitorAnalysis?.score || 0;
+  const summary = finalVerdict?.summary || '';
+  const hardTruth = finalVerdict?.hardTruth || '';
+  const strengths = finalVerdict?.topStrengths || [];
+  const criticalIssues = finalVerdict?.criticalIssues || [];
+  const dealbreakers = finalVerdict?.dealbreakers || [];
+  const actionItems = finalVerdict?.actionItems || [];
+  const buildRecommendation = finalVerdict?.buildRecommendation || '';
+  const pivotSuggestions = finalVerdict?.pivotSuggestions || [];
 
   const verdictConfig = {
     strong: { label: 'High Potential', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200', emoji: '🚀' },
@@ -491,10 +511,11 @@ export default function ValidationPage() {
           <p className="text-gray-600 mt-2 text-sm">{summary}</p>
           
           {/* Scores */}
-          <div className="flex justify-center gap-6 mt-4">
+          <div className="flex justify-center gap-4 mt-4">
             <ScoreCircle score={overallScore} label="Overall" />
-            <ScoreCircle score={marketScore} label="Market Fit" />
-            <ScoreCircle score={loopScore} label="Game Loop" />
+            <ScoreCircle score={marketScore} label="Market" />
+            <ScoreCircle score={loopScore} label="Loop" />
+            <ScoreCircle score={competitorScore} label="Edge" />
           </div>
           
           {/* Score Legend */}
@@ -506,16 +527,29 @@ export default function ValidationPage() {
           </div>
         </div>
 
-        {/* Hard Truth */}
+        {/* Hard Truth & Build Recommendation */}
         {hardTruth && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-            <div className="flex items-start gap-3">
-              <span className="text-xl">💡</span>
-              <div>
-                <div className="font-semibold text-amber-800 text-sm">The Hard Truth</div>
-                <p className="text-amber-700 text-sm mt-1">{hardTruth}</p>
+          <div className="space-y-3">
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <span className="text-xl">💡</span>
+                <div>
+                  <div className="font-semibold text-amber-800 text-sm">The Hard Truth</div>
+                  <p className="text-amber-700 text-sm mt-1">{hardTruth}</p>
+                </div>
               </div>
             </div>
+            {buildRecommendation && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <span className="text-xl">🎯</span>
+                  <div>
+                    <div className="font-semibold text-blue-800 text-sm">Build Recommendation</div>
+                    <p className="text-blue-700 text-sm mt-1">{buildRecommendation}</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -599,15 +633,15 @@ export default function ValidationPage() {
           </div>
         )}
 
-        {/* Concerns */}
-        {concerns.length > 0 && (
+        {/* Critical Issues */}
+        {criticalIssues.length > 0 && (
           <div className="bg-white rounded-2xl shadow-[0_3px_0_#e5e7eb] overflow-hidden">
             <div className="bg-amber-50 px-4 py-3 border-b border-amber-200 flex items-center gap-2">
               <span className="text-lg">⚠️</span>
-              <span className="font-bold text-amber-800">Concerns</span>
+              <span className="font-bold text-amber-800">Critical Issues</span>
             </div>
             <div className="p-4 space-y-2">
-              {concerns.map((c, i) => (
+              {criticalIssues.map((c, i) => (
                 <div key={i} className="flex items-start gap-2 text-sm">
                   <span className="text-amber-500 mt-0.5">•</span>
                   <span className="text-gray-700">{c}</span>
@@ -635,20 +669,47 @@ export default function ValidationPage() {
           </div>
         )}
 
-        {/* Suggestions */}
-        {suggestions.length > 0 && (
+        {/* Action Items */}
+        {actionItems.length > 0 && (
           <div className="bg-white rounded-2xl shadow-[0_3px_0_#e5e7eb] overflow-hidden">
             <div className="bg-blue-50 px-4 py-3 border-b border-blue-200 flex items-center gap-2">
+              <span className="text-lg">📋</span>
+              <span className="font-bold text-blue-800">Action Items</span>
+            </div>
+            <div className="p-4 space-y-3">
+              {actionItems.map((item, i) => (
+                <div key={i} className={`p-3 rounded-lg border-l-4 ${
+                  item.priority === 'high' ? 'border-red-500 bg-red-50' :
+                  item.priority === 'medium' ? 'border-amber-500 bg-amber-50' :
+                  'border-blue-500 bg-blue-50'
+                }`}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                      item.priority === 'high' ? 'bg-red-200 text-red-800' :
+                      item.priority === 'medium' ? 'bg-amber-200 text-amber-800' :
+                      'bg-blue-200 text-blue-800'
+                    }`}>{item.priority?.toUpperCase()}</span>
+                    <span className="font-medium text-sm text-gray-800">{item.action}</span>
+                  </div>
+                  <p className="text-xs text-gray-600">{item.reasoning}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Pivot Suggestions */}
+        {pivotSuggestions.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-[0_3px_0_#e5e7eb] overflow-hidden">
+            <div className="bg-purple-50 px-4 py-3 border-b border-purple-200 flex items-center gap-2">
               <span className="text-lg">💡</span>
-              <span className="font-bold text-blue-800">Suggestions</span>
+              <span className="font-bold text-purple-800">Pivot Suggestions</span>
             </div>
             <div className="p-4 space-y-2">
-              {suggestions.map((s, i) => (
-                <div key={i} className="flex items-start gap-3 text-sm">
-                  <span className="w-5 h-5 bg-blue-500 text-white rounded flex items-center justify-center text-xs font-bold shrink-0">
-                    {i + 1}
-                  </span>
-                  <span className="text-gray-700">{s}</span>
+              {pivotSuggestions.map((p, i) => (
+                <div key={i} className="flex items-start gap-2 text-sm">
+                  <span className="text-purple-500 mt-0.5">→</span>
+                  <span className="text-gray-700">{p}</span>
                 </div>
               ))}
             </div>
