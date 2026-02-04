@@ -138,14 +138,24 @@ function parsePercentage(str: string | undefined, fallback: number): number {
   return match ? parseInt(match[1], 10) : fallback;
 }
 
-// Score circle component
-function ScoreCircle({ score, label, color }: { score: number; label: string; color: string }) {
+// Score circle component with color coding
+function ScoreCircle({ score, label }: { score: number; label: string }) {
+  // Color based on score
+  const getScoreStyle = (s: number) => {
+    if (s >= 8) return { border: 'border-green-500', bg: 'bg-green-50', text: 'text-green-700', label: 'Great' };
+    if (s >= 6) return { border: 'border-blue-500', bg: 'bg-blue-50', text: 'text-blue-700', label: 'Good' };
+    if (s >= 4) return { border: 'border-amber-500', bg: 'bg-amber-50', text: 'text-amber-700', label: 'Meh' };
+    return { border: 'border-red-500', bg: 'bg-red-50', text: 'text-red-700', label: 'Bad' };
+  };
+  const style = getScoreStyle(score);
+  
   return (
     <div className="text-center">
-      <div className={`w-16 h-16 rounded-full border-4 ${color} flex items-center justify-center mx-auto mb-1`}>
-        <span className="text-xl font-bold text-gray-900">{score}</span>
+      <div className={`w-16 h-16 rounded-full border-4 ${style.border} ${style.bg} flex items-center justify-center mx-auto mb-1`}>
+        <span className={`text-2xl font-black ${style.text}`}>{score}</span>
       </div>
-      <div className="text-xs text-gray-500">{label}</div>
+      <div className="text-xs font-medium text-gray-700">{label}</div>
+      <div className={`text-xs ${style.text}`}>{style.label}</div>
     </div>
   );
 }
@@ -201,6 +211,15 @@ export default function ValidationPage() {
     setValidationState('validating');
     setError(null);
     setDevMode(true);
+
+    // Debug: log what we're sending
+    console.log('%c=== SENDING TO API ===', 'color: #ff6b00; font-weight: bold;');
+    console.log('Title:', testData.finalTitle);
+    console.log('Genre from questions:', testData.gameQuestions?.genre);
+    console.log('Vibes:', testData.vibeChips);
+    console.log('GameLoop nodes:', testData.gameLoop?.length);
+    console.log('SkillTree nodes:', testData.skillTree?.length);
+    console.log('Full test data:', testData);
 
     try {
       // Use test data directly - don't need current project
@@ -443,9 +462,17 @@ export default function ValidationPage() {
           
           {/* Scores */}
           <div className="flex justify-center gap-6 mt-4">
-            <ScoreCircle score={overallScore} label="Overall" color="border-pink-500" />
-            <ScoreCircle score={marketScore} label="Market" color="border-green-500" />
-            <ScoreCircle score={loopScore} label="Loop" color="border-blue-500" />
+            <ScoreCircle score={overallScore} label="Overall" />
+            <ScoreCircle score={marketScore} label="Market Fit" />
+            <ScoreCircle score={loopScore} label="Game Loop" />
+          </div>
+          
+          {/* Score Legend */}
+          <div className="flex justify-center gap-4 mt-3 text-xs">
+            <span className="text-green-600">8-10 = Build it</span>
+            <span className="text-blue-600">6-7 = Promising</span>
+            <span className="text-amber-600">4-5 = Needs work</span>
+            <span className="text-red-600">1-3 = Rethink</span>
           </div>
         </div>
 

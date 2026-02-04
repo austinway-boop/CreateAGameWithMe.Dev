@@ -26,6 +26,8 @@ export async function POST(request: NextRequest) {
     const timeHorizon = project?.timeHorizon || body.timeHorizon || '';
     const gameLoop = project?.gameLoop || body.gameLoop || [];
     const vibes = project?.vibeChips || body.vibes || [];
+    // Extract user-specified genre from game questions if available
+    const userSpecifiedGenre = project?.gameQuestions?.genre || '';
 
     if (!title || typeof title !== 'string') {
       return NextResponse.json(
@@ -52,8 +54,21 @@ export async function POST(request: NextRequest) {
       timeHorizon,
       gameLoop,
       vibes,
-      journeySummary
+      journeySummary,
+      userSpecifiedGenre
     );
+
+    // Debug logging - remove after testing
+    console.log('=== VALIDATION DEBUG ===');
+    console.log('Title:', title);
+    console.log('User Genre:', userSpecifiedGenre);
+    console.log('Vibes:', vibes);
+    console.log('GameLoop nodes:', gameLoop?.length || 0);
+    console.log('Journey Summary length:', journeySummary?.length || 0);
+    console.log('Prompt length:', prompt.length);
+    console.log('=== PROMPT START ===');
+    console.log(prompt.substring(0, 2000));
+    console.log('=== PROMPT END (truncated) ===');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -62,12 +77,13 @@ export async function POST(request: NextRequest) {
         Authorization: `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
+          { role: 'system', content: 'You are a Roblox game validation expert. Output only valid JSON. Be brutally honest and specific.' },
           { role: 'user', content: prompt },
         ],
-        temperature: 0.7,
-        max_tokens: 2000,
+        temperature: 0.5,
+        max_tokens: 3000,
       }),
     });
 

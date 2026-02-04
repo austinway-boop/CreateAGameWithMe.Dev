@@ -39,38 +39,103 @@ export interface RobloxMarketAnalysis {
 }
 
 // Keywords to match concept text to Roblox genres
-const robloxGenreKeywords: Record<string, string[]> = {
-  'simulator': ['simulator', 'sim', 'pet sim', 'collecting', 'farming sim', 'grinding', 'afk', 'idle', 'clicker', 'pet', 'bee', 'mining'],
-  'roleplay_lifesim': ['roleplay', 'rp', 'lifesim', 'life sim', 'house', 'family', 'adopt', 'town', 'city life', 'social', 'hangout', 'bloxburg'],
-  'horror': ['horror', 'scary', 'spooky', 'monster', 'escape', 'survival horror', 'doors', 'piggy', 'backrooms', 'creepy', 'jumpscare', 'fear'],
-  'battlegrounds_pvp': ['pvp', 'battlegrounds', 'combat', 'fighting', 'battle', 'arena', 'bedwars', 'murder', 'vs', 'competitive', 'shooter', 'fps'],
-  'obby_platformer': ['obby', 'obstacle', 'parkour', 'tower', 'jumping', 'platformer', 'escape tower'],
-  'tycoon': ['tycoon', 'build', 'business', 'manage', 'factory', 'empire', 'money', 'idle tycoon'],
-  'anime_rpg': ['anime', 'rpg', 'fruits', 'devil fruit', 'shindo', 'naruto', 'one piece', 'dbz', 'dragon ball', 'gacha', 'grinding', 'leveling'],
-  'social_coopetition': ['fashion', 'dress up', 'voting', 'talent show', 'competition', 'runway', 'makeover', 'beauty', 'co-opetition', 'party'],
-  'driving_racing': ['driving', 'racing', 'car', 'vehicle', 'speed', 'drift', 'motorcycle', 'truck', 'jailbreak'],
-  'open_world_action': ['open world', 'exploration', 'adventure', 'questing', 'rpg adventure', 'survival', 'crafting', 'apocalypse'],
-  'sports_arcade': ['sports', 'soccer', 'football', 'basketball', 'baseball', 'golf', 'arcade sports', 'ball'],
-  'tower_defense': ['tower defense', 'td', 'defend', 'waves', 'towers', 'units', 'strategy'],
-  'minigames_party': ['minigames', 'mini games', 'party', 'variety', 'random games', 'collection']
+// Format: keyword -> weight (higher = stronger signal)
+const robloxGenreKeywords: Record<string, Array<[string, number]>> = {
+  'simulator': [
+    ['simulator', 3], ['pet sim', 5], ['farming sim', 5], ['bee swarm', 5],
+    ['collecting', 2], ['grinding', 2], ['afk', 3], ['idle', 3], ['clicker', 3],
+    ['hatch', 3], ['rebirth', 3], ['pets', 2], ['gem', 1], ['coin', 1]
+  ],
+  'roleplay_lifesim': [
+    ['roleplay', 4], ['rp game', 5], ['lifesim', 5], ['life sim', 5],
+    ['adopt me', 5], ['bloxburg', 5], ['family', 2], ['town', 2], ['city life', 4],
+    ['hangout', 3], ['house', 1], ['decorate', 2], ['customiz', 2]
+  ],
+  'horror': [
+    ['horror', 5], ['scary', 4], ['spooky', 3], ['monster', 2], ['survival horror', 5],
+    ['doors', 4], ['piggy', 4], ['backrooms', 4], ['creepy', 3], ['jumpscare', 4],
+    ['fear', 2], ['ghost', 3], ['haunted', 4], ['possessed', 4], ['demon', 3],
+    ['escape the', 3], ['survive', 2], ['killer', 3], ['night', 1], ['dark', 1],
+    ['among us', 4], ['imposter', 4], ['traitor', 4], ['sabotage', 3], ['social deduction', 5]
+  ],
+  'battlegrounds_pvp': [
+    ['pvp', 4], ['battlegrounds', 5], ['combat', 3], ['fighting', 3], ['battle', 2],
+    ['arena', 3], ['bedwars', 5], ['murder mystery', 5], ['vs', 2], ['competitive', 3],
+    ['shooter', 4], ['fps', 4], ['gun', 3], ['weapon', 2], ['kill', 2], ['duel', 3]
+  ],
+  'obby_platformer': [
+    ['obby', 5], ['obstacle course', 5], ['parkour', 4], ['tower of hell', 5],
+    ['jumping', 2], ['platformer', 4], ['climb', 2], ['checkpoint', 3], ['levels', 1],
+    ['jump on platforms', 5], ['reach the end', 3]
+  ],
+  'tycoon': [
+    ['tycoon', 5], ['business', 2], ['manage', 2], ['factory', 3], ['empire', 2],
+    ['money', 1], ['idle tycoon', 5], ['build base', 3], ['upgrade', 2], ['droppers', 4]
+  ],
+  'anime_rpg': [
+    ['anime', 4], ['devil fruit', 5], ['shindo', 5], ['naruto', 5], ['one piece', 5],
+    ['dbz', 4], ['dragon ball', 5], ['gacha', 4], ['leveling', 2], ['powers', 2],
+    ['bleach', 4], ['jujutsu', 4], ['demon slayer', 4], ['manga', 3], ['awakening', 3]
+  ],
+  'social_coopetition': [
+    ['fashion', 4], ['dress up', 5], ['voting', 3], ['talent show', 5], ['runway', 5],
+    ['makeover', 4], ['beauty', 3], ['co-opetition', 5], ['party', 2], ['show off', 3],
+    ['rate my', 4], ['judge', 3], ['outfit', 3]
+  ],
+  'driving_racing': [
+    ['driving', 4], ['racing', 5], ['car', 3], ['vehicle', 3], ['speed', 2],
+    ['drift', 4], ['motorcycle', 3], ['truck', 2], ['jailbreak', 5], ['getaway', 3]
+  ],
+  'open_world_action': [
+    ['open world', 5], ['exploration', 3], ['adventure', 2], ['questing', 3],
+    ['survival', 3], ['crafting', 3], ['apocalypse', 3], ['sandbox', 4], ['freedom', 2]
+  ],
+  'sports_arcade': [
+    ['sports', 4], ['soccer', 5], ['football', 4], ['basketball', 5], ['baseball', 4],
+    ['golf', 4], ['arcade sports', 5], ['goal', 2], ['score', 1], ['team sport', 4]
+  ],
+  'tower_defense': [
+    ['tower defense', 5], ['td game', 5], ['defend', 2], ['waves', 3], ['towers', 3],
+    ['units', 2], ['strategy', 2], ['place towers', 5], ['enemy waves', 4]
+  ],
+  'minigames_party': [
+    ['minigames', 5], ['mini games', 5], ['party', 2], ['variety', 2], ['random games', 4],
+    ['collection', 1], ['rounds', 2], ['different games', 4]
+  ]
 };
 
 /**
  * Detect Roblox genres from a game concept description
+ * Uses weighted keyword matching for better accuracy
  */
 export function detectRobloxGenres(concept: string, title: string = '', vibes: string[] = []): RobloxGenreInfo[] {
   const text = `${title} ${concept} ${vibes.join(' ')}`.toLowerCase();
   const matchedGenres: RobloxGenreInfo[] = [];
   const scores: Record<string, number> = {};
 
-  // Score each genre based on keyword matches
-  for (const [genreKey, keywords] of Object.entries(robloxGenreKeywords)) {
+  // Score each genre based on weighted keyword matches
+  for (const [genreKey, keywordPairs] of Object.entries(robloxGenreKeywords)) {
     let score = 0;
-    for (const keyword of keywords) {
-      if (text.includes(keyword.toLowerCase())) {
-        score += keyword.split(' ').length; // Multi-word matches score higher
+    const matchedKeywords: string[] = [];
+    
+    for (const [keyword, weight] of keywordPairs) {
+      const kw = keyword.toLowerCase();
+      // Count occurrences (not just presence)
+      const regex = new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+      const matches = text.match(regex);
+      if (matches) {
+        score += weight * matches.length;
+        matchedKeywords.push(keyword);
       }
     }
+    
+    // Bonus for multiple keyword matches (signals stronger genre fit)
+    if (matchedKeywords.length >= 3) {
+      score *= 1.5;
+    } else if (matchedKeywords.length >= 2) {
+      score *= 1.2;
+    }
+    
     if (score > 0) {
       scores[genreKey] = score;
     }
@@ -81,10 +146,15 @@ export function detectRobloxGenres(concept: string, title: string = '', vibes: s
     .sort(([, a], [, b]) => b - a)
     .slice(0, 3);
 
-  for (const [genreKey] of sortedGenres) {
-    const info = getRobloxGenreInfo(genreKey as RobloxGenreKey);
-    if (info) {
-      matchedGenres.push(info);
+  // Only include genres with meaningful scores
+  const topScore = sortedGenres[0]?.[1] || 0;
+  for (const [genreKey, score] of sortedGenres) {
+    // Include if score is at least 30% of top score (to filter weak secondary matches)
+    if (score >= topScore * 0.3 || score >= 3) {
+      const info = getRobloxGenreInfo(genreKey as RobloxGenreKey);
+      if (info) {
+        matchedGenres.push(info);
+      }
     }
   }
 
@@ -154,15 +224,121 @@ export function getHotRobloxGenres(): string[] {
 }
 
 /**
+ * Map user-specified genre keywords to our genre keys
+ * Searches for ANY of these keywords in the user's genre string
+ */
+const userGenreKeywords: Array<[string, string]> = [
+  // Horror (check first - common primary genre)
+  ['horror', 'horror'],
+  ['scary', 'horror'],
+  ['survival horror', 'horror'],
+  ['social deduction', 'horror'], // Among Us style = horror-adjacent
+  ['possessed', 'horror'],
+  ['haunted', 'horror'],
+  ['ghost', 'horror'],
+  
+  // Obby/Platformer
+  ['obby', 'obby_platformer'],
+  ['platformer', 'obby_platformer'],
+  ['obstacle', 'obby_platformer'],
+  ['parkour', 'obby_platformer'],
+  ['tower of hell', 'obby_platformer'],
+  
+  // Simulator
+  ['simulator', 'simulator'],
+  ['sim', 'simulator'],
+  ['pet sim', 'simulator'],
+  ['idle', 'simulator'],
+  
+  // Roleplay/Lifesim
+  ['roleplay', 'roleplay_lifesim'],
+  ['rp', 'roleplay_lifesim'],
+  ['life sim', 'roleplay_lifesim'],
+  ['lifesim', 'roleplay_lifesim'],
+  
+  // Tycoon
+  ['tycoon', 'tycoon'],
+  
+  // PvP/Battlegrounds
+  ['pvp', 'battlegrounds_pvp'],
+  ['battlegrounds', 'battlegrounds_pvp'],
+  ['fighting', 'battlegrounds_pvp'],
+  ['combat', 'battlegrounds_pvp'],
+  ['shooter', 'battlegrounds_pvp'],
+  
+  // Anime RPG
+  ['anime', 'anime_rpg'],
+  ['anime rpg', 'anime_rpg'],
+  ['rpg', 'anime_rpg'],
+  
+  // Social/Fashion
+  ['fashion', 'social_coopetition'],
+  ['dress up', 'social_coopetition'],
+  
+  // Racing
+  ['racing', 'driving_racing'],
+  ['driving', 'driving_racing'],
+  ['car', 'driving_racing'],
+  
+  // Open World
+  ['open world', 'open_world_action'],
+  ['adventure', 'open_world_action'],
+  ['exploration', 'open_world_action'],
+  
+  // Sports
+  ['sports', 'sports_arcade'],
+  ['soccer', 'sports_arcade'],
+  ['basketball', 'sports_arcade'],
+  
+  // Tower Defense
+  ['tower defense', 'tower_defense'],
+  ['td', 'tower_defense'],
+  
+  // Minigames
+  ['minigames', 'minigames_party'],
+  ['party', 'minigames_party'],
+];
+
+/**
+ * Find the best matching genre key from a user-specified genre string
+ */
+function matchUserGenre(userGenre: string): string | null {
+  const normalized = userGenre.toLowerCase().trim();
+  
+  for (const [keyword, genreKey] of userGenreKeywords) {
+    if (normalized.includes(keyword)) {
+      return genreKey;
+    }
+  }
+  
+  return null;
+}
+
+/**
  * Analyze a Roblox game concept against market data
  */
 export function analyzeRobloxMarket(
   concept: string,
   title: string = '',
   vibes: string[] = [],
-  teamSize: string = ''
+  teamSize: string = '',
+  userSpecifiedGenre: string = ''
 ): RobloxMarketAnalysis {
-  const matchedGenres = detectRobloxGenres(concept, title, vibes);
+  // First, try to use user-specified genre if provided
+  let matchedGenres = detectRobloxGenres(concept, title, vibes);
+  
+  // If user specified a genre, use that as primary (supports compound genres like "Horror / Social Deduction")
+  if (userSpecifiedGenre) {
+    const mappedKey = matchUserGenre(userSpecifiedGenre);
+    if (mappedKey) {
+      const userGenreInfo = getRobloxGenreInfo(mappedKey);
+      if (userGenreInfo) {
+        // Put user's genre first, keep others as secondary
+        matchedGenres = [userGenreInfo, ...matchedGenres.filter(g => g.key !== mappedKey)];
+      }
+    }
+  }
+  
   const warnings: string[] = [];
   const opportunities: string[] = [];
   const insights: string[] = [];
