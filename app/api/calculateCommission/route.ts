@@ -1,86 +1,74 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-
-interface CommissionRequest {
-  skillType: string;
-  experienceLevel: string;
-  projectComplexity: string;
-  estimatedHours: number;
-  platform: string;
-  additionalContext?: string;
-}
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export async function POST(request: NextRequest) {
-  if (!ANTHROPIC_API_KEY) {
+  if (!OPENAI_API_KEY) {
     return NextResponse.json(
-      { message: 'Anthropic API key not configured' },
+      { message: 'OpenAI API key not configured' },
       { status: 500 }
     );
   }
 
   try {
-    const body: CommissionRequest = await request.json();
-    const { skillType, experienceLevel, projectComplexity, estimatedHours, platform, additionalContext } = body;
+    const { description } = await request.json();
 
-    if (!skillType || !experienceLevel || !projectComplexity || !estimatedHours || !platform) {
+    if (!description || typeof description !== 'string') {
       return NextResponse.json(
-        { message: 'Missing required fields' },
+        { message: 'Please describe the commission' },
         { status: 400 }
       );
     }
 
-    const prompt = `You are an expert consultant helping determine fair commission pricing for game development work. Based on the following details, provide a fair and competitive pricing recommendation.
+    const prompt = `You are an expert consultant helping determine fair commission pricing for game development and creative work. A user is describing a commission they want to price fairly.
 
-**Project Details:**
-- Skill Type: ${skillType}
-- Experience Level: ${experienceLevel}
-- Project Complexity: ${projectComplexity}
-- Estimated Hours: ${estimatedHours}
-- Platform: ${platform}
-${additionalContext ? `- Additional Context: ${additionalContext}` : ''}
+**Commission Description:**
+${description}
 
-Please analyze this and provide a JSON response with the following structure:
+Based on this description, analyze and provide a fair pricing recommendation. Consider:
+1. The type of work (programming, art, animation, sound, etc.)
+2. Estimated complexity and time required
+3. Current market rates for this type of work
+4. Experience level implied or mentioned
+5. Platform-specific considerations if mentioned
+
+Provide a JSON response with this structure:
 {
   "hourlyRateLow": <number - low end of fair hourly rate in USD>,
   "hourlyRateHigh": <number - high end of fair hourly rate in USD>,
   "recommendedHourlyRate": <number - your recommended hourly rate in USD>,
+  "estimatedHoursLow": <number - estimated hours low>,
+  "estimatedHoursHigh": <number - estimated hours high>,
   "totalEstimateLow": <number - total project cost low estimate>,
   "totalEstimateHigh": <number - total project cost high estimate>,
   "recommendedTotal": <number - recommended total project cost>,
+  "skillType": "<string - the type of skill/work identified>",
   "rationale": "<string - brief explanation of the pricing rationale>",
-  "marketInsights": "<string - brief market insights for this skill type>",
-  "negotiationTips": ["<tip1>", "<tip2>", "<tip3>"]
+  "marketInsights": "<string - brief market insights for this type of work>",
+  "tips": ["<tip1>", "<tip2>", "<tip3>"]
 }
-
-Consider these factors:
-1. Current market rates for ${skillType} work in game development
-2. Experience level premium (beginner vs expert)
-3. Platform-specific complexity (${platform} development)
-4. Project complexity overhead
-5. Industry standards and fair compensation
 
 Respond ONLY with valid JSON, no additional text.`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'user', content: prompt },
         ],
+        temperature: 0.7,
+        max_tokens: 1024,
       }),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('Anthropic API error:', error);
+      console.error('OpenAI API error:', error);
       return NextResponse.json(
         { message: 'Failed to calculate commission pricing' },
         { status: 500 }
@@ -88,7 +76,7 @@ Respond ONLY with valid JSON, no additional text.`;
     }
 
     const data = await response.json();
-    const content = data.content?.[0]?.text?.trim();
+    const content = data.choices?.[0]?.message?.content?.trim();
 
     if (!content) {
       return NextResponse.json(
