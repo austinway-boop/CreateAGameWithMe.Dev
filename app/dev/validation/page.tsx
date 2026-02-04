@@ -302,46 +302,219 @@ export default function DevValidationPage() {
               </div>
             </div>
 
-            {/* Loop Analysis Agent */}
+            {/* Loop Analysis Agent - DETAILED */}
             <div className="bg-white rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-lg">🔄 Game Loop Analysis</h3>
+                <h3 className="font-bold text-lg">🔄 Game Loop & Playability Analysis</h3>
                 <span className={`px-2 py-1 rounded text-sm font-bold ${getScoreColor(result.loopAnalysis.score)}`}>
                   {result.loopAnalysis.score}/10
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                <div><span className="text-gray-500">Core Mechanics:</span> {result.loopAnalysis.coreMechanics?.join(', ')}</div>
-                <div><span className="text-gray-500">Loop Strength:</span> <strong>{result.loopAnalysis.loopStrength}</strong></div>
-                <div><span className="text-gray-500">Progression:</span> {result.loopAnalysis.progressionDepth}</div>
-                <div><span className="text-gray-500">Social:</span> {result.loopAnalysis.socialIntegration}</div>
-              </div>
-              <div className="mb-3">
-                <div className="text-sm font-medium text-gray-700 mb-1">Session Flow:</div>
-                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">{result.loopAnalysis.sessionFlowAnalysis}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="text-sm font-medium text-green-700 mb-1">Retention Drivers</div>
-                  <ul className="text-xs text-gray-600 space-y-1">
-                    {result.loopAnalysis.retentionDrivers?.map((d, i) => <li key={i}>• {d}</li>)}
-                  </ul>
+              
+              {/* Core Loop Overview */}
+              <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                <div className="font-medium text-gray-800 mb-2">Core Loop</div>
+                <p className="text-sm text-gray-700">{result.loopAnalysis.primaryLoop}</p>
+                <div className="mt-2 text-xs text-gray-500">
+                  Mechanics: {result.loopAnalysis.coreMechanics?.join(' → ')}
                 </div>
-                <div>
-                  <div className="text-sm font-medium text-red-700 mb-1">Retention Risks</div>
-                  <ul className="text-xs text-gray-600 space-y-1">
-                    {result.loopAnalysis.retentionRisks?.map((r, i) => <li key={i}>• {r}</li>)}
-                  </ul>
+                <div className="mt-1 text-xs">
+                  <span className={`font-medium ${
+                    result.loopAnalysis.loopStrength?.includes('strong') ? 'text-green-600' :
+                    result.loopAnalysis.loopStrength?.includes('moderate') ? 'text-amber-600' : 'text-red-600'
+                  }`}>Strength: {result.loopAnalysis.loopStrength}</span>
                 </div>
               </div>
-              {result.loopAnalysis.missingElements?.length > 0 && (
-                <div className="mt-3 bg-amber-50 p-3 rounded">
-                  <div className="text-sm font-medium text-amber-700 mb-1">Missing Elements</div>
-                  <ul className="text-xs text-amber-800 space-y-1">
-                    {result.loopAnalysis.missingElements.map((m, i) => <li key={i}>• {m}</li>)}
-                  </ul>
+
+              {/* Moment-to-Moment Feel */}
+              {result.loopAnalysis.momentToMoment && (
+                <div className="mb-4">
+                  <div className="font-medium text-gray-800 mb-2">⚡ Moment-to-Moment Feel</div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="bg-blue-50 p-2 rounded">
+                      <div className="text-xs text-blue-600 font-medium">Core Verb</div>
+                      <div className="text-gray-700">{result.loopAnalysis.momentToMoment.coreVerb}</div>
+                    </div>
+                    <div className="bg-purple-50 p-2 rounded">
+                      <div className="text-xs text-purple-600 font-medium">How It Feels</div>
+                      <div className="text-gray-700">{result.loopAnalysis.momentToMoment.feeling}</div>
+                    </div>
+                    <div className="bg-green-50 p-2 rounded">
+                      <div className="text-xs text-green-600 font-medium">Satisfaction Source</div>
+                      <div className="text-gray-700">{result.loopAnalysis.momentToMoment.satisfactionSource}</div>
+                    </div>
+                    <div className="bg-red-50 p-2 rounded">
+                      <div className="text-xs text-red-600 font-medium">Frustration Risks</div>
+                      <div className="text-gray-700 text-xs">{result.loopAnalysis.momentToMoment.frustrationRisks?.join(', ')}</div>
+                    </div>
+                  </div>
                 </div>
               )}
+
+              {/* First Session Experience */}
+              {result.loopAnalysis.firstSession && (
+                <div className="mb-4">
+                  <div className="font-medium text-gray-800 mb-2">🎮 First Session Experience</div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div><span className="text-gray-500">Hook Moment:</span> {result.loopAnalysis.firstSession.hookMoment}</div>
+                    <div><span className="text-gray-500">Time to Fun:</span> <strong>{result.loopAnalysis.firstSession.timeToFun}</strong></div>
+                    <div><span className="text-gray-500">Tutorial Risk:</span> {result.loopAnalysis.firstSession.tutorialRisk}</div>
+                    <div><span className="text-gray-500">Aha Moment:</span> {result.loopAnalysis.firstSession.ahaMoment}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Retention Deep Dive */}
+              {result.loopAnalysis.retention && (
+                <div className="mb-4">
+                  <div className="font-medium text-gray-800 mb-2">📈 Retention Analysis</div>
+                  <div className="space-y-2 text-sm">
+                    <div className="bg-green-50 p-2 rounded">
+                      <span className="text-green-700 font-medium">Today:</span> {result.loopAnalysis.retention.whyComeBackToday}
+                    </div>
+                    <div className="bg-blue-50 p-2 rounded">
+                      <span className="text-blue-700 font-medium">Tomorrow:</span> {result.loopAnalysis.retention.whyComeBackTomorrow}
+                    </div>
+                    <div className="bg-purple-50 p-2 rounded">
+                      <span className="text-purple-700 font-medium">Next Week:</span> {result.loopAnalysis.retention.whyComeBackNextWeek}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    <div>
+                      <div className="text-xs font-medium text-green-700 mb-1">Daily Hooks</div>
+                      <ul className="text-xs text-gray-600">
+                        {result.loopAnalysis.retention.dailyHooks?.map((h, i) => <li key={i}>• {h}</li>)}
+                      </ul>
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-red-700 mb-1">Retention Killers</div>
+                      <ul className="text-xs text-red-600">
+                        {result.loopAnalysis.retention.retentionKillers?.map((k, i) => <li key={i}>✗ {k}</li>)}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Session Structure */}
+              {result.loopAnalysis.sessionStructure && (
+                <div className="mb-4">
+                  <div className="font-medium text-gray-800 mb-2">⏱️ Session Structure</div>
+                  <div className="text-sm space-y-2">
+                    <div><span className="text-gray-500">Ideal Length:</span> <strong>{result.loopAnalysis.sessionStructure.idealLength}</strong></div>
+                    <div><span className="text-gray-500">"One More Round" Factor:</span> {result.loopAnalysis.sessionStructure.oneMoreRoundFactor}</div>
+                    <div className="bg-gray-50 p-2 rounded mt-2">
+                      <div className="text-xs text-gray-500 mb-1">Session Flow:</div>
+                      <p className="text-gray-700">{result.loopAnalysis.sessionStructure.sessionFlow}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Progression */}
+              {result.loopAnalysis.progression && (
+                <div className="mb-4">
+                  <div className="font-medium text-gray-800 mb-2">📊 Progression Systems</div>
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    <div className="bg-green-50 p-2 rounded text-center">
+                      <div className="text-xs text-green-600 font-medium">Short-term</div>
+                      <div className="text-xs text-gray-700">{result.loopAnalysis.progression.shortTerm}</div>
+                    </div>
+                    <div className="bg-blue-50 p-2 rounded text-center">
+                      <div className="text-xs text-blue-600 font-medium">Medium-term</div>
+                      <div className="text-xs text-gray-700">{result.loopAnalysis.progression.mediumTerm}</div>
+                    </div>
+                    <div className="bg-purple-50 p-2 rounded text-center">
+                      <div className="text-xs text-purple-600 font-medium">Long-term</div>
+                      <div className="text-xs text-gray-700">{result.loopAnalysis.progression.longTerm}</div>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-600">
+                    <span className="font-medium">Mastery Depth:</span> {result.loopAnalysis.progression.masteryDepth}
+                  </div>
+                </div>
+              )}
+
+              {/* Social */}
+              {result.loopAnalysis.social && (
+                <div className="mb-4">
+                  <div className="font-medium text-gray-800 mb-2">👥 Social Integration: <span className={
+                    result.loopAnalysis.social.integrationLevel === 'core' ? 'text-green-600' :
+                    result.loopAnalysis.social.integrationLevel === 'moderate' ? 'text-blue-600' :
+                    result.loopAnalysis.social.integrationLevel === 'minimal' ? 'text-amber-600' : 'text-red-600'
+                  }>{result.loopAnalysis.social.integrationLevel}</span></div>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    {result.loopAnalysis.social.coopElements?.length > 0 && (
+                      <div>
+                        <div className="font-medium text-green-700 mb-1">Co-op Elements</div>
+                        <ul className="text-gray-600">{result.loopAnalysis.social.coopElements.map((e, i) => <li key={i}>• {e}</li>)}</ul>
+                      </div>
+                    )}
+                    {result.loopAnalysis.social.viralMoments?.length > 0 && (
+                      <div>
+                        <div className="font-medium text-purple-700 mb-1">Viral Moments</div>
+                        <ul className="text-gray-600">{result.loopAnalysis.social.viralMoments.map((v, i) => <li key={i}>• {v}</li>)}</ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Skill Curve */}
+              {result.loopAnalysis.skillCurve && (
+                <div className="mb-4">
+                  <div className="font-medium text-gray-800 mb-2">🎯 Skill & Mastery</div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div><span className="text-gray-500">Skill Floor:</span> {result.loopAnalysis.skillCurve.floorDescription}</div>
+                    <div><span className="text-gray-500">Skill Ceiling:</span> {result.loopAnalysis.skillCurve.ceilingDescription}</div>
+                  </div>
+                  {result.loopAnalysis.skillCurve.skillExpression?.length > 0 && (
+                    <div className="mt-2 text-xs">
+                      <span className="font-medium text-gray-700">Skill Expression:</span> {result.loopAnalysis.skillCurve.skillExpression.join(', ')}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Problems */}
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                {result.loopAnalysis.criticalFlaws?.length > 0 && (
+                  <div className="bg-red-50 p-3 rounded">
+                    <div className="text-sm font-medium text-red-700 mb-1">🚨 Critical Flaws</div>
+                    <ul className="text-xs text-red-800 space-y-1">
+                      {result.loopAnalysis.criticalFlaws.map((f, i) => <li key={i}>✗ {f}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {result.loopAnalysis.missingElements?.length > 0 && (
+                  <div className="bg-amber-50 p-3 rounded">
+                    <div className="text-sm font-medium text-amber-700 mb-1">⚠️ Missing Elements</div>
+                    <ul className="text-xs text-amber-800 space-y-1">
+                      {result.loopAnalysis.missingElements.map((m, i) => <li key={i}>• {m}</li>)}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              {/* Quick Wins & Suggestions */}
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                {result.loopAnalysis.quickWins?.length > 0 && (
+                  <div className="bg-green-50 p-3 rounded">
+                    <div className="text-sm font-medium text-green-700 mb-1">⚡ Quick Wins</div>
+                    <ul className="text-xs text-green-800 space-y-1">
+                      {result.loopAnalysis.quickWins.map((q, i) => <li key={i}>✓ {q}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {result.loopAnalysis.suggestions?.length > 0 && (
+                  <div className="bg-blue-50 p-3 rounded">
+                    <div className="text-sm font-medium text-blue-700 mb-1">💡 Suggestions</div>
+                    <ul className="text-xs text-blue-800 space-y-1">
+                      {result.loopAnalysis.suggestions.map((s, i) => <li key={i}>→ {s}</li>)}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Competitor Analysis Agent */}

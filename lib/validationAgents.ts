@@ -36,15 +36,78 @@ export interface MarketAgentResult {
 }
 
 export interface LoopAgentResult {
+  // Core Loop Analysis
   coreMechanics: string[];
+  primaryLoop: string;
+  secondaryLoops: string[];
   loopStrength: string;
-  retentionDrivers: string[];
-  retentionRisks: string[];
-  sessionFlowAnalysis: string;
-  progressionDepth: string;
-  socialIntegration: string;
+  
+  // Moment-to-Moment Feel
+  momentToMoment: {
+    coreVerb: string;
+    feeling: string;
+    satisfactionSource: string;
+    frustrationRisks: string[];
+  };
+  
+  // First Session Experience
+  firstSession: {
+    hookMoment: string;
+    timeToFun: string;
+    tutorialRisk: string;
+    ahaMoment: string;
+  };
+  
+  // Retention Analysis
+  retention: {
+    whyComeBackToday: string;
+    whyComeBackTomorrow: string;
+    whyComeBackNextWeek: string;
+    dailyHooks: string[];
+    weeklyHooks: string[];
+    retentionKillers: string[];
+  };
+  
+  // Session Structure
+  sessionStructure: {
+    idealLength: string;
+    naturalBreakPoints: string[];
+    oneMoreRoundFactor: string;
+    sessionFlow: string;
+  };
+  
+  // Progression Systems
+  progression: {
+    shortTerm: string;
+    mediumTerm: string;
+    longTerm: string;
+    masteryDepth: string;
+    contentVelocity: string;
+  };
+  
+  // Social & Multiplayer
+  social: {
+    integrationLevel: string;
+    coopElements: string[];
+    competitiveElements: string[];
+    socialHooks: string[];
+    viralMoments: string[];
+  };
+  
+  // Skill & Mastery
+  skillCurve: {
+    floorDescription: string;
+    ceilingDescription: string;
+    skillExpression: string[];
+    learningMoments: string[];
+  };
+  
+  // Problems & Solutions
   missingElements: string[];
+  criticalFlaws: string[];
   suggestions: string[];
+  quickWins: string[];
+  
   score: number;
 }
 
@@ -145,55 +208,190 @@ export function buildLoopAgentPrompt(
   gameLoop: GameLoopNode[],
   journeySummary: string
 ): string {
-  const loopDescription = gameLoop.length > 0
-    ? gameLoop.map(node => {
-        const type = node.type.toUpperCase();
-        const loop = node.loopType === 'sub' ? ` [${node.loopName || 'sub'}]` : ' [main]';
-        return `- ${type}${loop}: "${node.label}"`;
-      }).join('\n')
-    : 'No game loop defined';
+  // Build detailed loop description with connections
+  let loopDescription = 'No game loop defined';
+  if (gameLoop.length > 0) {
+    const mainLoop = gameLoop.filter(n => n.loopType === 'main');
+    const subLoops = gameLoop.filter(n => n.loopType === 'sub');
+    
+    let desc = `MAIN LOOP (${mainLoop.length} nodes):\n`;
+    mainLoop.forEach(node => {
+      const connections = node.connections
+        .map(id => gameLoop.find(n => n.id === id)?.label || '?')
+        .join(', ');
+      desc += `  ${node.type.toUpperCase()}: "${node.label}" → [${connections || 'end'}]\n`;
+    });
+    
+    if (subLoops.length > 0) {
+      const subLoopNames = [...new Set(subLoops.map(n => n.loopName).filter(Boolean))];
+      subLoopNames.forEach(name => {
+        const nodes = subLoops.filter(n => n.loopName === name);
+        desc += `\nSUB-LOOP "${name}" (${nodes.length} nodes):\n`;
+        nodes.forEach(node => {
+          const connections = node.connections
+            .map(id => gameLoop.find(n => n.id === id)?.label || '?')
+            .join(', ');
+          desc += `  ${node.type.toUpperCase()}: "${node.label}" → [${connections || 'end'}]\n`;
+        });
+      });
+    }
+    loopDescription = desc;
+  }
 
-  return `You are a ROBLOX GAME LOOP SPECIALIST. Analyze this game's core loop for retention.
+  return `You are an EXPERT GAME LOOP & PLAYABILITY ANALYST specializing in Roblox. Your job is to deeply analyze game loops, moment-to-moment gameplay feel, retention mechanics, and player psychology.
 
-=== GAME ===
+=== GAME TO ANALYZE ===
 Title: "${title}"
 Concept: ${concept}
 
 === GAME LOOP DIAGRAM ===
 ${loopDescription}
 
-=== FULL DESIGN CONTEXT ===
+=== COMPLETE DESIGN CONTEXT ===
 ${journeySummary}
 
-=== ROBLOX RETENTION BENCHMARKS ===
-- Top 10% games: 45%+ D1, 20%+ D7, 30+ min sessions
-- Successful games: 35%+ D1, 15%+ D7, 15+ min sessions
-- The "aha moment" must happen in first 2-3 minutes
-- Players need a reason to return DAILY (not just "more levels")
+=== ROBLOX PLAYER BEHAVIOR DATA ===
+Session Benchmarks:
+- Top 10% games: 30+ min average session, 45%+ D1 retention
+- Successful games: 15+ min average session, 35%+ D1 retention
+- Struggling games: <8 min sessions, <25% D1 retention
 
-=== YOUR TASK ===
-Analyze the game loop deeply. Consider:
-1. Is the core loop actually fun moment-to-moment?
-2. What drives SHORT-TERM retention (this session)?
-3. What drives LONG-TERM retention (coming back tomorrow)?
-4. How does progression work?
-5. What social elements exist?
+Critical Moments:
+- First 30 seconds: Player decides if they'll stay
+- First 2 minutes: "Aha moment" must happen or they leave
+- First 5 minutes: Core loop should be clear and fun
+- 10-15 minutes: Natural session break point
 
-Output JSON:
+Roblox-Specific:
+- Players often play in short bursts (school breaks, etc)
+- Mobile = 55% of players (touch controls matter)
+- Social features dramatically increase retention
+- Daily rewards/streaks are expected
+- Players want to show off progress to friends
+
+=== DEEP ANALYSIS REQUIRED ===
+
+Analyze EVERYTHING about this game's loop and playability:
+
+1. MOMENT-TO-MOMENT FEEL
+   - What is the actual core verb? (jump, click, shoot, build, etc)
+   - Is that verb inherently satisfying?
+   - Where does "juice" come from? (feedback, effects, sounds)
+   - What could cause frustration?
+
+2. FIRST SESSION EXPERIENCE
+   - What hooks them in the first 30 seconds?
+   - When is the "aha moment"?
+   - How long until they feel competent?
+   - What might make them quit early?
+
+3. RETENTION MECHANICS
+   - Why come back THIS session? (unfinished goal)
+   - Why come back TOMORROW? (daily rewards, progress)
+   - Why come back NEXT WEEK? (events, new content, social)
+   - What are the retention KILLERS?
+
+4. SESSION STRUCTURE
+   - How long is the ideal session?
+   - Where are natural break points?
+   - What creates "one more round" syndrome?
+   - How does a 15-minute session flow?
+
+5. PROGRESSION SYSTEMS
+   - Short-term: What do I earn THIS session?
+   - Medium-term: What am I working toward THIS WEEK?
+   - Long-term: What's my end-game goal?
+   - How deep is mastery?
+
+6. SOCIAL INTEGRATION
+   - Can I play with friends meaningfully?
+   - Can I show off to friends?
+   - Are there viral/shareable moments?
+   - What drives word-of-mouth?
+
+7. SKILL & MASTERY
+   - How easy to learn? (skill floor)
+   - How hard to master? (skill ceiling)
+   - How can skilled players express skill?
+   - What are the learning milestones?
+
+=== OUTPUT FORMAT ===
+
 {
-  "coreMechanics": ["The actual verbs/actions players do"],
-  "loopStrength": "strong/moderate/weak - with explanation",
-  "retentionDrivers": ["What will keep players coming back"],
-  "retentionRisks": ["What might cause players to leave"],
-  "sessionFlowAnalysis": "How a typical 15-min session would feel",
-  "progressionDepth": "shallow/moderate/deep - explanation",
-  "socialIntegration": "none/weak/moderate/strong - explanation",
-  "missingElements": ["Critical elements missing from the loop"],
-  "suggestions": ["Specific improvements to the loop"],
+  "coreMechanics": ["Primary verb/action", "Secondary verb", "etc"],
+  "primaryLoop": "The core loop in one sentence: Do X → Get Y → Use Y to Z",
+  "secondaryLoops": ["Supporting loops that add depth"],
+  "loopStrength": "strong/moderate/weak - detailed explanation of WHY",
+  
+  "momentToMoment": {
+    "coreVerb": "The single most common action",
+    "feeling": "How does doing this action FEEL?",
+    "satisfactionSource": "Where does the dopamine come from?",
+    "frustrationRisks": ["Things that could feel bad"]
+  },
+  
+  "firstSession": {
+    "hookMoment": "What grabs them immediately?",
+    "timeToFun": "How many seconds/minutes until fun starts?",
+    "tutorialRisk": "Is the tutorial too long/boring?",
+    "ahaMoment": "When do they 'get it'?"
+  },
+  
+  "retention": {
+    "whyComeBackToday": "Reason to continue THIS session",
+    "whyComeBackTomorrow": "Reason to return tomorrow",
+    "whyComeBackNextWeek": "Reason for long-term engagement",
+    "dailyHooks": ["Daily reward", "streak", "etc"],
+    "weeklyHooks": ["Events", "new content", "etc"],
+    "retentionKillers": ["Things that will make players quit forever"]
+  },
+  
+  "sessionStructure": {
+    "idealLength": "X-Y minutes and why",
+    "naturalBreakPoints": ["After completing X", "After Y happens"],
+    "oneMoreRoundFactor": "What makes them say 'one more'?",
+    "sessionFlow": "Narrative of a typical session"
+  },
+  
+  "progression": {
+    "shortTerm": "This session's goals",
+    "mediumTerm": "This week's goals", 
+    "longTerm": "End-game aspirations",
+    "masteryDepth": "shallow/moderate/deep - explanation",
+    "contentVelocity": "How fast will players consume content?"
+  },
+  
+  "social": {
+    "integrationLevel": "none/minimal/moderate/core",
+    "coopElements": ["Ways to cooperate"],
+    "competitiveElements": ["Ways to compete"],
+    "socialHooks": ["What makes players invite friends"],
+    "viralMoments": ["Shareable/streamable moments"]
+  },
+  
+  "skillCurve": {
+    "floorDescription": "How easy for a new player",
+    "ceilingDescription": "How much room for mastery",
+    "skillExpression": ["Ways skilled players stand out"],
+    "learningMoments": ["Key skill milestones"]
+  },
+  
+  "missingElements": ["Critical things NOT in the design"],
+  "criticalFlaws": ["Fundamental problems with the loop"],
+  "suggestions": ["Specific improvements with reasoning"],
+  "quickWins": ["Easy changes that would help immediately"],
+  
   "score": <1-10>
 }
 
-Be specific to Roblox. Output only valid JSON.`;
+SCORING GUIDE:
+- 9-10: Exceptional loop with clear retention drivers, social hooks, and deep mastery
+- 7-8: Solid loop, minor gaps, good potential
+- 5-6: Functional but missing key retention/social elements
+- 3-4: Weak loop, unclear progression, retention risks
+- 1-2: Broken or missing core loop
+
+BE BRUTALLY SPECIFIC. Reference the actual game elements. Output only valid JSON.`;
 }
 
 export function buildCompetitorAgentPrompt(
@@ -275,12 +473,17 @@ Risks: ${marketAnalysis.risks.join('; ')}
 Audience: ${marketAnalysis.audienceProfile.ageRange}, ${marketAnalysis.audienceProfile.playPatterns}
 
 === GAME LOOP ANALYSIS (Score: ${loopAnalysis.score}/10) ===
+Primary Loop: ${loopAnalysis.primaryLoop}
 Mechanics: ${loopAnalysis.coreMechanics.join(', ')}
 Loop Strength: ${loopAnalysis.loopStrength}
-Retention Drivers: ${loopAnalysis.retentionDrivers.join('; ')}
-Retention Risks: ${loopAnalysis.retentionRisks.join('; ')}
-Social: ${loopAnalysis.socialIntegration}
-Missing: ${loopAnalysis.missingElements.join('; ')}
+Core Feel: ${loopAnalysis.momentToMoment?.feeling || 'N/A'}
+Time to Fun: ${loopAnalysis.firstSession?.timeToFun || 'N/A'}
+Retention Today: ${loopAnalysis.retention?.whyComeBackToday || 'N/A'}
+Retention Tomorrow: ${loopAnalysis.retention?.whyComeBackTomorrow || 'N/A'}
+Retention Killers: ${loopAnalysis.retention?.retentionKillers?.join('; ') || 'None identified'}
+Social Level: ${loopAnalysis.social?.integrationLevel || 'N/A'}
+Critical Flaws: ${loopAnalysis.criticalFlaws?.join('; ') || 'None'}
+Missing Elements: ${loopAnalysis.missingElements?.join('; ') || 'None'}
 
 === COMPETITOR ANALYSIS (Score: ${competitorAnalysis.score}/10) ===
 Direct Competitors: ${competitorAnalysis.directCompetitors.map(c => c.name).join(', ')}
