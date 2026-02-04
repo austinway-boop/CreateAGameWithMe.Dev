@@ -223,7 +223,7 @@ export function buildLoopAgentPrompt(
     });
     
     if (subLoops.length > 0) {
-      const subLoopNames = [...new Set(subLoops.map(n => n.loopName).filter(Boolean))];
+      const subLoopNames = Array.from(new Set(subLoops.map(n => n.loopName).filter(Boolean))) as string[];
       subLoopNames.forEach(name => {
         const nodes = subLoops.filter(n => n.loopName === name);
         desc += `\nSUB-LOOP "${name}" (${nodes.length} nodes):\n`;

@@ -274,7 +274,7 @@ export default function ValidationPage() {
   // Get genre data for comparison (safe access)
   const genreData = useMemo(() => {
     try {
-      const detectedGenre = validation?.genreAnalysis?.detectedGenre;
+      const detectedGenre = validation?.marketAnalysis?.genre;
       if (!detectedGenre) return null;
       const primaryGenre = detectedGenre.toLowerCase().replace(/[\s\/]/g, '_');
       const genres = robloxGenreData.genres as Record<string, any>;
@@ -283,43 +283,6 @@ export default function ValidationPage() {
       return null;
     }
   }, [validation]);
-
-  // Dev test function - validates with test data
-  const runDevTest = async (testData: Partial<Project>) => {
-    setValidationState('validating');
-    setError(null);
-    setDevMode(true);
-
-    // Debug: log what we're sending
-    console.log('%c=== SENDING TO API ===', 'color: #ff6b00; font-weight: bold;');
-    console.log('Title:', testData.finalTitle);
-    console.log('Genre from questions:', testData.gameQuestions?.genre);
-    console.log('Vibes:', testData.vibeChips);
-    console.log('GameLoop nodes:', testData.gameLoop?.length);
-    console.log('SkillTree nodes:', testData.skillTree?.length);
-    console.log('Full test data:', testData);
-
-    try {
-      // Use test data directly - don't need current project
-      const response = await fetch('/api/validateIdea', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project: { id: 'dev-test', ...testData } }),
-      });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.message || 'Failed to validate');
-      }
-
-      const result: ValidationResult = await response.json();
-      setValidation(result);
-      setValidationState('complete');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
-      setValidationState('error');
-    }
-  };
 
   // Expose dev helpers immediately on mount
   useEffect(() => {
