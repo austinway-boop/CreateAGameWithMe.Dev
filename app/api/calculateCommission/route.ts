@@ -20,17 +20,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const prompt = `You are an expert consultant helping determine fair commission pricing for game development and creative work. A user is describing a commission they want to price fairly.
+    const prompt = `You are an expert consultant specializing in Roblox and indie game development commission pricing. You understand the REAL market rates that freelancers actually charge on platforms like Roblox, DevForum, Twitter, and Discord.
+
+**IMPORTANT PRICING CONTEXT:**
+- Roblox commissions are typically MUCH cheaper than traditional game dev
+- Many Roblox scripters charge $5-25/hour, not $50-100+
+- Simple scripts might be $10-50 total, not hundreds
+- Even complex systems are often $100-500, rarely $1000+
+- Artists on Roblox often charge $5-50 per asset
+- Be realistic about what people ACTUALLY pay in these communities
 
 **Commission Description:**
 ${description}
 
-Based on this description, analyze and provide a fair pricing recommendation. Consider:
-1. The type of work (programming, art, animation, sound, etc.)
+Based on this description, analyze and provide a REALISTIC pricing recommendation based on actual Roblox/indie game community rates. Consider:
+1. The type of work (scripting, modeling, building, UI, animation, etc.)
 2. Estimated complexity and time required
-3. Current market rates for this type of work
+3. ACTUAL market rates in Roblox/indie communities (not corporate rates)
 4. Experience level implied or mentioned
-5. Platform-specific considerations if mentioned
+5. What commissioners realistically pay for this type of work
 
 Provide a JSON response with this structure:
 {
