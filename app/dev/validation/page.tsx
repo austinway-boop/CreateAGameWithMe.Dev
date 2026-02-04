@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Project } from '@/lib/types';
-import { ValidationResult } from '@/lib/prompts';
+import { ComprehensiveValidation } from '@/lib/validationAgents';
 
 // ============================================
 // TEST DATA
@@ -104,10 +104,11 @@ const GOOD_GAME_DATA: Partial<Project> = {
 
 export default function DevValidationPage() {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<ValidationResult | null>(null);
+  const [result, setResult] = useState<ComprehensiveValidation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [testType, setTestType] = useState<'bad' | 'good' | null>(null);
   const [rawResponse, setRawResponse] = useState<string>('');
+  const [agentStatus, setAgentStatus] = useState<string>('');
 
   const runTest = async (data: Partial<Project>, type: 'bad' | 'good') => {
     setLoading(true);
@@ -115,9 +116,12 @@ export default function DevValidationPage() {
     setResult(null);
     setTestType(type);
     setRawResponse('');
+    setAgentStatus('Starting 4-agent analysis...');
 
     try {
-      const res = await fetch('/api/validateIdea', {
+      setAgentStatus('Running Market, Loop & Competitor agents in parallel...');
+      
+      const res = await fetch('/api/validateComprehensive', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project: { id: 'dev-test', ...data } }),
@@ -131,6 +135,7 @@ export default function DevValidationPage() {
         return;
       }
 
+      setAgentStatus('Complete!');
       setResult(json);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -181,7 +186,8 @@ export default function DevValidationPage() {
         {loading && (
           <div className="bg-white rounded-xl p-6 mb-6 text-center">
             <div className="animate-spin w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-            <p className="text-gray-600">Validating with AI...</p>
+            <p className="text-gray-600 font-medium">{agentStatus}</p>
+            <p className="text-xs text-gray-400 mt-1">Running 4 specialized AI agents...</p>
           </div>
         )}
 
@@ -202,112 +208,252 @@ export default function DevValidationPage() {
         {/* Results */}
         {result && (
           <div className="space-y-4">
-            {/* Header Scores */}
+            {/* Header with Final Verdict */}
             <div className="bg-white rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-bold ${getVerdictColor(result.verdict)}`}>
-                    {result.verdict.toUpperCase().replace('_', ' ')}
+                  <span className={`px-3 py-1 rounded-full text-sm font-bold ${getVerdictColor(result.finalVerdict.verdict)}`}>
+                    {result.finalVerdict.verdict.toUpperCase().replace('_', ' ')}
                   </span>
                   <span className="ml-2 text-gray-500">
                     {testType === 'bad' ? 'Super Jump Obby 2' : 'Possessed Academy'}
                   </span>
                 </div>
-                <div className="flex gap-4">
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center font-black text-2xl ${getScoreColor(result.overallScore)}`}>
-                    {result.overallScore}
-                  </div>
+                <div className={`w-20 h-20 rounded-full flex items-center justify-center font-black text-3xl ${getScoreColor(result.finalVerdict.overallScore)}`}>
+                  {result.finalVerdict.overallScore}
                 </div>
               </div>
 
-              {/* Sub-scores */}
-              <div className="grid grid-cols-4 gap-4 text-center">
+              {/* Agent Sub-scores */}
+              <div className="grid grid-cols-3 gap-4 text-center border-t pt-4">
                 <div>
-                  <div className={`text-xl font-bold ${getScoreColor(result.marketFit?.score || 0)}`}>
-                    {result.marketFit?.score || '?'}
+                  <div className={`text-2xl font-bold ${getScoreColor(result.marketAnalysis.score)}`}>
+                    {result.marketAnalysis.score}
                   </div>
-                  <div className="text-xs text-gray-500">Market</div>
+                  <div className="text-xs text-gray-500">Market Agent</div>
                 </div>
                 <div>
-                  <div className={`text-xl font-bold ${getScoreColor(result.loopAnalysis?.score || 0)}`}>
-                    {result.loopAnalysis?.score || '?'}
+                  <div className={`text-2xl font-bold ${getScoreColor(result.loopAnalysis.score)}`}>
+                    {result.loopAnalysis.score}
                   </div>
-                  <div className="text-xs text-gray-500">Loop</div>
+                  <div className="text-xs text-gray-500">Loop Agent</div>
                 </div>
                 <div>
-                  <div className={`text-xl font-bold ${getScoreColor(result.uniqueness?.score || 0)}`}>
-                    {result.uniqueness?.score || '?'}
+                  <div className={`text-2xl font-bold ${getScoreColor(result.competitorAnalysis.score)}`}>
+                    {result.competitorAnalysis.score}
                   </div>
-                  <div className="text-xs text-gray-500">Unique</div>
+                  <div className="text-xs text-gray-500">Competitor Agent</div>
                 </div>
-                <div>
-                  <div className={`text-xl font-bold ${getScoreColor(result.scopeAssessment?.score || 0)}`}>
-                    {result.scopeAssessment?.score || '?'}
-                  </div>
-                  <div className="text-xs text-gray-500">Scope</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Genre Analysis */}
-            <div className="bg-white rounded-xl p-6">
-              <h3 className="font-bold mb-2">Genre Analysis</h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><span className="text-gray-500">Detected:</span> {result.genreAnalysis?.detectedGenre}</div>
-                <div><span className="text-gray-500">Competition:</span> {result.genreAnalysis?.competitionLevel}</div>
-                <div><span className="text-gray-500">Phase:</span> {result.genreAnalysis?.lifecyclePhase}</div>
-                <div><span className="text-gray-500">Trend:</span> {result.genreAnalysis?.trend}</div>
-                <div><span className="text-gray-500">Hot Genre:</span> {result.genreAnalysis?.isHotGenre ? '🔥 Yes' : 'No'}</div>
-                <div><span className="text-gray-500">Competitors:</span> {result.genreAnalysis?.topCompetitors?.join(', ')}</div>
               </div>
             </div>
 
             {/* Summary & Hard Truth */}
             <div className="bg-white rounded-xl p-6">
-              <h3 className="font-bold mb-2">Summary</h3>
-              <p className="text-gray-700 mb-4">{result.summary}</p>
+              <h3 className="font-bold mb-2">Executive Summary</h3>
+              <p className="text-gray-700 mb-4">{result.finalVerdict.summary}</p>
               
-              <h3 className="font-bold mb-2 text-red-600">Hard Truth</h3>
-              <p className="text-gray-700">{result.hardTruth}</p>
+              <div className="bg-red-50 p-4 rounded-lg">
+                <h3 className="font-bold mb-1 text-red-600">Hard Truth</h3>
+                <p className="text-red-800">{result.finalVerdict.hardTruth}</p>
+              </div>
+              
+              <div className="mt-4 bg-blue-50 p-4 rounded-lg">
+                <h3 className="font-bold mb-1 text-blue-600">Build Recommendation</h3>
+                <p className="text-blue-800">{result.finalVerdict.buildRecommendation}</p>
+              </div>
             </div>
 
-            {/* Strengths & Concerns */}
+            {/* Market Analysis Agent */}
+            <div className="bg-white rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-lg">🎯 Market Analysis</h3>
+                <span className={`px-2 py-1 rounded text-sm font-bold ${getScoreColor(result.marketAnalysis.score)}`}>
+                  {result.marketAnalysis.score}/10
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+                <div><span className="text-gray-500">Genre:</span> <strong>{result.marketAnalysis.genre}</strong></div>
+                <div><span className="text-gray-500">Sub-genres:</span> {result.marketAnalysis.subGenres?.join(', ')}</div>
+                <div><span className="text-gray-500">Market Size:</span> {result.marketAnalysis.marketSize}</div>
+                <div><span className="text-gray-500">Trend:</span> {result.marketAnalysis.growthTrend}</div>
+                <div><span className="text-gray-500">Saturation:</span> {result.marketAnalysis.saturationLevel}</div>
+              </div>
+              <div className="mb-3">
+                <div className="text-sm font-medium text-gray-700 mb-1">Audience Profile:</div>
+                <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                  <strong>{result.marketAnalysis.audienceProfile?.ageRange}</strong> • 
+                  {result.marketAnalysis.audienceProfile?.playPatterns} • 
+                  {result.marketAnalysis.audienceProfile?.spendingHabits}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm font-medium text-green-700 mb-1">Opportunities</div>
+                  <ul className="text-xs text-gray-600 space-y-1">
+                    {result.marketAnalysis.opportunityWindows?.map((o, i) => <li key={i}>• {o}</li>)}
+                  </ul>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-red-700 mb-1">Risks</div>
+                  <ul className="text-xs text-gray-600 space-y-1">
+                    {result.marketAnalysis.risks?.map((r, i) => <li key={i}>• {r}</li>)}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Loop Analysis Agent */}
+            <div className="bg-white rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-lg">🔄 Game Loop Analysis</h3>
+                <span className={`px-2 py-1 rounded text-sm font-bold ${getScoreColor(result.loopAnalysis.score)}`}>
+                  {result.loopAnalysis.score}/10
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+                <div><span className="text-gray-500">Core Mechanics:</span> {result.loopAnalysis.coreMechanics?.join(', ')}</div>
+                <div><span className="text-gray-500">Loop Strength:</span> <strong>{result.loopAnalysis.loopStrength}</strong></div>
+                <div><span className="text-gray-500">Progression:</span> {result.loopAnalysis.progressionDepth}</div>
+                <div><span className="text-gray-500">Social:</span> {result.loopAnalysis.socialIntegration}</div>
+              </div>
+              <div className="mb-3">
+                <div className="text-sm font-medium text-gray-700 mb-1">Session Flow:</div>
+                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">{result.loopAnalysis.sessionFlowAnalysis}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm font-medium text-green-700 mb-1">Retention Drivers</div>
+                  <ul className="text-xs text-gray-600 space-y-1">
+                    {result.loopAnalysis.retentionDrivers?.map((d, i) => <li key={i}>• {d}</li>)}
+                  </ul>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-red-700 mb-1">Retention Risks</div>
+                  <ul className="text-xs text-gray-600 space-y-1">
+                    {result.loopAnalysis.retentionRisks?.map((r, i) => <li key={i}>• {r}</li>)}
+                  </ul>
+                </div>
+              </div>
+              {result.loopAnalysis.missingElements?.length > 0 && (
+                <div className="mt-3 bg-amber-50 p-3 rounded">
+                  <div className="text-sm font-medium text-amber-700 mb-1">Missing Elements</div>
+                  <ul className="text-xs text-amber-800 space-y-1">
+                    {result.loopAnalysis.missingElements.map((m, i) => <li key={i}>• {m}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* Competitor Analysis Agent */}
+            <div className="bg-white rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-lg">⚔️ Competitor Analysis</h3>
+                <span className={`px-2 py-1 rounded text-sm font-bold ${getScoreColor(result.competitorAnalysis.score)}`}>
+                  {result.competitorAnalysis.score}/10
+                </span>
+              </div>
+              
+              {/* Direct Competitors */}
+              <div className="mb-4">
+                <div className="text-sm font-medium text-gray-700 mb-2">Direct Competitors</div>
+                <div className="space-y-2">
+                  {result.competitorAnalysis.directCompetitors?.map((c, i) => (
+                    <div key={i} className="bg-gray-50 p-3 rounded text-sm">
+                      <div className="font-medium">{c.name} <span className="text-gray-400 text-xs">{c.visits}</span></div>
+                      <div className="text-xs mt-1">
+                        <span className="text-green-600">✓ {c.whatTheyDoWell}</span>
+                        <span className="mx-2">|</span>
+                        <span className="text-red-600">✗ {c.weakness}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <div className="text-sm font-medium text-gray-700 mb-1">Differentiation Analysis</div>
+                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">{result.competitorAnalysis.differentiationAnalysis}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm font-medium text-green-700 mb-1">Advantages</div>
+                  <ul className="text-xs text-gray-600 space-y-1">
+                    {result.competitorAnalysis.competitiveAdvantages?.map((a, i) => <li key={i}>• {a}</li>)}
+                  </ul>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-red-700 mb-1">Disadvantages</div>
+                  <ul className="text-xs text-gray-600 space-y-1">
+                    {result.competitorAnalysis.competitiveDisadvantages?.map((d, i) => <li key={i}>• {d}</li>)}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Strengths & Issues */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white rounded-xl p-6">
-                <h3 className="font-bold mb-2 text-green-600">Strengths</h3>
-                <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                  {result.strengths?.map((s, i) => <li key={i}>{s}</li>)}
+              <div className="bg-green-50 rounded-xl p-6">
+                <h3 className="font-bold mb-2 text-green-700">Top Strengths</h3>
+                <ul className="text-sm text-green-800 space-y-2">
+                  {result.finalVerdict.topStrengths?.map((s, i) => <li key={i}>✓ {s}</li>)}
                 </ul>
               </div>
-              <div className="bg-white rounded-xl p-6">
-                <h3 className="font-bold mb-2 text-amber-600">Concerns</h3>
-                <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                  {result.concerns?.map((c, i) => <li key={i}>{c}</li>)}
+              <div className="bg-amber-50 rounded-xl p-6">
+                <h3 className="font-bold mb-2 text-amber-700">Critical Issues</h3>
+                <ul className="text-sm text-amber-800 space-y-2">
+                  {result.finalVerdict.criticalIssues?.map((c, i) => <li key={i}>⚠ {c}</li>)}
                 </ul>
               </div>
             </div>
 
             {/* Dealbreakers */}
-            {result.dealbreakers && result.dealbreakers.length > 0 && (
-              <div className="bg-red-50 rounded-xl p-6">
-                <h3 className="font-bold mb-2 text-red-600">Dealbreakers</h3>
-                <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
-                  {result.dealbreakers.map((d, i) => <li key={i}>{d}</li>)}
+            {result.finalVerdict.dealbreakers && result.finalVerdict.dealbreakers.length > 0 && (
+              <div className="bg-red-100 rounded-xl p-6 border-2 border-red-300">
+                <h3 className="font-bold mb-2 text-red-700">🚨 Dealbreakers</h3>
+                <ul className="text-sm text-red-800 space-y-2">
+                  {result.finalVerdict.dealbreakers.map((d, i) => <li key={i}>✗ {d}</li>)}
                 </ul>
               </div>
             )}
 
-            {/* Suggestions */}
+            {/* Action Items */}
             <div className="bg-white rounded-xl p-6">
-              <h3 className="font-bold mb-2 text-blue-600">Suggestions</h3>
-              <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                {result.suggestions?.map((s, i) => <li key={i}>{s}</li>)}
-              </ul>
+              <h3 className="font-bold mb-4 text-lg">📋 Action Items</h3>
+              <div className="space-y-3">
+                {result.finalVerdict.actionItems?.map((item, i) => (
+                  <div key={i} className={`p-3 rounded-lg border-l-4 ${
+                    item.priority === 'high' ? 'border-red-500 bg-red-50' :
+                    item.priority === 'medium' ? 'border-amber-500 bg-amber-50' :
+                    'border-blue-500 bg-blue-50'
+                  }`}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                        item.priority === 'high' ? 'bg-red-200 text-red-800' :
+                        item.priority === 'medium' ? 'bg-amber-200 text-amber-800' :
+                        'bg-blue-200 text-blue-800'
+                      }`}>{item.priority.toUpperCase()}</span>
+                      <span className="font-medium text-sm">{item.action}</span>
+                    </div>
+                    <p className="text-xs text-gray-600">{item.reasoning}</p>
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {/* Pivot Suggestions (if low score) */}
+            {result.finalVerdict.pivotSuggestions && result.finalVerdict.pivotSuggestions.length > 0 && (
+              <div className="bg-purple-50 rounded-xl p-6">
+                <h3 className="font-bold mb-2 text-purple-700">💡 Pivot Suggestions</h3>
+                <ul className="text-sm text-purple-800 space-y-2">
+                  {result.finalVerdict.pivotSuggestions.map((p, i) => <li key={i}>→ {p}</li>)}
+                </ul>
+              </div>
+            )}
 
             {/* Raw JSON */}
             <details className="bg-gray-800 rounded-xl p-4">
-              <summary className="text-white font-bold cursor-pointer">Raw JSON Response</summary>
+              <summary className="text-white font-bold cursor-pointer">Raw JSON Response (4 Agents)</summary>
               <pre className="mt-4 text-xs text-green-400 overflow-auto max-h-96">{rawResponse}</pre>
             </details>
           </div>
