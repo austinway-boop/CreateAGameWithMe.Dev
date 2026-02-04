@@ -93,34 +93,28 @@ export default function ConverterPage() {
   const calculations = useMemo(() => {
     const currencyRate = selectedCurrency.rate;
     
-    if (mode === 'robuxToUsd') {
-      // Converting Robux to currency
-      const robux = numericAmount;
-      const playerPurchaseValue = robux * currencyRate;
-      const devExValue = robux * DEVEX_RATE;
-      const devExValueInCurrency = devExValue * (currencyRate / CURRENCY_RATES.USD.rate);
-      
-      return {
-        robux,
-        playerPurchaseValue,
-        devExValue,
-        devExValueInCurrency,
-        devExRate: DEVEX_RATE,
-      };
-    } else {
-      // Converting currency to Robux
-      const currencyAmount = numericAmount;
-      const robuxFromPurchase = Math.floor(currencyAmount / currencyRate);
-      const robuxFromDevEx = Math.floor((currencyAmount * (CURRENCY_RATES.USD.rate / currencyRate)) / DEVEX_RATE);
-      
-      return {
-        currencyAmount,
-        robuxFromPurchase,
-        robuxFromDevEx,
-        devExRate: DEVEX_RATE,
-      };
-    }
-  }, [numericAmount, mode, selectedCurrency]);
+    // Converting Robux to currency
+    const robux = numericAmount;
+    const playerPurchaseValue = robux * currencyRate;
+    const devExValue = robux * DEVEX_RATE;
+    const devExValueInCurrency = devExValue * (currencyRate / CURRENCY_RATES.USD.rate);
+    
+    // Converting currency to Robux
+    const currencyAmount = numericAmount;
+    const robuxFromPurchase = Math.floor(currencyAmount / currencyRate);
+    const robuxFromDevEx = Math.floor((currencyAmount * (CURRENCY_RATES.USD.rate / currencyRate)) / DEVEX_RATE);
+    
+    return {
+      robux,
+      playerPurchaseValue,
+      devExValue,
+      devExValueInCurrency,
+      currencyAmount,
+      robuxFromPurchase,
+      robuxFromDevEx,
+      devExRate: DEVEX_RATE,
+    };
+  }, [numericAmount, selectedCurrency]);
 
   const marketplaceCalc = useMemo(() => {
     const fee = MARKETPLACE_FEES[marketplaceType];
