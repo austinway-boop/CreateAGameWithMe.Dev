@@ -34,7 +34,7 @@ export default function ConverterPage() {
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
 
   const selectedCurrency = CURRENCY_RATES[currency];
-  const numericAmount = Math.min(parseFloat(amount) || 0, 999999999999);
+  const numericAmount = Math.min(parseFloat(amount) || 0, 9999999999); // Max 10 billion
 
   const calculations = useMemo(() => {
     const currencyRate = selectedCurrency.rate;
@@ -47,9 +47,15 @@ export default function ConverterPage() {
   }, [numericAmount, selectedCurrency]);
 
   const formatNum = (value: number) => {
-    // Cap at reasonable max to prevent overflow display
-    if (!isFinite(value) || value > 999999999999) {
-      return '∞';
+    if (!isFinite(value) || value > 99999999999) {
+      return '999B+';
+    }
+    // Shorten large numbers
+    if (value >= 1000000000) {
+      return (value / 1000000000).toFixed(1) + 'B';
+    }
+    if (value >= 1000000) {
+      return (value / 1000000).toFixed(1) + 'M';
     }
     if (['JPY', 'KRW', 'IDR'].includes(currency)) {
       return Math.round(value).toLocaleString();
@@ -121,19 +127,19 @@ export default function ConverterPage() {
 
         {/* Results */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white rounded-2xl p-6" style={{ boxShadow: '0 4px 0 #e5e7eb' }}>
+          <div className="bg-white rounded-2xl p-6 overflow-hidden" style={{ boxShadow: '0 4px 0 #e5e7eb' }}>
             <div className="text-sm font-semibold text-gray-400 uppercase mb-2">Player Cost</div>
-            <div className="text-3xl font-bold text-gray-900">
+            <div className="text-2xl font-bold text-gray-900 truncate">
               {selectedCurrency.symbol}{formatNum(calculations.playerValue)}
             </div>
             <div className="text-sm text-gray-400 mt-2">What players pay</div>
           </div>
-          <div className="bg-white rounded-2xl p-6" style={{ boxShadow: '0 4px 0 #e5e7eb' }}>
+          <div className="bg-white rounded-2xl p-6 overflow-hidden" style={{ boxShadow: '0 4px 0 #e5e7eb' }}>
             <div className="text-sm font-semibold text-green-500 uppercase mb-2">DevEx Payout</div>
-            <div className="text-3xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-green-600 truncate">
               {selectedCurrency.symbol}{formatNum(calculations.devExInCurrency)}
             </div>
-            <div className="text-sm text-gray-400 mt-2">${calculations.devExValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</div>
+            <div className="text-sm text-gray-400 mt-2 truncate">${calculations.devExValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</div>
           </div>
         </div>
 
