@@ -138,24 +138,101 @@ function parsePercentage(str: string | undefined, fallback: number): number {
   return match ? parseInt(match[1], 10) : fallback;
 }
 
-// Score circle component with color coding
+// Skeleton components for loading state
+function SkeletonPulse({ className }: { className?: string }) {
+  return <div className={`animate-pulse bg-gray-200 rounded ${className}`} />;
+}
+
+function ValidationSkeleton() {
+  return (
+    <div className="flex-1 overflow-auto pb-24">
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <SkeletonPulse className="w-16 h-8" />
+          <SkeletonPulse className="w-32 h-6" />
+          <SkeletonPulse className="w-8 h-8" />
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto p-4 space-y-4">
+        {/* Agent Status */}
+        <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-4 border-2 border-pink-200">
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
+            <span className="font-bold text-pink-700">Running AI Analysis...</span>
+          </div>
+          <div className="flex justify-center gap-2">
+            <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full animate-pulse">🎯 Market</span>
+            <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full animate-pulse">🔄 Loop</span>
+            <span className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full animate-pulse">⚔️ Competitor</span>
+            <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full animate-pulse">✅ Verdict</span>
+          </div>
+        </div>
+
+        {/* Verdict Skeleton */}
+        <div className="bg-white rounded-2xl shadow-[0_4px_0_#e5e7eb] p-6">
+          <div className="flex justify-center mb-4">
+            <SkeletonPulse className="w-24 h-8 rounded-full" />
+          </div>
+          <SkeletonPulse className="w-3/4 h-4 mx-auto mb-2" />
+          <SkeletonPulse className="w-1/2 h-4 mx-auto mb-6" />
+          <div className="flex justify-center gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="text-center">
+                <SkeletonPulse className="w-14 h-14 rounded-full mx-auto mb-2" />
+                <SkeletonPulse className="w-12 h-3 mx-auto" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Hard Truth Skeleton */}
+        <div className="bg-white rounded-2xl shadow-[0_4px_0_#e5e7eb] p-4">
+          <div className="flex gap-3">
+            <SkeletonPulse className="w-8 h-8 rounded-lg shrink-0" />
+            <div className="flex-1">
+              <SkeletonPulse className="w-24 h-4 mb-2" />
+              <SkeletonPulse className="w-full h-3 mb-1" />
+              <SkeletonPulse className="w-3/4 h-3" />
+            </div>
+          </div>
+        </div>
+
+        {/* Sections Skeleton */}
+        {[1, 2, 3].map(i => (
+          <div key={i} className="bg-white rounded-2xl shadow-[0_4px_0_#e5e7eb] overflow-hidden">
+            <div className="bg-gray-50 px-4 py-3 border-b">
+              <SkeletonPulse className="w-32 h-5" />
+            </div>
+            <div className="p-4 space-y-2">
+              <SkeletonPulse className="w-full h-3" />
+              <SkeletonPulse className="w-5/6 h-3" />
+              <SkeletonPulse className="w-4/6 h-3" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Score circle component with color coding - Duolingo style
 function ScoreCircle({ score, label }: { score: number; label: string }) {
-  // Color based on score
   const getScoreStyle = (s: number) => {
-    if (s >= 8) return { border: 'border-green-500', bg: 'bg-green-50', text: 'text-green-700', label: 'Great' };
-    if (s >= 6) return { border: 'border-blue-500', bg: 'bg-blue-50', text: 'text-blue-700', label: 'Good' };
-    if (s >= 4) return { border: 'border-amber-500', bg: 'bg-amber-50', text: 'text-amber-700', label: 'Meh' };
-    return { border: 'border-red-500', bg: 'bg-red-50', text: 'text-red-700', label: 'Bad' };
+    if (s >= 8) return { border: 'border-[#58cc02]', bg: 'bg-[#d7ffb8]', text: 'text-[#58a700]', label: '🔥', shadow: 'shadow-[0_4px_0_#58a700]' };
+    if (s >= 6) return { border: 'border-[#1cb0f6]', bg: 'bg-[#ddf4ff]', text: 'text-[#1899d6]', label: '👍', shadow: 'shadow-[0_4px_0_#1899d6]' };
+    if (s >= 4) return { border: 'border-[#ff9600]', bg: 'bg-[#fff4e0]', text: 'text-[#ea7900]', label: '🤔', shadow: 'shadow-[0_4px_0_#ea7900]' };
+    return { border: 'border-[#ff4b4b]', bg: 'bg-[#ffe0e0]', text: 'text-[#ea2b2b]', label: '⚠️', shadow: 'shadow-[0_4px_0_#ea2b2b]' };
   };
   const style = getScoreStyle(score);
   
   return (
     <div className="text-center">
-      <div className={`w-16 h-16 rounded-full border-4 ${style.border} ${style.bg} flex items-center justify-center mx-auto mb-1`}>
-        <span className={`text-2xl font-black ${style.text}`}>{score}</span>
+      <div className={`w-14 h-14 rounded-2xl border-2 ${style.border} ${style.bg} ${style.shadow} flex items-center justify-center mx-auto mb-1 transition-transform hover:scale-105`}>
+        <span className={`text-xl font-black ${style.text}`}>{score}</span>
       </div>
-      <div className="text-xs font-medium text-gray-700">{label}</div>
-      <div className={`text-xs ${style.text}`}>{style.label}</div>
+      <div className="text-[11px] font-bold text-gray-600 uppercase tracking-wide">{label}</div>
     </div>
   );
 }
@@ -402,29 +479,9 @@ export default function ValidationPage() {
     );
   }
 
-  // Loading state
+  // Loading state - Skeleton
   if (validationState === 'validating') {
-    return (
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="text-center space-y-4">
-          <div className="relative w-20 h-20 mx-auto">
-            <div className="absolute inset-0 border-4 border-gray-200 rounded-full" />
-            <div className="absolute inset-0 border-4 border-pink-500 border-t-transparent rounded-full animate-spin" />
-            <Gamepad2 className="absolute inset-0 m-auto w-8 h-8 text-pink-500" />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">Deep Analysis in Progress</h2>
-            <p className="text-gray-500 text-sm">{agentStatus || 'Running 4 specialized AI agents...'}</p>
-            <div className="mt-3 flex justify-center gap-2">
-              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Market</span>
-              <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">Loop</span>
-              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">Competitor</span>
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Verdict</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <ValidationSkeleton />;
   }
 
   // Error state
@@ -463,11 +520,11 @@ export default function ValidationPage() {
   const pivotSuggestions = finalVerdict?.pivotSuggestions || [];
 
   const verdictConfig = {
-    strong: { label: 'High Potential', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200', emoji: '🚀' },
-    promising: { label: 'Promising', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', emoji: '👍' },
-    needs_work: { label: 'Needs Work', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', emoji: '⚠️' },
-    rethink: { label: 'High Risk', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', emoji: '🔄' },
-  }[verdict] || { label: 'Unknown', color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200', emoji: '❓' };
+    strong: { label: 'Build It!', color: 'text-[#58a700]', bg: 'bg-[#d7ffb8]', border: 'border-[#58cc02]', shadow: 'shadow-[0_4px_0_#58a700]', emoji: '🚀' },
+    promising: { label: 'Promising', color: 'text-[#1899d6]', bg: 'bg-[#ddf4ff]', border: 'border-[#1cb0f6]', shadow: 'shadow-[0_4px_0_#1899d6]', emoji: '👍' },
+    needs_work: { label: 'Needs Work', color: 'text-[#ea7900]', bg: 'bg-[#fff4e0]', border: 'border-[#ff9600]', shadow: 'shadow-[0_4px_0_#ea7900]', emoji: '🛠️' },
+    rethink: { label: 'Rethink', color: 'text-[#ea2b2b]', bg: 'bg-[#ffe0e0]', border: 'border-[#ff4b4b]', shadow: 'shadow-[0_4px_0_#ea2b2b]', emoji: '🔄' },
+  }[verdict] || { label: 'Unknown', color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200', shadow: 'shadow-[0_4px_0_#d1d5db]', emoji: '❓' };
 
   const benchmarks = robloxBenchmarks.retention_benchmarks;
 
@@ -504,14 +561,14 @@ export default function ValidationPage() {
           </div>
         )}
 
-        {/* Verdict Card */}
-        <div className={`${verdictConfig.bg} ${verdictConfig.border} border-2 rounded-2xl p-6 text-center`}>
-          <div className="text-4xl mb-2">{verdictConfig.emoji}</div>
-          <div className={`text-2xl font-bold ${verdictConfig.color}`}>{verdictConfig.label}</div>
-          <p className="text-gray-600 mt-2 text-sm">{summary}</p>
+        {/* Verdict Card - Duolingo Style */}
+        <div className={`${verdictConfig.bg} ${verdictConfig.border} border-2 rounded-2xl ${verdictConfig.shadow} p-6 text-center`}>
+          <div className="text-5xl mb-3">{verdictConfig.emoji}</div>
+          <div className={`text-2xl font-black ${verdictConfig.color} uppercase tracking-wide`}>{verdictConfig.label}</div>
+          <p className="text-gray-600 mt-3 text-sm leading-relaxed max-w-md mx-auto">{summary}</p>
           
           {/* Scores */}
-          <div className="flex justify-center gap-4 mt-4">
+          <div className="flex justify-center gap-3 mt-6 pt-4 border-t border-white/50">
             <ScoreCircle score={overallScore} label="Overall" />
             <ScoreCircle score={marketScore} label="Market" />
             <ScoreCircle score={loopScore} label="Loop" />
@@ -519,33 +576,33 @@ export default function ValidationPage() {
           </div>
           
           {/* Score Legend */}
-          <div className="flex justify-center gap-4 mt-3 text-xs">
-            <span className="text-green-600">8-10 = Build it</span>
-            <span className="text-blue-600">6-7 = Promising</span>
-            <span className="text-amber-600">4-5 = Needs work</span>
-            <span className="text-red-600">1-3 = Rethink</span>
+          <div className="flex justify-center gap-3 mt-4 text-[10px] font-bold uppercase tracking-wider">
+            <span className="text-[#58a700]">🔥 8+</span>
+            <span className="text-[#1899d6]">👍 6-7</span>
+            <span className="text-[#ea7900]">🤔 4-5</span>
+            <span className="text-[#ea2b2b]">⚠️ 1-3</span>
           </div>
         </div>
 
-        {/* Hard Truth & Build Recommendation */}
+        {/* Hard Truth & Build Recommendation - Duolingo Style */}
         {hardTruth && (
           <div className="space-y-3">
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <div className="bg-[#fff4e0] border-2 border-[#ff9600] rounded-2xl shadow-[0_4px_0_#ea7900] p-4">
               <div className="flex items-start gap-3">
-                <span className="text-xl">💡</span>
-                <div>
-                  <div className="font-semibold text-amber-800 text-sm">The Hard Truth</div>
-                  <p className="text-amber-700 text-sm mt-1">{hardTruth}</p>
+                <div className="w-10 h-10 bg-[#ff9600] rounded-xl flex items-center justify-center text-xl shadow-[0_2px_0_#ea7900]">💡</div>
+                <div className="flex-1">
+                  <div className="font-bold text-[#ea7900] text-sm uppercase tracking-wide">Hard Truth</div>
+                  <p className="text-gray-700 text-sm mt-1 leading-relaxed">{hardTruth}</p>
                 </div>
               </div>
             </div>
             {buildRecommendation && (
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <div className="bg-[#ddf4ff] border-2 border-[#1cb0f6] rounded-2xl shadow-[0_4px_0_#1899d6] p-4">
                 <div className="flex items-start gap-3">
-                  <span className="text-xl">🎯</span>
-                  <div>
-                    <div className="font-semibold text-blue-800 text-sm">Build Recommendation</div>
-                    <p className="text-blue-700 text-sm mt-1">{buildRecommendation}</p>
+                  <div className="w-10 h-10 bg-[#1cb0f6] rounded-xl flex items-center justify-center text-xl shadow-[0_2px_0_#1899d6]">🎯</div>
+                  <div className="flex-1">
+                    <div className="font-bold text-[#1899d6] text-sm uppercase tracking-wide">Recommendation</div>
+                    <p className="text-gray-700 text-sm mt-1 leading-relaxed">{buildRecommendation}</p>
                   </div>
                 </div>
               </div>
@@ -553,79 +610,76 @@ export default function ValidationPage() {
           </div>
         )}
 
-        {/* Your Competition */}
-        {genreData && (
-          <div className="bg-white rounded-2xl shadow-[0_3px_0_#e5e7eb] overflow-hidden">
-            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-amber-500" />
-                  <span className="font-bold text-gray-900">Your Competition</span>
-                </div>
-                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                  genreData.competition_level === 'extreme' || genreData.competition_level === 'very_high'
-                    ? 'bg-red-100 text-red-700'
-                    : genreData.competition_level === 'high'
-                    ? 'bg-amber-100 text-amber-700'
-                    : 'bg-green-100 text-green-700'
-                }`}>
-                  {(genreData.competition_level || 'unknown').replace('_', ' ')}
-                </span>
+        {/* Your Competition - Duolingo Style */}
+        {validation.competitorAnalysis?.directCompetitors && validation.competitorAnalysis.directCompetitors.length > 0 && (
+          <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3 border-b-2 border-[#ff9600]">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-[#ff9600] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#ea7900]">⚔️</div>
+                <span className="font-bold text-[#ea7900] uppercase tracking-wide text-sm">Your Competition</span>
               </div>
-              <p className="text-gray-500 text-xs mt-1">{genreData.name} genre • #{genreData.popularity_rank} on Roblox</p>
+              <p className="text-gray-500 text-xs mt-1">{validation.marketAnalysis?.genre || 'Unknown'} genre</p>
             </div>
             
             <div className="p-4 space-y-2">
-              {(genreData.top_games || []).slice(0, 3).map((game: any, i: number) => (
-                <CompetitorCard
-                  key={game.name}
-                  name={game.name}
-                  visits={game.visits}
-                  revenue={game.monthly_revenue_estimate}
-                  rank={i + 1}
-                />
+              {validation.competitorAnalysis.directCompetitors.slice(0, 3).map((comp, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="w-8 h-8 bg-gradient-to-br from-[#ff9600] to-[#ff4b4b] text-white rounded-lg flex items-center justify-center font-black text-sm shadow-[0_2px_0_#ea7900]">
+                    {i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-gray-900 truncate">{comp.name}</div>
+                    <div className="text-xs text-gray-500">{comp.visits}</div>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Retention Targets */}
-        <div className="bg-white rounded-2xl shadow-[0_3px_0_#e5e7eb] overflow-hidden">
-          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center gap-2">
-            <Target className="w-5 h-5 text-blue-500" />
-            <span className="font-bold text-gray-900">Retention Targets</span>
-          </div>
-          <div className="p-4 space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Day 1 Retention</span>
-                <span className="font-medium">{parsePercentage(validation.retentionAnalysis?.predictedD1, 25)}%</span>
+        {/* Loop Insights - Duolingo Style */}
+        {validation.loopAnalysis && (
+          <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-4 py-3 border-b-2 border-[#a560e8]">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-[#a560e8] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#8b47cc]">🔄</div>
+                <span className="font-bold text-[#8b47cc] uppercase tracking-wide text-sm">Loop Insights</span>
               </div>
-              <Progress value={parsePercentage(validation.retentionAnalysis?.predictedD1, 25)} className="h-2" />
-              <div className="text-xs text-gray-500 mt-1">Target: {benchmarks.target_for_success.d1_minimum}%+</div>
             </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Day 7 Retention</span>
-                <span className="font-medium">{parsePercentage(validation.retentionAnalysis?.predictedD7, 10)}%</span>
-              </div>
-              <Progress value={parsePercentage(validation.retentionAnalysis?.predictedD7, 10) * 2} className="h-2" />
-              <div className="text-xs text-gray-500 mt-1">Target: {benchmarks.target_for_success.d7_minimum}%+</div>
+            <div className="p-4 space-y-3">
+              {validation.loopAnalysis.primaryLoop && (
+                <div className="bg-purple-50 p-3 rounded-xl border border-purple-100">
+                  <div className="text-xs font-bold text-[#8b47cc] uppercase mb-1">Core Loop</div>
+                  <div className="text-sm text-gray-700">{validation.loopAnalysis.primaryLoop}</div>
+                </div>
+              )}
+              {validation.loopAnalysis.retention?.whyComeBackTomorrow && (
+                <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                  <div className="text-xs font-bold text-[#1899d6] uppercase mb-1">Why They Return</div>
+                  <div className="text-sm text-gray-700">{validation.loopAnalysis.retention.whyComeBackTomorrow}</div>
+                </div>
+              )}
+              {validation.loopAnalysis.sessionStructure?.oneMoreRoundFactor && (
+                <div className="bg-green-50 p-3 rounded-xl border border-green-100">
+                  <div className="text-xs font-bold text-[#58a700] uppercase mb-1">"One More Round" Factor</div>
+                  <div className="text-sm text-gray-700">{validation.loopAnalysis.sessionStructure.oneMoreRoundFactor}</div>
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Strengths */}
+        {/* Strengths - Duolingo Style */}
         {strengths.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-[0_3px_0_#e5e7eb] overflow-hidden">
-            <div className="bg-green-50 px-4 py-3 border-b border-green-200 flex items-center gap-2">
-              <span className="text-lg">✅</span>
-              <span className="font-bold text-green-800">Strengths</span>
+          <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+            <div className="bg-[#d7ffb8] px-4 py-3 border-b-2 border-[#58cc02] flex items-center gap-2">
+              <div className="w-7 h-7 bg-[#58cc02] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#58a700]">✓</div>
+              <span className="font-bold text-[#58a700] uppercase tracking-wide text-sm">Strengths</span>
             </div>
             <div className="p-4 space-y-2">
               {strengths.map((s, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm">
-                  <span className="text-green-500 mt-0.5">•</span>
+                <div key={i} className="flex items-start gap-3 text-sm">
+                  <span className="w-5 h-5 bg-[#58cc02] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">✓</span>
                   <span className="text-gray-700">{s}</span>
                 </div>
               ))}
@@ -633,17 +687,17 @@ export default function ValidationPage() {
           </div>
         )}
 
-        {/* Critical Issues */}
+        {/* Critical Issues - Duolingo Style */}
         {criticalIssues.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-[0_3px_0_#e5e7eb] overflow-hidden">
-            <div className="bg-amber-50 px-4 py-3 border-b border-amber-200 flex items-center gap-2">
-              <span className="text-lg">⚠️</span>
-              <span className="font-bold text-amber-800">Critical Issues</span>
+          <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+            <div className="bg-[#fff4e0] px-4 py-3 border-b-2 border-[#ff9600] flex items-center gap-2">
+              <div className="w-7 h-7 bg-[#ff9600] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#ea7900]">!</div>
+              <span className="font-bold text-[#ea7900] uppercase tracking-wide text-sm">Issues to Fix</span>
             </div>
             <div className="p-4 space-y-2">
               {criticalIssues.map((c, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm">
-                  <span className="text-amber-500 mt-0.5">•</span>
+                <div key={i} className="flex items-start gap-3 text-sm">
+                  <span className="w-5 h-5 bg-[#ff9600] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">!</span>
                   <span className="text-gray-700">{c}</span>
                 </div>
               ))}
@@ -651,17 +705,17 @@ export default function ValidationPage() {
           </div>
         )}
 
-        {/* Dealbreakers */}
+        {/* Dealbreakers - Duolingo Style */}
         {dealbreakers.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-[0_3px_0_#e5e7eb] overflow-hidden">
-            <div className="bg-red-50 px-4 py-3 border-b border-red-200 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-red-500" />
-              <span className="font-bold text-red-800">Critical Issues</span>
+          <div className="bg-white rounded-2xl border-2 border-[#ff4b4b] shadow-[0_4px_0_#ea2b2b] overflow-hidden">
+            <div className="bg-[#ffe0e0] px-4 py-3 border-b-2 border-[#ff4b4b] flex items-center gap-2">
+              <div className="w-7 h-7 bg-[#ff4b4b] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#ea2b2b]">✗</div>
+              <span className="font-bold text-[#ea2b2b] uppercase tracking-wide text-sm">Dealbreakers</span>
             </div>
             <div className="p-4 space-y-2">
               {dealbreakers.map((d, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm">
-                  <span className="text-red-500 mt-0.5">•</span>
+                <div key={i} className="flex items-start gap-3 text-sm">
+                  <span className="w-5 h-5 bg-[#ff4b4b] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">✗</span>
                   <span className="text-gray-700">{d}</span>
                 </div>
               ))}
@@ -669,46 +723,46 @@ export default function ValidationPage() {
           </div>
         )}
 
-        {/* Action Items */}
+        {/* Action Items - Duolingo Style */}
         {actionItems.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-[0_3px_0_#e5e7eb] overflow-hidden">
-            <div className="bg-blue-50 px-4 py-3 border-b border-blue-200 flex items-center gap-2">
-              <span className="text-lg">📋</span>
-              <span className="font-bold text-blue-800">Action Items</span>
+          <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+            <div className="bg-[#ddf4ff] px-4 py-3 border-b-2 border-[#1cb0f6] flex items-center gap-2">
+              <div className="w-7 h-7 bg-[#1cb0f6] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#1899d6]">📋</div>
+              <span className="font-bold text-[#1899d6] uppercase tracking-wide text-sm">Action Items</span>
             </div>
             <div className="p-4 space-y-3">
               {actionItems.map((item, i) => (
-                <div key={i} className={`p-3 rounded-lg border-l-4 ${
-                  item.priority === 'high' ? 'border-red-500 bg-red-50' :
-                  item.priority === 'medium' ? 'border-amber-500 bg-amber-50' :
-                  'border-blue-500 bg-blue-50'
+                <div key={i} className={`p-3 rounded-xl border-2 ${
+                  item.priority === 'high' ? 'border-[#ff4b4b] bg-[#ffe0e0]' :
+                  item.priority === 'medium' ? 'border-[#ff9600] bg-[#fff4e0]' :
+                  'border-[#1cb0f6] bg-[#ddf4ff]'
                 }`}>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                      item.priority === 'high' ? 'bg-red-200 text-red-800' :
-                      item.priority === 'medium' ? 'bg-amber-200 text-amber-800' :
-                      'bg-blue-200 text-blue-800'
-                    }`}>{item.priority?.toUpperCase()}</span>
-                    <span className="font-medium text-sm text-gray-800">{item.action}</span>
+                    <span className={`text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-wider ${
+                      item.priority === 'high' ? 'bg-[#ff4b4b] text-white' :
+                      item.priority === 'medium' ? 'bg-[#ff9600] text-white' :
+                      'bg-[#1cb0f6] text-white'
+                    }`}>{item.priority}</span>
+                    <span className="font-bold text-sm text-gray-800">{item.action}</span>
                   </div>
-                  <p className="text-xs text-gray-600">{item.reasoning}</p>
+                  <p className="text-xs text-gray-600 ml-12">{item.reasoning}</p>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Pivot Suggestions */}
+        {/* Pivot Suggestions - Duolingo Style */}
         {pivotSuggestions.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-[0_3px_0_#e5e7eb] overflow-hidden">
-            <div className="bg-purple-50 px-4 py-3 border-b border-purple-200 flex items-center gap-2">
-              <span className="text-lg">💡</span>
-              <span className="font-bold text-purple-800">Pivot Suggestions</span>
+          <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+            <div className="bg-[#f0e6ff] px-4 py-3 border-b-2 border-[#a560e8] flex items-center gap-2">
+              <div className="w-7 h-7 bg-[#a560e8] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#8b47cc]">💡</div>
+              <span className="font-bold text-[#8b47cc] uppercase tracking-wide text-sm">Pivot Ideas</span>
             </div>
             <div className="p-4 space-y-2">
               {pivotSuggestions.map((p, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm">
-                  <span className="text-purple-500 mt-0.5">→</span>
+                <div key={i} className="flex items-start gap-3 text-sm">
+                  <span className="w-5 h-5 bg-[#a560e8] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">→</span>
                   <span className="text-gray-700">{p}</span>
                 </div>
               ))}
@@ -717,18 +771,21 @@ export default function ValidationPage() {
         )}
 
         {/* Data source */}
-        <p className="text-center text-xs text-gray-400">
-          Data from Roblox Creator Hub & industry benchmarks
+        <p className="text-center text-xs text-gray-400 pb-4">
+          Powered by 4 specialized AI agents • Roblox market data
         </p>
       </div>
 
-      {/* Continue Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
+      {/* Continue Button - Duolingo Style */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur border-t border-gray-200">
         <div className="max-w-2xl mx-auto">
-          <Button className="w-full" size="lg" onClick={() => router.push('/finalize')}>
+          <button
+            onClick={() => router.push('/finalize')}
+            className="w-full bg-[#58cc02] hover:bg-[#4caf00] text-white font-bold py-4 px-6 rounded-2xl shadow-[0_4px_0_#58a700] hover:shadow-[0_2px_0_#58a700] hover:translate-y-[2px] transition-all uppercase tracking-wide flex items-center justify-center gap-2"
+          >
             Continue to Game Plan
-            <ChevronRight className="h-4 w-4 ml-2" />
-          </Button>
+            <ChevronRight className="h-5 w-5" />
+          </button>
         </div>
       </div>
     </div>
