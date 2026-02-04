@@ -189,7 +189,13 @@ export default function DevValidationPage() {
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
             <h3 className="font-bold text-red-700 mb-2">Error</h3>
-            <p className="text-red-600">{error}</p>
+            <p className="text-red-600 mb-4">{error}</p>
+            {rawResponse && (
+              <details>
+                <summary className="cursor-pointer text-red-500 text-sm">Show debug info</summary>
+                <pre className="mt-2 text-xs bg-red-100 p-2 rounded overflow-auto max-h-64">{rawResponse}</pre>
+              </details>
+            )}
           </div>
         )}
 

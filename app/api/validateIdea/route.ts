@@ -106,14 +106,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse JSON response
+    // Parse JSON response - handle markdown code blocks
     try {
-      const validation: ValidationResult = JSON.parse(content);
+      let jsonContent = content;
+      
+      // Strip markdown code blocks if present
+      if (jsonContent.startsWith('```json')) {
+        jsonContent = jsonContent.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+      } else if (jsonContent.startsWith('```')) {
+        jsonContent = jsonContent.replace(/^```\n?/, '').replace(/\n?```$/, '');
+      }
+      
+      // Try to find JSON object if there's extra text
+      const jsonMatch = jsonContent.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        jsonContent = jsonMatch[0];
+      }
+      
+      const validation: ValidationResult = JSON.parse(jsonContent);
       return NextResponse.json(validation);
-    } catch {
-      console.error('Failed to parse AI response:', content);
+    } catch (parseError) {
+      console.error('=== JSON PARSE ERROR ===');
+      console.error('Raw content:', content);
+      console.error('Parse error:', parseError);
       return NextResponse.json(
-        { message: 'Invalid AI response format' },
+        { message: 'Invalid AI response format', debug: content.substring(0, 500) },
         { status: 500 }
       );
     }
