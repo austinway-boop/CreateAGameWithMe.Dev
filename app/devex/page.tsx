@@ -137,14 +137,22 @@ export default function DevExCalculator() {
   const calc = useMemo(() => {
     const r = parseFloat(robux) || 0;
     const c = COUNTRY_TAX_DATA[country];
-    const gross = r * DEVEX_RATE;
-    const usWithheld = gross * (c.usWithholding / 100);
-    const afterUs = gross - usWithheld;
-    const localTax = afterUs * (c.incomeTax / 100);
-    const netUSD = afterUs - localTax;
-    const netLocal = netUSD * c.rate;
-    const totalRate = gross > 0 ? ((gross - netUSD) / gross) * 100 : 0;
-    return { gross, usWithheld, afterUs, localTax, netUSD, netLocal, totalRate, ...c };
+    const grossUSD = r * DEVEX_RATE;
+    const usWithheldUSD = grossUSD * (c.usWithholding / 100);
+    const afterUsUSD = grossUSD - usWithheldUSD;
+    const localTaxUSD = afterUsUSD * (c.incomeTax / 100);
+    const netUSD = afterUsUSD - localTaxUSD;
+    
+    // Convert to local currency
+    const gross = grossUSD * c.rate;
+    const usWithheld = usWithheldUSD * c.rate;
+    const localTax = localTaxUSD * c.rate;
+    const net = netUSD * c.rate;
+    
+    const totalRate = grossUSD > 0 ? ((grossUSD - netUSD) / grossUSD) * 100 : 0;
+    const decimals = c.rate >= 100 ? 0 : 2;
+    
+    return { gross, usWithheld, localTax, net, netUSD, totalRate, decimals, ...c };
   }, [robux, country]);
 
   const data = COUNTRY_TAX_DATA[country];
@@ -230,17 +238,17 @@ export default function DevExCalculator() {
           
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Gross payout</span>
-            <span className="font-semibold">${calc.gross.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            <span className="font-semibold">{calc.symbol}{calc.gross.toLocaleString(undefined, { minimumFractionDigits: calc.decimals, maximumFractionDigits: calc.decimals })}</span>
           </div>
 
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">US withholding ({calc.usWithholding}%)</span>
-            <span className="text-red-500">-${calc.usWithheld.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            <span className="text-red-500">-{calc.symbol}{calc.usWithheld.toLocaleString(undefined, { minimumFractionDigits: calc.decimals, maximumFractionDigits: calc.decimals })}</span>
           </div>
 
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">{data.name} tax ({calc.incomeTax}%)</span>
-            <span className="text-red-500">-${calc.localTax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            <span className="text-red-500">-{calc.symbol}{calc.localTax.toLocaleString(undefined, { minimumFractionDigits: calc.decimals, maximumFractionDigits: calc.decimals })}</span>
           </div>
 
           <div className="border-t border-gray-100 pt-4">
@@ -251,7 +259,7 @@ export default function DevExCalculator() {
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold text-green-600">
-                  {calc.symbol}{calc.netLocal.toLocaleString(undefined, { minimumFractionDigits: calc.rate >= 100 ? 0 : 2, maximumFractionDigits: calc.rate >= 100 ? 0 : 2 })}
+                  {calc.symbol}{calc.net.toLocaleString(undefined, { minimumFractionDigits: calc.decimals, maximumFractionDigits: calc.decimals })}
                 </p>
                 {country !== 'US' && (
                   <p className="text-xs text-gray-400">
