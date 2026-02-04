@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, Loader2, CheckCircle2, AlertTriangle, XCircle, Sparkles, Target, Clock, Lightbulb, HelpCircle, TrendingUp, Zap, RefreshCw, AlertOctagon, Flame, Beaker, Users, Gauge, TrendingDown, DollarSign, Tv, ArrowRight, BarChart3, Rocket, AlertCircle, ChevronRight, CircleDot } from 'lucide-react';
+import { ArrowLeft, Loader2, CheckCircle2, AlertTriangle, XCircle, Sparkles, Target, Clock, Lightbulb, HelpCircle, TrendingUp, Zap, RefreshCw, AlertOctagon, Flame, Users, TrendingDown, ArrowRight, ChevronRight, CircleDot, Play, Eye, DollarSign, Timer, BarChart2 } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,93 +16,135 @@ type ValidationState = 'idle' | 'validating' | 'complete' | 'error' | 'incomplet
 const VERDICT_CONFIG = {
   strong: {
     icon: CheckCircle2,
-    color: 'text-green-600',
-    bg: 'bg-green-50',
-    border: 'border-green-300',
-    label: 'Strong Concept',
-    description: 'Ready to prototype',
+    color: 'text-emerald-600',
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-200',
+    label: 'Ready to Build',
+    tagline: 'This has real potential on Roblox',
   },
   promising: {
     icon: TrendingUp,
     color: 'text-blue-600',
     bg: 'bg-blue-50',
-    border: 'border-blue-300',
-    label: 'Promising',
-    description: 'Good foundation, needs work',
+    border: 'border-blue-200',
+    label: 'Worth Prototyping',
+    tagline: 'Good foundation, address the gaps',
   },
   needs_work: {
     icon: AlertTriangle,
     color: 'text-amber-600',
     bg: 'bg-amber-50',
-    border: 'border-amber-300',
-    label: 'Needs Work',
-    description: 'Significant issues to address',
+    border: 'border-amber-200',
+    label: 'Needs Iteration',
+    tagline: 'Rethink before building',
   },
   rethink: {
     icon: XCircle,
     color: 'text-red-600',
     bg: 'bg-red-50',
-    border: 'border-red-300',
-    label: 'Rethink',
-    description: 'Fundamental problems',
+    border: 'border-red-200',
+    label: 'Major Pivot Needed',
+    tagline: 'Fundamental issues to address',
   },
 };
 
-const COMPETITOR_LABELS = {
-  none: { label: 'Blue Ocean', color: 'text-green-600' },
-  few: { label: 'Low Competition', color: 'text-blue-600' },
-  moderate: { label: 'Competitive', color: 'text-amber-600' },
-  saturated: { label: 'Saturated Market', color: 'text-red-600' },
-};
-
-const RETENTION_LABELS = {
-  high: { label: 'High Retention', color: 'text-green-600' },
-  medium: { label: 'Medium Retention', color: 'text-blue-600' },
-  low: { label: 'Low Retention', color: 'text-amber-600' },
-  unclear: { label: 'Unclear', color: 'text-muted-foreground' },
-};
-
-function ScoreBar({ score, label }: { score: number; label: string }) {
+function ScoreRing({ score, size = 'md' }: { score: number; size?: 'sm' | 'md' | 'lg' }) {
   const getColor = (s: number) => {
-    if (s >= 8) return 'bg-green-500';
-    if (s >= 6) return 'bg-blue-500';
-    if (s >= 4) return 'bg-amber-500';
-    return 'bg-red-500';
+    if (s >= 8) return { stroke: '#10b981', bg: 'bg-emerald-100' };
+    if (s >= 6) return { stroke: '#3b82f6', bg: 'bg-blue-100' };
+    if (s >= 4) return { stroke: '#f59e0b', bg: 'bg-amber-100' };
+    return { stroke: '#ef4444', bg: 'bg-red-100' };
   };
-
+  
+  const sizeMap = { sm: 48, md: 64, lg: 80 };
+  const strokeMap = { sm: 4, md: 5, lg: 6 };
+  const fontMap = { sm: 'text-lg', md: 'text-2xl', lg: 'text-3xl' };
+  
+  const diameter = sizeMap[size];
+  const strokeWidth = strokeMap[size];
+  const radius = (diameter - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const progress = (score / 10) * circumference;
+  const colors = getColor(score);
+  
   return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-sm">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium">{score}/10</span>
-      </div>
-      <div className="h-2 bg-muted rounded-full overflow-hidden">
-        <div 
-          className={`h-full ${getColor(score)} transition-all duration-500`}
-          style={{ width: `${score * 10}%` }}
+    <div className="relative inline-flex items-center justify-center">
+      <svg width={diameter} height={diameter} className="-rotate-90">
+        <circle
+          cx={diameter / 2}
+          cy={diameter / 2}
+          r={radius}
+          fill="none"
+          stroke="#e5e7eb"
+          strokeWidth={strokeWidth}
         />
+        <circle
+          cx={diameter / 2}
+          cy={diameter / 2}
+          r={radius}
+          fill="none"
+          stroke={colors.stroke}
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference - progress}
+          strokeLinecap="round"
+          className="transition-all duration-700"
+        />
+      </svg>
+      <span className={`absolute ${fontMap[size]} font-bold`}>{score}</span>
+    </div>
+  );
+}
+
+function MetricCard({ 
+  icon: Icon, 
+  label, 
+  value, 
+  subtext, 
+  color = 'text-muted-foreground' 
+}: { 
+  icon: React.ElementType; 
+  label: string; 
+  value: string; 
+  subtext?: string;
+  color?: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+      <Icon className={`h-5 w-5 ${color} flex-shrink-0`} />
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className={`text-sm font-medium ${color}`}>{value}</p>
+        {subtext && <p className="text-xs text-muted-foreground">{subtext}</p>}
       </div>
+    </div>
+  );
+}
+
+function CompetitorChip({ name, visits }: { name: string; visits?: string }) {
+  return (
+    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-xs">
+      <span className="font-medium">{name}</span>
+      {visits && <span className="text-muted-foreground">({visits})</span>}
     </div>
   );
 }
 
 export default function ValidationPage() {
   const router = useRouter();
-  const { project, loading, retryLoad } = useProject();
+  const { project, loading } = useProject();
   const [validationState, setValidationState] = useState<ValidationState>('idle');
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const aiEnabled = process.env.NEXT_PUBLIC_ENABLE_AI === 'true';
 
-  // Check validation readiness
   const readiness: ValidationReadiness = useMemo(() => {
     return checkValidationReadiness(project);
   }, [project]);
 
   useEffect(() => {
     if (project && validationState === 'idle' && aiEnabled) {
-      // Only auto-run if ready
       if (readiness.isReady) {
         runValidation();
       } else {
@@ -119,13 +161,10 @@ export default function ValidationPage() {
     setError(null);
 
     try {
-      // Send the full project for comprehensive validation
       const response = await fetch('/api/validateIdea', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          project: project, // Send full project for journey context
-        }),
+        body: JSON.stringify({ project }),
       });
 
       if (!response.ok) {
@@ -153,7 +192,7 @@ export default function ValidationPage() {
           <div className="text-center space-y-4">
             <Sparkles className="h-12 w-12 mx-auto text-muted-foreground" />
             <h1 className="text-2xl font-semibold tracking-tight">AI Validation Disabled</h1>
-            <p className="text-muted-foreground">Enable AI to get feedback on your game concept.</p>
+            <p className="text-muted-foreground">Enable AI to get feedback on your Roblox game concept.</p>
           </div>
           <Button variant="outline" onClick={() => router.push('/skilltree')} className="w-full gap-2">
             <ArrowLeft className="h-4 w-4" />
@@ -164,26 +203,24 @@ export default function ValidationPage() {
     );
   }
 
-  // Show requirements checklist if not ready
+  // Requirements checklist
   if (validationState === 'incomplete' || (validationState === 'idle' && !readiness.isReady)) {
     return (
       <div className="flex-1 overflow-auto">
         <div className="max-w-[600px] mx-auto p-6 space-y-6">
-          {/* Header */}
           <div className="text-center space-y-2">
-            <AlertCircle className="h-12 w-12 mx-auto text-amber-500" />
-            <h1 className="text-2xl font-semibold tracking-tight">Complete Your Journey First</h1>
-            <p className="text-muted-foreground">
-              To get the most accurate validation, we need more information about your game.
+            <AlertTriangle className="h-10 w-10 mx-auto text-amber-500" />
+            <h1 className="text-xl font-semibold">Complete Your Concept First</h1>
+            <p className="text-sm text-muted-foreground">
+              We need more details to give you accurate Roblox market validation.
             </p>
           </div>
 
-          {/* Progress */}
           <Card>
             <CardContent className="pt-6">
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Journey Completion</span>
+                  <span className="text-muted-foreground">Progress</span>
                   <span className="font-medium">{readiness.completionPercentage}%</span>
                 </div>
                 <Progress value={readiness.completionPercentage} className="h-2" />
@@ -191,100 +228,54 @@ export default function ValidationPage() {
             </CardContent>
           </Card>
 
-          {/* Required Items */}
           {readiness.requiredMissing.length > 0 && (
-            <Card className="border-red-200 bg-red-50">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2 text-red-700">
-                  <AlertOctagon className="h-4 w-4" />
-                  Required Before Validation
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {readiness.requiredMissing.map((req) => (
-                  <button
-                    key={req.id}
-                    onClick={() => router.push(req.link)}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-white border border-red-200 hover:border-red-400 transition-colors text-left"
-                  >
-                    <CircleDot className="h-5 w-5 text-red-500 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{req.label}</p>
-                      <p className="text-xs text-muted-foreground">{req.description}</p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  </button>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Recommended Items */}
-          {readiness.recommendedMissing.length > 0 && (
-            <Card className="border-amber-200 bg-amber-50">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2 text-amber-700">
-                  <Lightbulb className="h-4 w-4" />
-                  Recommended for Better Validation
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {readiness.recommendedMissing.map((req) => (
-                  <button
-                    key={req.id}
-                    onClick={() => router.push(req.link)}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-white border border-amber-200 hover:border-amber-400 transition-colors text-left"
-                  >
-                    <CircleDot className="h-5 w-5 text-amber-500 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{req.label}</p>
-                      <p className="text-xs text-muted-foreground">{req.description}</p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  </button>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Completed Items */}
-          {readiness.allRequirements.some(r => r.completed) && (
-            <Card className="border-green-200 bg-green-50">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2 text-green-700">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Completed
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1">
-                {readiness.allRequirements.filter(r => r.completed).map((req) => (
-                  <div key={req.id} className="flex items-center gap-2 text-sm text-green-700">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>{req.label}</span>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-red-600">Required</p>
+              {readiness.requiredMissing.map((req) => (
+                <button
+                  key={req.id}
+                  onClick={() => router.push(req.link)}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-200 hover:bg-red-100 transition-colors text-left"
+                >
+                  <CircleDot className="h-4 w-4 text-red-500 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{req.label}</p>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+              ))}
+            </div>
           )}
 
-          {/* Actions */}
-          <div className="flex flex-col gap-3 pt-4">
+          {readiness.recommendedMissing.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-amber-600">Recommended</p>
+              {readiness.recommendedMissing.map((req) => (
+                <button
+                  key={req.id}
+                  onClick={() => router.push(req.link)}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg bg-amber-50 border border-amber-200 hover:bg-amber-100 transition-colors text-left"
+                >
+                  <CircleDot className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{req.label}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3 pt-2">
             {readiness.isReady ? (
-              <Button onClick={() => { setValidationState('idle'); runValidation(); }} size="lg" className="gap-2">
-                <Sparkles className="h-5 w-5" />
-                Run Full Validation
+              <Button onClick={() => { setValidationState('idle'); runValidation(); }} className="gap-2">
+                <Sparkles className="h-4 w-4" />
+                Run Validation
               </Button>
             ) : (
-              <Button disabled size="lg" className="gap-2">
-                <AlertCircle className="h-5 w-5" />
-                Complete Required Items to Validate
+              <Button disabled className="gap-2">
+                Complete Required Items First
               </Button>
-            )}
-            
-            {readiness.isReady && readiness.recommendedMissing.length > 0 && (
-              <p className="text-xs text-center text-muted-foreground">
-                You can validate now, but completing recommended items will give better results.
-              </p>
             )}
             
             <Button variant="outline" onClick={() => router.push('/skilltree')} className="gap-2">
@@ -300,13 +291,11 @@ export default function ValidationPage() {
   if (validationState === 'validating') {
     return (
       <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-[500px] space-y-6">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <div className="text-center">
-              <h1 className="text-xl font-semibold tracking-tight">Running Validation</h1>
-              <p className="text-muted-foreground mt-1">Analyzing your concept with brutal honesty...</p>
-            </div>
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <div>
+            <h1 className="text-lg font-semibold">Analyzing Your Roblox Game</h1>
+            <p className="text-sm text-muted-foreground mt-1">Checking against current market data...</p>
           </div>
         </div>
       </div>
@@ -316,12 +305,12 @@ export default function ValidationPage() {
   if (validationState === 'error') {
     return (
       <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-[500px] space-y-6">
-          <Card className="border-destructive">
+        <div className="w-full max-w-[400px] space-y-4">
+          <Card className="border-red-200">
             <CardContent className="pt-6 text-center space-y-4">
-              <AlertTriangle className="h-10 w-10 mx-auto text-destructive" />
-              <p className="text-destructive">{error || 'Failed to validate concept'}</p>
-              <Button onClick={runValidation}>
+              <XCircle className="h-8 w-8 mx-auto text-red-500" />
+              <p className="text-sm text-red-600">{error || 'Failed to validate'}</p>
+              <Button onClick={runValidation} variant="outline" size="sm">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Try Again
               </Button>
@@ -335,362 +324,290 @@ export default function ValidationPage() {
   if (!validation) {
     return (
       <div className="flex-1 flex items-center justify-center p-6">
-        <Button onClick={runValidation} size="lg" className="gap-2">
-          <Sparkles className="h-5 w-5" />
-          Validate My Concept
+        <Button onClick={runValidation} className="gap-2">
+          <Sparkles className="h-4 w-4" />
+          Validate My Roblox Game
         </Button>
       </div>
     );
   }
 
-  // Safe access with fallbacks
+  // Results UI
   const verdict = validation.verdict && VERDICT_CONFIG[validation.verdict] ? validation.verdict : 'needs_work';
   const verdictConfig = VERDICT_CONFIG[verdict];
   const VerdictIcon = verdictConfig.icon;
-  const competitorCount = validation.marketFit?.competitorCount;
-  const competitorConfig = competitorCount && COMPETITOR_LABELS[competitorCount] 
-    ? COMPETITOR_LABELS[competitorCount] 
-    : COMPETITOR_LABELS.moderate;
-  const retentionPrediction = validation.loopAnalysis?.retentionPrediction;
-  const retentionConfig = retentionPrediction && RETENTION_LABELS[retentionPrediction]
-    ? RETENTION_LABELS[retentionPrediction]
-    : RETENTION_LABELS.unclear;
 
   return (
     <div className="flex-1 overflow-auto">
-      <div className="max-w-[900px] mx-auto p-6 space-y-6">
-        {/* Header with Overall Score */}
-        <div className={`rounded-xl p-6 ${verdictConfig.bg} ${verdictConfig.border} border-2`}>
-          <div className="flex items-start gap-4">
-            <div className={`p-3 rounded-full bg-white/50`}>
-              <VerdictIcon className={`h-8 w-8 ${verdictConfig.color}`} />
-            </div>
+      <div className="max-w-[800px] mx-auto p-6 space-y-6 pb-12">
+        
+        {/* Hero Section - Verdict */}
+        <div className={`rounded-xl p-6 ${verdictConfig.bg} ${verdictConfig.border} border`}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <ScoreRing score={validation.overallScore ?? 5} size="lg" />
             <div className="flex-1">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-2xl font-bold">{verdictConfig.label}</h1>
-                <div className={`px-3 py-1 rounded-full text-xl font-bold ${verdictConfig.color} bg-white/70`}>
-                  {validation.overallScore ?? '?'}/10
-                </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <VerdictIcon className={`h-5 w-5 ${verdictConfig.color}`} />
+                <h1 className="text-xl font-bold">{verdictConfig.label}</h1>
               </div>
-              <p className="text-muted-foreground mt-1">{verdictConfig.description}</p>
-              <p className="mt-3 font-medium">{validation.summary}</p>
+              <p className="text-sm text-muted-foreground mt-0.5">{verdictConfig.tagline}</p>
+              <p className="mt-3 text-sm">{validation.summary}</p>
             </div>
           </div>
         </div>
 
-        {/* Hard Truth - Most Important */}
+        {/* Hard Truth */}
         {validation.hardTruth && (
-          <Card className="border-2 border-orange-300 bg-orange-50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2 text-orange-700">
-                <Flame className="h-4 w-4" />
-                Hard Truth
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm font-medium text-orange-900">{validation.hardTruth}</p>
-            </CardContent>
-          </Card>
+          <div className="rounded-lg p-4 bg-orange-50 border border-orange-200">
+            <div className="flex gap-3">
+              <Flame className="h-5 w-5 text-orange-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-orange-800">The Hard Truth</p>
+                <p className="text-sm text-orange-700 mt-1">{validation.hardTruth}</p>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Dealbreakers */}
         {validation.dealbreakers && validation.dealbreakers.length > 0 && (
-          <Card className="border-2 border-red-300 bg-red-50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2 text-red-700">
-                <AlertOctagon className="h-4 w-4" />
-                Dealbreakers — Must Fix
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {validation.dealbreakers.map((item, i) => (
-                  <li key={i} className="text-sm flex gap-2 text-red-800">
-                    <span className="text-red-600 font-bold">✗</span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          <div className="rounded-lg p-4 bg-red-50 border border-red-200">
+            <p className="text-sm font-semibold text-red-800 mb-2">Must Fix Before Building</p>
+            <ul className="space-y-1.5">
+              {validation.dealbreakers.map((item, i) => (
+                <li key={i} className="text-sm text-red-700 flex gap-2">
+                  <span className="text-red-500">×</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
 
-        {/* Score Breakdown */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Score Breakdown</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <ScoreBar score={validation.marketFit?.score || 0} label="Market Fit" />
-            <ScoreBar score={validation.scopeAssessment?.score || 0} label="Scope Feasibility" />
-            <ScoreBar score={validation.uniqueness?.score || 0} label="Uniqueness" />
-            <ScoreBar score={validation.loopAnalysis?.score || 0} label="Game Loop" />
-          </CardContent>
-        </Card>
+        {/* Quick Metrics Row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <MetricCard
+            icon={Target}
+            label="Market Fit"
+            value={`${validation.marketFit?.score ?? '?'}/10`}
+            color={validation.marketFit?.score >= 7 ? 'text-emerald-600' : validation.marketFit?.score >= 5 ? 'text-blue-600' : 'text-amber-600'}
+          />
+          <MetricCard
+            icon={Clock}
+            label="Scope"
+            value={`${validation.scopeAssessment?.score ?? '?'}/10`}
+            color={validation.scopeAssessment?.score >= 7 ? 'text-emerald-600' : validation.scopeAssessment?.score >= 5 ? 'text-blue-600' : 'text-amber-600'}
+          />
+          <MetricCard
+            icon={Sparkles}
+            label="Uniqueness"
+            value={`${validation.uniqueness?.score ?? '?'}/10`}
+            color={validation.uniqueness?.score >= 7 ? 'text-emerald-600' : validation.uniqueness?.score >= 5 ? 'text-blue-600' : 'text-amber-600'}
+          />
+          <MetricCard
+            icon={Zap}
+            label="Game Loop"
+            value={`${validation.loopAnalysis?.score ?? '?'}/10`}
+            color={validation.loopAnalysis?.score >= 7 ? 'text-emerald-600' : validation.loopAnalysis?.score >= 5 ? 'text-blue-600' : 'text-amber-600'}
+          />
+        </div>
 
-        {/* Detailed Analysis Grid */}
-        <div className="grid md:grid-cols-2 gap-4">
-          {/* Market Fit */}
+        {/* Genre & Competition - Simplified */}
+        {validation.genreAnalysis && (
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Target className="h-4 w-4 text-blue-500" />
-                Market Fit
-                <span className={`ml-auto text-xs font-medium ${competitorConfig.color}`}>
-                  {competitorConfig.label}
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">{validation.marketFit?.reasoning}</p>
-              {validation.marketFit?.targetAudience && (
-                <div className="pt-2 border-t">
-                  <p className="text-xs text-muted-foreground">Target Audience:</p>
-                  <p className="text-sm font-medium">{validation.marketFit.targetAudience}</p>
-                </div>
-              )}
-              {validation.marketFit?.discoverabilityRisk && (
+            <CardContent className="pt-5">
+              <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
-                  <p className="text-xs text-muted-foreground">Discoverability Risk:</p>
-                  <p className="text-sm">{validation.marketFit.discoverabilityRisk}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Genre</p>
+                  <p className="font-semibold">{validation.genreAnalysis.detectedGenre}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    {validation.genreAnalysis.isHotGenre ? (
+                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                        <TrendingUp className="h-3 w-3" />
+                        Hot Genre
+                      </span>
+                    ) : validation.genreAnalysis.trend?.includes('rising') ? (
+                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                        <TrendingUp className="h-3 w-3" />
+                        Rising
+                      </span>
+                    ) : validation.genreAnalysis.trend?.includes('declining') ? (
+                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                        <TrendingDown className="h-3 w-3" />
+                        Declining
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Stable</span>
+                    )}
+                    <span className="text-xs text-muted-foreground">
+                      {validation.genreAnalysis.competitionLevel} competition
+                    </span>
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Scope */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Clock className="h-4 w-4 text-amber-500" />
-                Scope Assessment
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">{validation.scopeAssessment?.reasoning}</p>
-              {validation.scopeAssessment?.timeEstimate && (
-                <div className="pt-2 border-t">
-                  <p className="text-xs text-muted-foreground">Time Estimate:</p>
-                  <p className="text-sm font-medium">{validation.scopeAssessment.timeEstimate}</p>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Phase</p>
+                  <p className="text-sm font-medium capitalize">
+                    {validation.genreAnalysis.lifecyclePhase?.replace('_', ' ')}
+                  </p>
                 </div>
-              )}
-              {validation.scopeAssessment?.biggestRisks && validation.scopeAssessment.biggestRisks.length > 0 && (
-                <div>
-                  <p className="text-xs text-muted-foreground">Biggest Risks:</p>
-                  <ul className="text-sm space-y-0.5">
-                    {validation.scopeAssessment.biggestRisks.map((risk, i) => (
-                      <li key={i} className="text-amber-700">• {risk}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {validation.scopeAssessment?.mvpSuggestion && (
-                <div className="bg-green-50 p-2 rounded border border-green-200">
-                  <p className="text-xs text-green-700 font-medium">MVP Suggestion:</p>
-                  <p className="text-sm text-green-800">{validation.scopeAssessment.mvpSuggestion}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Uniqueness */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-purple-500" />
-                Uniqueness
-                {validation.uniqueness?.isGimmickOrCore && (
-                  <span className={`ml-auto text-xs px-2 py-0.5 rounded ${
-                    validation.uniqueness.isGimmickOrCore === 'core' 
-                      ? 'bg-green-100 text-green-700' 
-                      : validation.uniqueness.isGimmickOrCore === 'gimmick'
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-gray-100 text-gray-700'
-                  }`}>
-                    {validation.uniqueness.isGimmickOrCore === 'core' ? 'Core Innovation' : 
-                     validation.uniqueness.isGimmickOrCore === 'gimmick' ? 'Gimmick' : 'Unclear'}
-                  </span>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">{validation.uniqueness?.reasoning}</p>
-              {validation.uniqueness?.differentiator && (
-                <div className="pt-2 border-t">
-                  <p className="text-xs text-muted-foreground">Key Differentiator:</p>
-                  <p className="text-sm font-medium text-purple-700">{validation.uniqueness.differentiator}</p>
-                </div>
-              )}
-              {validation.uniqueness?.similarGames && validation.uniqueness.similarGames.length > 0 && (
-                <div>
-                  <p className="text-xs text-muted-foreground">Similar Games:</p>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {validation.uniqueness.similarGames.map((game, i) => (
-                      <span key={i} className="text-xs bg-muted px-2 py-0.5 rounded">{game}</span>
+              </div>
+              
+              {validation.genreAnalysis.topCompetitors && validation.genreAnalysis.topCompetitors.length > 0 && (
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-xs text-muted-foreground mb-2">Top Competitors</p>
+                  <div className="flex flex-wrap gap-2">
+                    {validation.genreAnalysis.topCompetitors.map((game, i) => (
+                      <CompetitorChip key={i} name={game} />
                     ))}
                   </div>
                 </div>
               )}
             </CardContent>
           </Card>
+        )}
 
-          {/* Loop Analysis */}
+        {/* Retention & Engagement Predictions */}
+        {validation.retentionAnalysis && (
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Zap className="h-4 w-4 text-green-500" />
-                Game Loop
-                <span className={`ml-auto text-xs font-medium ${retentionConfig.color}`}>
-                  {retentionConfig.label}
+                <BarChart2 className="h-4 w-4 text-blue-500" />
+                Predicted Retention
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-4 mb-3">
+                <div className="text-center p-3 rounded-lg bg-muted/50">
+                  <p className="text-xs text-muted-foreground">Day 1</p>
+                  <p className="text-lg font-bold">{validation.retentionAnalysis.predictedD1}</p>
+                  <p className="text-xs text-muted-foreground">Target: 30%+</p>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-muted/50">
+                  <p className="text-xs text-muted-foreground">Day 7</p>
+                  <p className="text-lg font-bold">{validation.retentionAnalysis.predictedD7}</p>
+                  <p className="text-xs text-muted-foreground">Target: 12%+</p>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-muted/50">
+                  <p className="text-xs text-muted-foreground">Session</p>
+                  <p className="text-lg font-bold">{validation.retentionAnalysis.sessionTimePrediction}</p>
+                  <p className="text-xs text-muted-foreground">Target: 30m+</p>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">{validation.retentionAnalysis.reasoning}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Two Column: Market Fit & Scope */}
+        <div className="grid md:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Target className="h-4 w-4 text-blue-500" />
+                Market Fit
+                <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
+                  validation.marketFit?.competitorCount === 'none' ? 'bg-emerald-100 text-emerald-700' :
+                  validation.marketFit?.competitorCount === 'few' ? 'bg-blue-100 text-blue-700' :
+                  validation.marketFit?.competitorCount === 'moderate' ? 'bg-amber-100 text-amber-700' :
+                  'bg-red-100 text-red-700'
+                }`}>
+                  {validation.marketFit?.competitorCount === 'none' ? 'Open Market' :
+                   validation.marketFit?.competitorCount === 'few' ? 'Low Competition' :
+                   validation.marketFit?.competitorCount === 'moderate' ? 'Competitive' :
+                   'Saturated'}
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">{validation.loopAnalysis?.reasoning}</p>
-              {validation.loopAnalysis?.sessionLength && (
-                <div className="pt-2 border-t">
-                  <p className="text-xs text-muted-foreground">Expected Session:</p>
-                  <p className="text-sm font-medium">{validation.loopAnalysis.sessionLength}</p>
+            <CardContent className="space-y-3 text-sm">
+              <p className="text-muted-foreground">{validation.marketFit?.reasoning}</p>
+              {validation.marketFit?.targetAudience && (
+                <div>
+                  <p className="text-xs font-medium">Target Players</p>
+                  <p className="text-muted-foreground">{validation.marketFit.targetAudience}</p>
                 </div>
               )}
-              {validation.loopAnalysis?.missingElements && validation.loopAnalysis.missingElements.length > 0 && (
-                <div>
-                  <p className="text-xs text-muted-foreground">Missing Elements:</p>
-                  <ul className="text-sm space-y-0.5">
-                    {validation.loopAnalysis.missingElements.map((el, i) => (
-                      <li key={i} className="text-amber-600">• {el}</li>
-                    ))}
-                  </ul>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Clock className="h-4 w-4 text-amber-500" />
+                Scope Check
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <p className="text-muted-foreground">{validation.scopeAssessment?.reasoning}</p>
+              {validation.scopeAssessment?.timeEstimate && (
+                <div className="flex items-center gap-2">
+                  <Timer className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">{validation.scopeAssessment.timeEstimate}</span>
+                </div>
+              )}
+              {validation.scopeAssessment?.mvpSuggestion && (
+                <div className="p-2 rounded bg-emerald-50 border border-emerald-200">
+                  <p className="text-xs font-medium text-emerald-800">MVP Suggestion</p>
+                  <p className="text-xs text-emerald-700">{validation.scopeAssessment.mvpSuggestion}</p>
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Genre Analysis - New Data-Driven Section */}
-        {validation.genreAnalysis && (
-          <Card className={`border-2 ${validation.genreAnalysis.isGreatConjunction ? 'border-emerald-300 bg-emerald-50' : 'border-purple-200 bg-purple-50'}`}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2 text-purple-700">
-                <BarChart3 className="h-4 w-4" />
-                Market Data Analysis
-                {validation.genreAnalysis.isGreatConjunction && (
-                  <span className="ml-auto text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 flex items-center gap-1">
-                    <Rocket className="h-3 w-3" />
-                    Great Conjunction
-                  </span>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <p className="text-xs text-muted-foreground">Detected Genre</p>
-                  <p className="text-sm font-medium">{validation.genreAnalysis.detectedGenre}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Success Rate</p>
-                  <p className={`text-sm font-bold ${
-                    parseFloat(validation.genreAnalysis.successRate) >= 5 ? 'text-green-600' :
-                    parseFloat(validation.genreAnalysis.successRate) >= 2 ? 'text-blue-600' :
-                    parseFloat(validation.genreAnalysis.successRate) >= 1 ? 'text-amber-600' :
-                    'text-red-600'
-                  }`}>
-                    {validation.genreAnalysis.successRate}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Lifecycle Phase</p>
-                  <p className={`text-sm font-medium ${
-                    ['proto', 'definer', 'variant_window'].includes(validation.genreAnalysis.lifecyclePhase) ? 'text-green-600' :
-                    validation.genreAnalysis.lifecyclePhase === 'mature' ? 'text-blue-600' :
-                    'text-amber-600'
-                  }`}>
-                    {validation.genreAnalysis.lifecyclePhase.replace('_', ' ')}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Trend</p>
-                  <p className={`text-sm font-medium flex items-center gap-1 ${
-                    validation.genreAnalysis.trend.includes('rising') ? 'text-green-600' :
-                    validation.genreAnalysis.trend === 'stable' ? 'text-blue-600' :
-                    'text-amber-600'
-                  }`}>
-                    {validation.genreAnalysis.trend.includes('rising') ? <TrendingUp className="h-3 w-3" /> :
-                     validation.genreAnalysis.trend.includes('declining') ? <TrendingDown className="h-3 w-3" /> : null}
-                    {validation.genreAnalysis.trend.replace('_', ' ')}
-                  </p>
-                </div>
-              </div>
-              {validation.genreAnalysis.isGreatConjunction && (
-                <div className="bg-emerald-100 p-2 rounded border border-emerald-200 mt-2">
-                  <p className="text-xs text-emerald-700 font-medium">🔥 Great Conjunction Active</p>
-                  <p className="text-sm text-emerald-800">Player demand exceeds supply in this genre. Window is open for fast movers!</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Viral Potential - New Section */}
+        {/* Viral & Social */}
         {validation.viralPotential && (
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Tv className="h-4 w-4 text-pink-500" />
-                Viral Potential
-                <span className={`ml-auto text-xs font-medium ${
-                  validation.viralPotential.streamerAppeal === 'high' ? 'text-green-600' :
-                  validation.viralPotential.streamerAppeal === 'medium' ? 'text-blue-600' :
-                  'text-muted-foreground'
+                <Play className="h-4 w-4 text-pink-500" />
+                Viral & Social Potential
+                <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
+                  validation.viralPotential.streamerAppeal === 'high' ? 'bg-emerald-100 text-emerald-700' :
+                  validation.viralPotential.streamerAppeal === 'medium' ? 'bg-blue-100 text-blue-700' :
+                  'bg-muted text-muted-foreground'
                 }`}>
-                  {validation.viralPotential.streamerAppeal === 'high' ? '🔥 Highly Streamable' :
-                   validation.viralPotential.streamerAppeal === 'medium' ? '📺 Moderately Streamable' :
-                   '📝 Low Stream Appeal'}
+                  {validation.viralPotential.streamerAppeal === 'high' ? 'Highly Streamable' :
+                   validation.viralPotential.streamerAppeal === 'medium' ? 'Moderately Streamable' :
+                   'Low Stream Appeal'}
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <ScoreBar score={validation.viralPotential.score} label="Viral Score" />
-              <p className="text-sm text-muted-foreground">{validation.viralPotential.reasoning}</p>
-              {validation.viralPotential.clipWorthiness && (
-                <div className="pt-2 border-t">
-                  <p className="text-xs text-muted-foreground">Clip-Worthy Moments:</p>
-                  <p className="text-sm">{validation.viralPotential.clipWorthiness}</p>
+            <CardContent className="space-y-2 text-sm">
+              <p className="text-muted-foreground">{validation.viralPotential.reasoning}</p>
+              {validation.viralPotential.socialFeatures && (
+                <div>
+                  <p className="text-xs font-medium">Social Features</p>
+                  <p className="text-muted-foreground">{validation.viralPotential.socialFeatures}</p>
                 </div>
               )}
             </CardContent>
           </Card>
         )}
 
-        {/* Pricing Analysis - New Section */}
-        {validation.pricingAnalysis && (
+        {/* Monetization */}
+        {validation.monetizationAnalysis && (
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-green-500" />
-                Pricing Analysis
-                <span className={`ml-auto text-xs px-2 py-0.5 rounded ${
-                  validation.pricingAnalysis.priceZone === 'impulse' ? 'bg-green-100 text-green-700' :
-                  validation.pricingAnalysis.priceZone === 'uncanny_valley' ? 'bg-red-100 text-red-700' :
-                  'bg-blue-100 text-blue-700'
+                Monetization
+                <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
+                  validation.monetizationAnalysis.potentialLevel === 'excellent' ? 'bg-emerald-100 text-emerald-700' :
+                  validation.monetizationAnalysis.potentialLevel === 'good' ? 'bg-blue-100 text-blue-700' :
+                  validation.monetizationAnalysis.potentialLevel === 'moderate' ? 'bg-amber-100 text-amber-700' :
+                  'bg-muted text-muted-foreground'
                 }`}>
-                  {validation.pricingAnalysis.priceZone === 'impulse' ? '💰 Impulse Zone' :
-                   validation.pricingAnalysis.priceZone === 'uncanny_valley' ? '⚠️ Uncanny Valley' :
-                   '💎 Premium Zone'}
+                  {validation.monetizationAnalysis.potentialLevel} potential
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <p className="text-xs text-muted-foreground">Suggested Price Range:</p>
-                <p className="text-sm font-bold text-green-700">{validation.pricingAnalysis.suggestedRange}</p>
-              </div>
-              <p className="text-sm text-muted-foreground">{validation.pricingAnalysis.reasoning}</p>
-              {validation.pricingAnalysis.priceZone === 'uncanny_valley' && (
-                <div className="bg-amber-50 p-2 rounded border border-amber-200">
-                  <p className="text-xs text-amber-700 font-medium">⚠️ Price Warning</p>
-                  <p className="text-sm text-amber-800">$10-25 is the "uncanny valley" - not cheap enough for impulse buys, not prestigious enough for hype. Consider $3-8 (viral) or $30+ (premium).</p>
+            <CardContent className="space-y-2 text-sm">
+              <p className="text-muted-foreground">{validation.monetizationAnalysis.reasoning}</p>
+              {validation.monetizationAnalysis.suggestedMethods && validation.monetizationAnalysis.suggestedMethods.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {validation.monetizationAnalysis.suggestedMethods.map((method, i) => (
+                    <span key={i} className="text-xs px-2 py-1 rounded bg-muted">{method}</span>
+                  ))}
                 </div>
               )}
             </CardContent>
@@ -699,48 +616,45 @@ export default function ValidationPage() {
 
         {/* Prototype Test */}
         {validation.prototypeTest && (
-          <Card className="border-2 border-blue-200 bg-blue-50">
+          <Card className="border-blue-200 bg-blue-50">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2 text-blue-700">
-                <Beaker className="h-4 w-4" />
-                48-Hour Prototype Test
-                <span className={`ml-auto text-xs px-2 py-0.5 rounded ${
-                  validation.prototypeTest.canTestIn48Hours 
-                    ? 'bg-green-100 text-green-700' 
-                    : 'bg-red-100 text-red-700'
-                }`}>
-                  {validation.prototypeTest.canTestIn48Hours ? 'Possible' : 'Not Feasible'}
-                </span>
+              <CardTitle className="text-sm flex items-center gap-2 text-blue-800">
+                <Eye className="h-4 w-4" />
+                Quick Test Plan
+                {validation.prototypeTest.canTestIn48Hours && (
+                  <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-blue-200 text-blue-800">
+                    Testable in 48 hours
+                  </span>
+                )}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="text-sm space-y-2">
               <div>
-                <p className="text-xs text-blue-600 font-medium">What to Test:</p>
-                <p className="text-sm text-blue-900">{validation.prototypeTest.whatToTest}</p>
+                <p className="text-xs font-medium text-blue-800">What to Test</p>
+                <p className="text-blue-700">{validation.prototypeTest.whatToTest}</p>
               </div>
               <div>
-                <p className="text-xs text-blue-600 font-medium">Success Metric:</p>
-                <p className="text-sm text-blue-900">{validation.prototypeTest.successMetric}</p>
+                <p className="text-xs font-medium text-blue-800">Success Looks Like</p>
+                <p className="text-blue-700">{validation.prototypeTest.successMetric}</p>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Pivot Suggestions - New Section */}
+        {/* Pivot Suggestions */}
         {validation.pivotSuggestions && validation.pivotSuggestions.length > 0 && validation.overallScore < 7 && (
-          <Card className="border-2 border-indigo-200 bg-indigo-50">
+          <Card className="border-indigo-200 bg-indigo-50">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2 text-indigo-700">
+              <CardTitle className="text-sm flex items-center gap-2 text-indigo-800">
                 <ArrowRight className="h-4 w-4" />
-                Pivot Suggestions
+                Consider These Pivots
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-indigo-600 mb-2">Consider these alternatives to improve your odds:</p>
               <ul className="space-y-2">
                 {validation.pivotSuggestions.map((suggestion, i) => (
-                  <li key={i} className="text-sm flex gap-2 text-indigo-800">
-                    <span className="text-indigo-500 font-bold">{i + 1}.</span>
+                  <li key={i} className="text-sm text-indigo-700 flex gap-2">
+                    <span className="text-indigo-400">{i + 1}.</span>
                     {suggestion}
                   </li>
                 ))}
@@ -749,25 +663,25 @@ export default function ValidationPage() {
           </Card>
         )}
 
-        {/* Strengths & Concerns */}
+        {/* Strengths & Concerns - Simplified */}
         <div className="grid md:grid-cols-2 gap-4">
-          <Card className="border-green-200">
+          <Card className="border-emerald-200">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2 text-green-700">
+              <CardTitle className="text-sm flex items-center gap-2 text-emerald-700">
                 <CheckCircle2 className="h-4 w-4" />
                 Strengths
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2">
-                {validation.strengths?.map((strength, i) => (
+              <ul className="space-y-1.5">
+                {validation.strengths?.map((s, i) => (
                   <li key={i} className="text-sm flex gap-2">
-                    <span className="text-green-500">✓</span>
-                    {strength}
+                    <span className="text-emerald-500">✓</span>
+                    {s}
                   </li>
                 ))}
                 {(!validation.strengths || validation.strengths.length === 0) && (
-                  <li className="text-sm text-muted-foreground italic">No clear strengths identified</li>
+                  <li className="text-sm text-muted-foreground italic">None identified</li>
                 )}
               </ul>
             </CardContent>
@@ -781,11 +695,11 @@ export default function ValidationPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2">
-                {validation.concerns?.map((concern, i) => (
+              <ul className="space-y-1.5">
+                {validation.concerns?.map((c, i) => (
                   <li key={i} className="text-sm flex gap-2">
                     <span className="text-amber-500">!</span>
-                    {concern}
+                    {c}
                   </li>
                 ))}
               </ul>
@@ -793,49 +707,50 @@ export default function ValidationPage() {
           </Card>
         </div>
 
-        {/* Suggestions */}
+        {/* Suggestions & Questions - Compact */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Lightbulb className="h-4 w-4 text-amber-500" />
-              Actionable Suggestions
+              Next Steps
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2">
-              {validation.suggestions?.map((suggestion, i) => (
+            <ul className="space-y-1.5">
+              {validation.suggestions?.map((s, i) => (
                 <li key={i} className="text-sm flex gap-2">
-                  <span className="text-primary font-bold">{i + 1}.</span>
-                  {suggestion}
+                  <span className="text-primary font-medium">{i + 1}.</span>
+                  {s}
                 </li>
               ))}
             </ul>
           </CardContent>
         </Card>
 
-        {/* Questions */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <HelpCircle className="h-4 w-4 text-blue-500" />
-              Questions to Answer
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {validation.questions?.map((question, i) => (
-                <li key={i} className="text-sm flex gap-2">
-                  <span className="text-blue-500">?</span>
-                  {question}
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+        {validation.questions && validation.questions.length > 0 && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <HelpCircle className="h-4 w-4 text-blue-500" />
+                Questions to Consider
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-1.5">
+                {validation.questions.map((q, i) => (
+                  <li key={i} className="text-sm flex gap-2 text-muted-foreground">
+                    <span className="text-blue-500">?</span>
+                    {q}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-4 pb-8">
-          <Button onClick={runValidation} variant="outline" className="gap-2">
+        <div className="flex flex-col sm:flex-row gap-3 pt-4">
+          <Button onClick={runValidation} variant="outline" size="sm" className="gap-2">
             <RefreshCw className="h-4 w-4" />
             Re-validate
           </Button>

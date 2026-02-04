@@ -1,6 +1,6 @@
 // ============================================
 // Validation Requirements Checker
-// Ensures users have completed key journey steps before validation
+// Ensures users have completed key journey steps before Roblox validation
 // ============================================
 
 import { Project, GameLoopNode, GameQuestions, SkillTreeNode } from './types';
@@ -73,7 +73,7 @@ export function checkValidationReadiness(project: Project | null): ValidationRea
     {
       id: 'title',
       label: 'Game Title',
-      description: 'Give your game a working title',
+      description: 'Give your Roblox experience a working title',
       link: '/finalize',
       completed: !!(project.finalTitle && project.finalTitle.trim().length > 0),
       priority: 'required'
@@ -81,17 +81,9 @@ export function checkValidationReadiness(project: Project | null): ValidationRea
     {
       id: 'concept',
       label: 'Game Concept',
-      description: 'Write a clear description of your game',
+      description: 'Write a clear description of your Roblox game',
       link: '/finalize',
       completed: !!(project.finalConcept && project.finalConcept.trim().length > 20),
-      priority: 'required'
-    },
-    {
-      id: 'platform',
-      label: 'Target Platform',
-      description: 'Choose your target platform (PC, Mobile, etc.)',
-      link: '/create',
-      completed: !!(project.platform && project.platform.length > 0),
       priority: 'required'
     },
     {
@@ -111,7 +103,7 @@ export function checkValidationReadiness(project: Project | null): ValidationRea
       priority: 'required'
     },
     
-    // RECOMMENDED - Highly encouraged for better validation
+    // RECOMMENDED - Highly encouraged for better Roblox validation
     {
       id: 'gameLoop',
       label: 'Game Loop Diagram',
@@ -123,7 +115,7 @@ export function checkValidationReadiness(project: Project | null): ValidationRea
     {
       id: 'gameQuestions',
       label: 'Game Details',
-      description: 'Answer key questions about your game (genre, target player, price)',
+      description: 'Answer key questions about your Roblox game (genre, target player)',
       link: '/questions',
       completed: hasValidGameQuestions(project.gameQuestions),
       priority: 'recommended'
@@ -139,7 +131,7 @@ export function checkValidationReadiness(project: Project | null): ValidationRea
     {
       id: 'vibes',
       label: 'Game Vibes',
-      description: 'Select the emotional tone of your game',
+      description: 'Select the emotional tone of your experience',
       link: '/idea',
       completed: project.vibeChips && project.vibeChips.length >= 1,
       priority: 'recommended'
@@ -161,15 +153,15 @@ export function checkValidationReadiness(project: Project | null): ValidationRea
 }
 
 /**
- * Build a comprehensive journey summary for the AI
+ * Build a comprehensive journey summary for the AI (Roblox-focused)
  */
 export function buildJourneySummary(project: Project): string {
   let summary = '';
 
-  // Basic info
-  summary += `=== PROJECT DETAILS ===\n`;
+  // Basic info - Roblox focused
+  summary += `=== ROBLOX PROJECT DETAILS ===\n`;
   summary += `Title: ${project.finalTitle || 'Not set'}\n`;
-  summary += `Platform: ${project.platform || 'Not set'}\n`;
+  summary += `Platform: Roblox\n`;
   summary += `Team Size: ${project.teamSize || 'Not set'}\n`;
   summary += `Time Horizon: ${project.timeHorizon || 'Not set'}\n`;
   summary += `Vibes: ${project.vibeChips?.length > 0 ? project.vibeChips.join(', ') : 'Not set'}\n\n`;

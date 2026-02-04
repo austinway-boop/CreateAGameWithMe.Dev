@@ -1,90 +1,70 @@
 // ============================================
-// Market Data Analysis Utilities
-// Uses real data from HTMAG, GameDiscoverCo, VGInsights, SteamDB
+// Roblox Market Data Analysis Utilities
+// Uses real data from Roblox Charts, GGAID, GameAnalytics Roblox Report
 // ============================================
 
-import genreData from './data/genreData.json';
-import benchmarks from './data/benchmarks.json';
-import greatConjunction from './data/greatConjunction.json';
+import robloxGenreData from './data/robloxGenreData.json';
+import robloxBenchmarks from './data/robloxBenchmarks.json';
 
-export type GenreKey = keyof typeof genreData.genres;
+export type RobloxGenreKey = keyof typeof robloxGenreData.genres;
 
-export interface GenreInfo {
+export interface RobloxGenreInfo {
   key: string;
   name: string;
-  successRate: number;
-  successRateDisplay: string;
-  gamesReleased: number;
-  hits: number;
-  medianRevenue: number;
-  p90Revenue: number;
-  trend: string;
+  description: string;
+  popularityRank: number;
+  growthTrend: string;
   lifecyclePhase: string;
-  winnerTakeAll: boolean;
+  competitionLevel: string;
+  monetizationPotential: string;
   devTime: string;
   teamSizeMin: number;
   recommended: boolean;
-  greatConjunction: boolean;
+  isHotGenre: boolean;
   warning: boolean;
   notes: string;
-  examples: string[];
+  topGames: Array<{ name: string; visits: string; monthly_revenue_estimate: string }>;
+  successSignals: string[];
+  retentionBenchmarks: { d1: number; d7: number; d30: number };
 }
 
-export interface MarketAnalysis {
-  genreInfo: GenreInfo | null;
-  matchedGenres: GenreInfo[];
-  isGreatConjunction: boolean;
-  conjunctionInfo: typeof greatConjunction.active_conjunctions[0] | null;
+export interface RobloxMarketAnalysis {
+  genreInfo: RobloxGenreInfo | null;
+  matchedGenres: RobloxGenreInfo[];
+  isHotGenre: boolean;
   warnings: string[];
   opportunities: string[];
   insights: string[];
+  competitorGames: Array<{ name: string; visits: string; monthly_revenue_estimate: string }>;
 }
 
-// Keywords to match concept text to genres
-const genreKeywords: Record<string, string[]> = {
-  'friend_slop': ['co-op', 'coop', 'multiplayer', 'friends', 'chaos', 'party', 'silly', '4 player', 'four player'],
-  'horror': ['horror', 'scary', 'spooky', 'creepy', 'terror', 'frightening', 'fear', 'monster', 'survival horror'],
-  'horror_casino': ['gambling', 'casino', 'roulette', 'cards', 'betting', 'poker', 'blackjack', 'slots'],
-  'job_simulator': ['simulator', 'shop', 'store', 'business', 'manage', 'run a', 'own a', 'supermarket', 'gas station', 'restaurant'],
-  'idle_incremental': ['idle', 'incremental', 'clicker', 'afk', 'offline progress', 'auto'],
-  'roguelike': ['roguelike', 'roguelite', 'permadeath', 'procedural', 'run-based', 'runs'],
-  'roguelike_deckbuilder': ['deckbuilder', 'deck builder', 'deck-builder', 'card game roguelike', 'slay the spire'],
-  'survivor_like': ['survivor', 'vampire survivors', 'bullet heaven', 'auto-shooter', 'horde'],
-  '2d_platformer': ['2d platformer', 'side-scroller', 'platforming', 'jump and run', 'metroidvania'],
-  '3d_platformer': ['3d platformer', 'collectathon', 'mario-like'],
-  'puzzle': ['puzzle', 'brain teaser', 'logic', 'match-3', 'sokoban'],
-  'management_sim': ['tycoon', 'management', 'strategy sim', 'build and manage'],
-  'farming': ['farming', 'farm sim', 'harvest', 'crops', 'stardew'],
-  'rpg': ['rpg', 'role-playing', 'jrpg', 'crpg', 'leveling', 'character progression'],
-  'narrative': ['story', 'narrative', 'visual novel', 'choice-based', 'text adventure'],
-  'tower_defense': ['tower defense', 'td game', 'defend base'],
-  'city_builder': ['city builder', 'build city', 'urban planning', 'settlement'],
-  'shooter': ['shooter', 'fps', 'first person shooter', 'shoot', 'guns'],
-  'metroidvania': ['metroidvania', 'ability gating', 'backtracking', 'hollow knight'],
-  'party_game': ['party game', 'local multiplayer', 'couch co-op', 'minigames'],
-  'vr': ['vr', 'virtual reality', 'oculus', 'quest', 'headset'],
-  'visual_novel': ['visual novel', 'vn', 'dating sim'],
-  'point_and_click': ['point and click', 'adventure game', 'lucas arts'],
-  'action_adventure': ['action adventure', 'zelda-like', 'exploration'],
-  'strategy': ['strategy', 'rts', 'turn-based', '4x', 'grand strategy'],
-  'simulation': ['simulation', 'sim'],
-  'sandbox': ['sandbox', 'creative', 'minecraft', 'building'],
-  'open_world_survival_craft': ['survival craft', 'open world survival', 'gather resources', 'build base', 'valheim'],
-  'fighting': ['fighting game', 'fighter', 'combo', 'versus'],
-  'racing': ['racing', 'driving', 'cars', 'vehicles'],
-  'sports': ['sports', 'football', 'soccer', 'basketball', 'golf']
+// Keywords to match concept text to Roblox genres
+const robloxGenreKeywords: Record<string, string[]> = {
+  'simulator': ['simulator', 'sim', 'pet sim', 'collecting', 'farming sim', 'grinding', 'afk', 'idle', 'clicker', 'pet', 'bee', 'mining'],
+  'roleplay_lifesim': ['roleplay', 'rp', 'lifesim', 'life sim', 'house', 'family', 'adopt', 'town', 'city life', 'social', 'hangout', 'bloxburg'],
+  'horror': ['horror', 'scary', 'spooky', 'monster', 'escape', 'survival horror', 'doors', 'piggy', 'backrooms', 'creepy', 'jumpscare', 'fear'],
+  'battlegrounds_pvp': ['pvp', 'battlegrounds', 'combat', 'fighting', 'battle', 'arena', 'bedwars', 'murder', 'vs', 'competitive', 'shooter', 'fps'],
+  'obby_platformer': ['obby', 'obstacle', 'parkour', 'tower', 'jumping', 'platformer', 'escape tower'],
+  'tycoon': ['tycoon', 'build', 'business', 'manage', 'factory', 'empire', 'money', 'idle tycoon'],
+  'anime_rpg': ['anime', 'rpg', 'fruits', 'devil fruit', 'shindo', 'naruto', 'one piece', 'dbz', 'dragon ball', 'gacha', 'grinding', 'leveling'],
+  'social_coopetition': ['fashion', 'dress up', 'voting', 'talent show', 'competition', 'runway', 'makeover', 'beauty', 'co-opetition', 'party'],
+  'driving_racing': ['driving', 'racing', 'car', 'vehicle', 'speed', 'drift', 'motorcycle', 'truck', 'jailbreak'],
+  'open_world_action': ['open world', 'exploration', 'adventure', 'questing', 'rpg adventure', 'survival', 'crafting', 'apocalypse'],
+  'sports_arcade': ['sports', 'soccer', 'football', 'basketball', 'baseball', 'golf', 'arcade sports', 'ball'],
+  'tower_defense': ['tower defense', 'td', 'defend', 'waves', 'towers', 'units', 'strategy'],
+  'minigames_party': ['minigames', 'mini games', 'party', 'variety', 'random games', 'collection']
 };
 
 /**
- * Detect genres from a game concept description
+ * Detect Roblox genres from a game concept description
  */
-export function detectGenres(concept: string, title: string = '', vibes: string[] = []): GenreInfo[] {
+export function detectRobloxGenres(concept: string, title: string = '', vibes: string[] = []): RobloxGenreInfo[] {
   const text = `${title} ${concept} ${vibes.join(' ')}`.toLowerCase();
-  const matchedGenres: GenreInfo[] = [];
+  const matchedGenres: RobloxGenreInfo[] = [];
   const scores: Record<string, number> = {};
 
   // Score each genre based on keyword matches
-  for (const [genreKey, keywords] of Object.entries(genreKeywords)) {
+  for (const [genreKey, keywords] of Object.entries(robloxGenreKeywords)) {
     let score = 0;
     for (const keyword of keywords) {
       if (text.includes(keyword.toLowerCase())) {
@@ -102,7 +82,7 @@ export function detectGenres(concept: string, title: string = '', vibes: string[
     .slice(0, 3);
 
   for (const [genreKey] of sortedGenres) {
-    const info = getGenreInfo(genreKey as GenreKey);
+    const info = getRobloxGenreInfo(genreKey as RobloxGenreKey);
     if (info) {
       matchedGenres.push(info);
     }
@@ -112,304 +92,330 @@ export function detectGenres(concept: string, title: string = '', vibes: string[
 }
 
 /**
- * Get detailed info about a specific genre
+ * Get detailed info about a specific Roblox genre
  */
-export function getGenreInfo(genreKey: string): GenreInfo | null {
-  const genre = genreData.genres[genreKey as GenreKey];
+export function getRobloxGenreInfo(genreKey: string): RobloxGenreInfo | null {
+  const genre = robloxGenreData.genres[genreKey as RobloxGenreKey];
   if (!genre) return null;
 
   return {
     key: genreKey,
     name: genre.name,
-    successRate: genre.success_rate,
-    successRateDisplay: `${(genre.success_rate * 100).toFixed(2)}%`,
-    gamesReleased: genre.games_released_2025,
-    hits: genre.hits_2025,
-    medianRevenue: genre.median_revenue,
-    p90Revenue: genre.p90_revenue,
-    trend: genre.trend,
+    description: genre.description,
+    popularityRank: genre.popularity_rank,
+    growthTrend: genre.growth_trend,
     lifecyclePhase: genre.lifecycle_phase,
-    winnerTakeAll: genre.winner_take_all,
+    competitionLevel: genre.competition_level,
+    monetizationPotential: genre.monetization_potential,
     devTime: genre.dev_time_typical,
     teamSizeMin: genre.team_size_minimum,
     recommended: genre.recommended,
-    greatConjunction: (genre as any).great_conjunction || false,
+    isHotGenre: (genre as any).hot_genre || false,
     warning: (genre as any).warning || false,
     notes: genre.notes,
-    examples: genre.examples
+    topGames: genre.top_games,
+    successSignals: genre.success_signals,
+    retentionBenchmarks: genre.retention_benchmarks
   };
 }
 
 /**
- * Get all genres sorted by success rate
+ * Get all Roblox genres sorted by popularity
  */
-export function getAllGenres(): GenreInfo[] {
-  return Object.entries(genreData.genres)
+export function getAllRobloxGenres(): RobloxGenreInfo[] {
+  return Object.entries(robloxGenreData.genres)
     .map(([key, genre]) => ({
       key,
       name: genre.name,
-      successRate: genre.success_rate,
-      successRateDisplay: `${(genre.success_rate * 100).toFixed(2)}%`,
-      gamesReleased: genre.games_released_2025,
-      hits: genre.hits_2025,
-      medianRevenue: genre.median_revenue,
-      p90Revenue: genre.p90_revenue,
-      trend: genre.trend,
+      description: genre.description,
+      popularityRank: genre.popularity_rank,
+      growthTrend: genre.growth_trend,
       lifecyclePhase: genre.lifecycle_phase,
-      winnerTakeAll: genre.winner_take_all,
+      competitionLevel: genre.competition_level,
+      monetizationPotential: genre.monetization_potential,
       devTime: genre.dev_time_typical,
       teamSizeMin: genre.team_size_minimum,
       recommended: genre.recommended,
-      greatConjunction: (genre as any).great_conjunction || false,
+      isHotGenre: (genre as any).hot_genre || false,
       warning: (genre as any).warning || false,
       notes: genre.notes,
-      examples: genre.examples
+      topGames: genre.top_games,
+      successSignals: genre.success_signals,
+      retentionBenchmarks: genre.retention_benchmarks
     }))
-    .sort((a, b) => b.successRate - a.successRate);
+    .sort((a, b) => a.popularityRank - b.popularityRank);
 }
 
 /**
- * Get Great Conjunction genres
+ * Get hot/trending Roblox genres
  */
-export function getGreatConjunctionGenres() {
-  return greatConjunction.active_conjunctions;
+export function getHotRobloxGenres(): string[] {
+  return robloxGenreData.hot_genres;
 }
 
 /**
- * Analyze a game concept against market data
+ * Analyze a Roblox game concept against market data
  */
-export function analyzeMarket(
+export function analyzeRobloxMarket(
   concept: string,
   title: string = '',
   vibes: string[] = [],
-  platform: string = '',
   teamSize: string = ''
-): MarketAnalysis {
-  const matchedGenres = detectGenres(concept, title, vibes);
+): RobloxMarketAnalysis {
+  const matchedGenres = detectRobloxGenres(concept, title, vibes);
   const warnings: string[] = [];
   const opportunities: string[] = [];
   const insights: string[] = [];
+  const competitorGames: Array<{ name: string; visits: string; monthly_revenue_estimate: string }> = [];
 
   const primaryGenre = matchedGenres[0] || null;
 
-  // Check for Great Conjunction
-  let conjunctionInfo = null;
-  let isGreatConjunction = false;
-
-  if (primaryGenre?.greatConjunction) {
-    isGreatConjunction = true;
-    conjunctionInfo = greatConjunction.active_conjunctions.find(
-      c => c.name.toLowerCase().includes(primaryGenre.name.toLowerCase().split(' ')[0])
-    ) || null;
-
-    opportunities.push(`🔥 GREAT CONJUNCTION: ${primaryGenre.name} is in a demand > supply window. Success rate is unusually high.`);
-    if (conjunctionInfo?.window_remaining) {
-      opportunities.push(`Window remaining: approximately ${conjunctionInfo.window_remaining}`);
+  // Check for hot genre opportunity
+  let isHotGenre = false;
+  if (primaryGenre?.isHotGenre) {
+    isHotGenre = true;
+    opportunities.push(`🔥 HOT GENRE: ${primaryGenre.name} is showing strong growth on Roblox right now!`);
+    
+    if (primaryGenre.lifecyclePhase === 'variant_window') {
+      opportunities.push(`Window is open for differentiated takes on ${primaryGenre.name}`);
+    } else if (primaryGenre.lifecyclePhase === 'proto') {
+      opportunities.push(`Early mover advantage! ${primaryGenre.name} is still being defined on Roblox`);
     }
   }
 
   // Check for warning genres
   if (primaryGenre?.warning) {
-    warnings.push(`⚠️ GENRE WARNING: ${primaryGenre.name} has a ${primaryGenre.successRateDisplay} success rate. This is in the "avoid" category.`);
+    warnings.push(`⚠️ GENRE WARNING: ${primaryGenre.name} is oversaturated on Roblox`);
     warnings.push(primaryGenre.notes);
   }
 
-  // Lifecycle phase insights
+  // Competition level insights
   if (primaryGenre) {
-    const lifecycleMessages: Record<string, string> = {
-      'proto': '🚀 Proto phase - Maximum opportunity! Define the genre.',
-      'definer': '⚡ Definer phase - Fast follow opportunity available.',
-      'variant_window': '✨ Variant window - Good opportunity for differentiated takes.',
-      'mature': '📊 Mature market - Need strong differentiation to stand out.',
-      'oligopoly': '⚠️ Oligopoly phase - Window closing, quality bar very high.',
-      'oversaturated': '🔴 Oversaturated - Extremely difficult to break through.',
-      'dead': '💀 Market essentially dead for new entries.',
-      'evergreen': '🌲 Evergreen genre - Consistent demand over time.',
-      'niche': '🎯 Niche market - Dedicated audience but limited scale.'
+    const competitionMessages: Record<string, string> = {
+      'extreme': '🔴 Extreme competition - need exceptional quality and unique hook',
+      'very_high': '⚠️ Very high competition - strong differentiation required',
+      'high': '📊 High competition - need clear unique selling point',
+      'moderate': '✨ Moderate competition - good opportunity with quality execution',
+      'low': '🚀 Low competition - excellent opportunity for first movers!'
     };
 
-    const lifecycleMsg = lifecycleMessages[primaryGenre.lifecyclePhase];
-    if (lifecycleMsg) {
-      insights.push(lifecycleMsg);
+    const compMsg = competitionMessages[primaryGenre.competitionLevel];
+    if (compMsg) {
+      insights.push(compMsg);
     }
 
-    // Trend insights
+    // Growth trend insights
     const trendMessages: Record<string, string> = {
-      'rising_fast': '📈 Rapidly rising trend - Great timing!',
-      'rising': '📈 Rising trend - Good momentum.',
-      'stable': '➡️ Stable trend - Consistent market.',
-      'consistently_strong': '💪 Consistently strong performer.',
-      'declining': '📉 Declining trend - Consider implications.',
-      'stagnant': '😐 Stagnant market growth.'
+      'rising_fast': '📈 Rapidly rising - excellent timing!',
+      'rising': '📈 Growing trend - good momentum',
+      'stable': '➡️ Stable genre - consistent player interest',
+      'declining': '📉 Declining trend - consider pivoting'
     };
 
-    const trendMsg = trendMessages[primaryGenre.trend];
+    const trendMsg = trendMessages[primaryGenre.growthTrend];
     if (trendMsg) {
       insights.push(trendMsg);
-    }
-
-    // Winner-take-all warning
-    if (primaryGenre.winnerTakeAll) {
-      warnings.push(`⚠️ Winner-take-all market: Only top games succeed in ${primaryGenre.name}. High risk for new entries.`);
     }
 
     // Team size check
     const teamSizeNum = parseInt(teamSize) || 1;
     if (teamSizeNum < primaryGenre.teamSizeMin) {
-      warnings.push(`Team size alert: ${primaryGenre.name} typically requires ${primaryGenre.teamSizeMin}+ team members. You have ${teamSizeNum}.`);
+      warnings.push(`Team size alert: ${primaryGenre.name} typically requires ${primaryGenre.teamSizeMin}+ team members`);
     }
 
-    // Revenue insights
-    insights.push(`Median revenue for successful ${primaryGenre.name} games: $${primaryGenre.medianRevenue.toLocaleString()}`);
-    insights.push(`Top 10% revenue potential: $${primaryGenre.p90Revenue.toLocaleString()}`);
+    // Add top competitors
+    competitorGames.push(...primaryGenre.topGames);
+
+    // Retention benchmarks
+    insights.push(`Target D1 retention for ${primaryGenre.name}: ${primaryGenre.retentionBenchmarks.d1}%+`);
     insights.push(`Typical dev time: ${primaryGenre.devTime}`);
-    insights.push(`In 2025: ${primaryGenre.gamesReleased} released, ${primaryGenre.hits} achieved 1000+ reviews (success rate: ${primaryGenre.successRateDisplay})`);
-  }
+    
+    // Monetization potential
+    const monetizationMessages: Record<string, string> = {
+      'excellent': '💰 Excellent monetization potential - strong revenue opportunity',
+      'good': '💵 Good monetization potential',
+      'moderate': '💲 Moderate monetization - may need creative strategies',
+      'low': '⚠️ Low monetization potential - consider hybrid approaches'
+    };
+    
+    const monMsg = monetizationMessages[primaryGenre.monetizationPotential];
+    if (monMsg) {
+      insights.push(monMsg);
+    }
 
-  // Platform-specific insights
-  if (platform.toLowerCase().includes('mobile')) {
-    warnings.push('📱 Mobile requires 10x more polish for discoverability. Consider soft launch strategy.');
-    insights.push(`Mobile soft launch KPIs: D1 retention >40%, D7 >20%, LTV/CPI ratio >3x`);
-  }
-
-  if (platform.toLowerCase().includes('vr')) {
-    warnings.push('🥽 VR has a tiny market with high dev costs. Only Beat Saber-level hits survive.');
+    // Success signals
+    if (primaryGenre.successSignals.length > 0) {
+      insights.push(`Key success signals: ${primaryGenre.successSignals.join(', ')}`);
+    }
   }
 
   return {
     genreInfo: primaryGenre,
     matchedGenres,
-    isGreatConjunction,
-    conjunctionInfo,
+    isHotGenre,
     warnings,
     opportunities,
-    insights
+    insights,
+    competitorGames
   };
 }
 
 /**
- * Get price psychology insights
+ * Get Roblox retention benchmarks
  */
-export function getPriceInsights(pricePoint: number): string[] {
-  const insights: string[] = [];
-  const priceData = benchmarks.price_psychology;
-
-  if (pricePoint >= priceData.impulse_zone.range[0] && pricePoint <= priceData.impulse_zone.range[1]) {
-    insights.push(`💰 Impulse price zone ($${priceData.impulse_zone.range[0]}-$${priceData.impulse_zone.range[1]}): ${priceData.impulse_zone.behavior}`);
-    insights.push('HIGH viral coefficient - streamers will say "JUST BUY IT"');
-  } else if (pricePoint >= priceData.uncanny_valley.range[0] && pricePoint <= priceData.uncanny_valley.range[1]) {
-    insights.push(`⚠️ PRICE WARNING: $${pricePoint} is in the "uncanny valley" ($${priceData.uncanny_valley.range[0]}-$${priceData.uncanny_valley.range[1]})`);
-    insights.push(priceData.uncanny_valley.behavior);
-    insights.push('Consider pricing at $7.99 (impulse) or $29.99+ (premium)');
-  } else if (pricePoint >= priceData.premium_zone.range[0]) {
-    insights.push(`💎 Premium price zone: ${priceData.premium_zone.behavior}`);
-    insights.push(priceData.premium_zone.requirement);
-  }
-
-  return insights;
+export function getRobloxRetentionBenchmarks() {
+  return robloxBenchmarks.retention_benchmarks;
 }
 
 /**
- * Get development benchmarks
+ * Get Roblox session time benchmarks
  */
-export function getDevBenchmarks() {
-  return benchmarks.development_benchmarks;
+export function getRobloxSessionBenchmarks() {
+  return robloxBenchmarks.session_time_benchmarks;
 }
 
 /**
- * Get Steam market statistics
+ * Get Roblox CCU benchmarks
  */
-export function getSteamStats() {
-  return benchmarks.steam_market_2025;
+export function getRobloxCCUBenchmarks() {
+  return robloxBenchmarks.concurrent_users_benchmarks;
 }
 
 /**
- * Get validation timeline recommendations
+ * Get Roblox monetization benchmarks
  */
-export function getValidationTimeline() {
-  return benchmarks.validation_timeline;
+export function getRobloxMonetizationBenchmarks() {
+  return robloxBenchmarks.monetization_benchmarks;
 }
 
 /**
- * Get anti-patterns to avoid
+ * Get Roblox platform statistics
  */
-export function getAntiPatterns() {
-  return benchmarks.anti_patterns;
+export function getRobloxPlatformStats() {
+  return robloxBenchmarks.platform_stats_2025;
 }
 
 /**
- * Get success stories for inspiration
+ * Get Roblox success patterns
  */
-export function getSuccessStories() {
-  return benchmarks.success_stories_rapid;
+export function getRobloxSuccessPatterns() {
+  return robloxBenchmarks.success_patterns;
 }
 
 /**
- * Generate pivot suggestions based on current concept
+ * Get Roblox anti-patterns to avoid
  */
-export function generatePivotSuggestions(currentGenres: GenreInfo[]): string[] {
+export function getRobloxAntiPatterns() {
+  return robloxBenchmarks.anti_patterns;
+}
+
+/**
+ * Get Roblox validation checklist
+ */
+export function getRobloxValidationChecklist() {
+  return robloxBenchmarks.validation_checklist;
+}
+
+/**
+ * Generate pivot suggestions for Roblox games
+ */
+export function generateRobloxPivotSuggestions(currentGenres: RobloxGenreInfo[]): string[] {
   const suggestions: string[] = [];
-  const conjunctions = getGreatConjunctionGenres();
+  const hotGenres = getHotRobloxGenres();
 
-  // If not in a great conjunction, suggest pivoting to one
-  const isInConjunction = currentGenres.some(g => g.greatConjunction);
+  // If not in a hot genre, suggest pivoting to one
+  const isInHotGenre = currentGenres.some(g => g.isHotGenre);
   
-  if (!isInConjunction) {
-    suggestions.push('Consider adding co-op multiplayer for "friend-slop" viral potential (15% success rate)');
-    suggestions.push('Adding horror elements could 3x your success rate (horror accepts rough graphics)');
+  if (!isInHotGenre) {
+    suggestions.push('Consider adding horror elements - horror games accept jank and are highly streamable');
+    suggestions.push('Social/multiplayer features can dramatically increase retention and virality');
+    suggestions.push('Fashion/voting mechanics (social co-opetition) are trending with untapped potential');
   }
 
   // Check for specific issues
   const hasWarningGenre = currentGenres.some(g => g.warning);
   if (hasWarningGenre) {
-    suggestions.push('Your primary genre has very low success rates. Consider pivoting to: Job Simulator, Horror, or Idle/Incremental');
+    suggestions.push('Your genre (obby/platformer) is extremely saturated. Consider: Tower-style mechanics, horror elements, or unique twist');
   }
 
-  // Add conjunction-specific suggestions
-  for (const conjunction of conjunctions.slice(0, 3)) {
-    suggestions.push(`Pivot to ${conjunction.name}: ${conjunction.opportunity_score}% opportunity score, window: ${conjunction.window_remaining}`);
+  // Add hot genre suggestions
+  const hotGenreInfo = hotGenres.map(g => getRobloxGenreInfo(g)).filter(Boolean) as RobloxGenreInfo[];
+  for (const genre of hotGenreInfo.slice(0, 2)) {
+    if (!currentGenres.some(cg => cg.key === genre.key)) {
+      suggestions.push(`Pivot to ${genre.name}: ${genre.notes}`);
+    }
   }
+
+  // Add Roblox-specific suggestions
+  suggestions.push('Open world action has high demand but low supply - 14M searches, few quality games');
+  suggestions.push('Sports games are underserved - localized content (Brazil soccer, etc.) shows strong demand');
 
   return suggestions.slice(0, 5);
 }
 
 /**
- * Build market context for AI prompt
+ * Build Roblox market context for AI prompt
  */
-export function buildMarketContext(
+export function buildRobloxMarketContext(
   concept: string,
   title: string,
   vibes: string[],
-  platform: string,
   teamSize: string
 ): string {
-  const analysis = analyzeMarket(concept, title, vibes, platform, teamSize);
-  const steamStats = getSteamStats();
+  const analysis = analyzeRobloxMarket(concept, title, vibes, teamSize);
+  const platformStats = getRobloxPlatformStats();
+  const retentionBenchmarks = getRobloxRetentionBenchmarks();
+  const sessionBenchmarks = getRobloxSessionBenchmarks();
+  const ccuBenchmarks = getRobloxCCUBenchmarks();
   
   let context = `
-=== REAL MARKET DATA (Use this to inform your analysis) ===
+=== ROBLOX MARKET DATA (February 2026) ===
 
-STEAM MARKET 2025:
-- Total games released: ${steamStats.total_games_released.toLocaleString()}
-- Games with 1000+ reviews (success threshold): ${steamStats.games_with_1000_reviews}
-- Overall success rate: ${(steamStats.overall_success_rate * 100).toFixed(2)}%
-- Median revenue (all games): $${steamStats.median_revenue_all.toLocaleString()}
+PLATFORM OVERVIEW:
+- Daily Active Users: ${(platformStats.daily_active_users / 1000000).toFixed(1)} million
+- Average play time: ${platformStats.hours_per_day_average} hours/day per user
+- Total experiences: 40+ million (most never get players)
+- Creator earnings (2024): $${(platformStats.creator_earnings_annual / 1000000).toFixed(0)}M total
+- Top 1000 creators average: $${(platformStats.top_1000_creator_earnings / 1000000).toFixed(1)}M each
+
+SUCCESS THRESHOLDS:
+- Breakout hit: ${ccuBenchmarks.breakout_hit.ccu.toLocaleString()}+ CCU (${ccuBenchmarks.breakout_hit.monthly_revenue_estimate}/month)
+- Successful game: ${ccuBenchmarks.successful.ccu.toLocaleString()}+ CCU (${ccuBenchmarks.successful.monthly_revenue_estimate}/month)
+- Viable game: ${ccuBenchmarks.viable.ccu.toLocaleString()}+ CCU (${ccuBenchmarks.viable.monthly_revenue_estimate}/month)
+- Struggling: <${ccuBenchmarks.growing.ccu} CCU - needs major changes
+
+RETENTION TARGETS (must hit for viability):
+- D1 (Day 1) retention: ${retentionBenchmarks.target_for_success.d1_minimum}%+ minimum
+- D7 retention: ${retentionBenchmarks.target_for_success.d7_minimum}%+ minimum
+- D30 retention: ${retentionBenchmarks.target_for_success.d30_minimum}%+ minimum
+- Top 10% games: D1=${retentionBenchmarks.top_10_percent.d1}%, D7=${retentionBenchmarks.top_10_percent.d7}%, D30=${retentionBenchmarks.top_10_percent.d30}%
+
+SESSION TIME TARGETS:
+- Magic threshold: ${sessionBenchmarks.magic_threshold.minutes}+ minutes (viral potential unlocks)
+- Top 10%: ${sessionBenchmarks.top_10_percent.minutes}+ minutes
+- First session critical: ${sessionBenchmarks.first_session_critical.target_minutes}+ minutes or players leave
 
 `;
 
   if (analysis.genreInfo) {
     context += `DETECTED PRIMARY GENRE: ${analysis.genreInfo.name}
-- Success rate: ${analysis.genreInfo.successRateDisplay} (${analysis.genreInfo.hits}/${analysis.genreInfo.gamesReleased} games succeeded in 2025)
-- Lifecycle phase: ${analysis.genreInfo.lifecyclePhase}
-- Trend: ${analysis.genreInfo.trend}
-- Median revenue for hits: $${analysis.genreInfo.medianRevenue.toLocaleString()}
-- Top 10% revenue: $${analysis.genreInfo.p90Revenue.toLocaleString()}
+- Competition level: ${analysis.genreInfo.competitionLevel}
+- Growth trend: ${analysis.genreInfo.growthTrend}
+- Lifecycle: ${analysis.genreInfo.lifecyclePhase}
+- Monetization potential: ${analysis.genreInfo.monetizationPotential}
 - Typical dev time: ${analysis.genreInfo.devTime}
 - Minimum team size: ${analysis.genreInfo.teamSizeMin}
-- Similar games: ${analysis.genreInfo.examples.join(', ')}
-- Notes: ${analysis.genreInfo.notes}
-${analysis.genreInfo.warning ? '⚠️ WARNING: This genre is on the "avoid" list due to very low success rates.' : ''}
-${analysis.genreInfo.greatConjunction ? '🔥 GREAT CONJUNCTION: This genre has unusually high success rates right now!' : ''}
+- Target D1 retention: ${analysis.genreInfo.retentionBenchmarks.d1}%
+${analysis.genreInfo.warning ? '⚠️ WARNING: This genre is oversaturated on Roblox!' : ''}
+${analysis.genreInfo.isHotGenre ? '🔥 HOT GENRE: This is trending with high growth potential!' : ''}
+
+TOP COMPETITORS (study these):
+${analysis.competitorGames.map(g => `- ${g.name}: ${g.visits} visits, ~${g.monthly_revenue_estimate}/month`).join('\n')}
+
+SUCCESS SIGNALS FOR THIS GENRE:
+${analysis.genreInfo.successSignals.map(s => `- ${s}`).join('\n')}
+
+GENRE NOTES: ${analysis.genreInfo.notes}
 
 `;
   }
@@ -417,7 +423,7 @@ ${analysis.genreInfo.greatConjunction ? '🔥 GREAT CONJUNCTION: This genre has 
   if (analysis.matchedGenres.length > 1) {
     context += `SECONDARY GENRES DETECTED:\n`;
     for (const genre of analysis.matchedGenres.slice(1)) {
-      context += `- ${genre.name}: ${genre.successRateDisplay} success rate\n`;
+      context += `- ${genre.name}: ${genre.competitionLevel} competition, ${genre.growthTrend} trend\n`;
     }
     context += '\n';
   }
@@ -430,24 +436,52 @@ ${analysis.genreInfo.greatConjunction ? '🔥 GREAT CONJUNCTION: This genre has 
     context += `WARNINGS:\n${analysis.warnings.map(w => `- ${w}`).join('\n')}\n\n`;
   }
 
-  if (analysis.conjunctionInfo) {
-    context += `GREAT CONJUNCTION DETAILS:
-- Status: ${analysis.conjunctionInfo.status}
-- Opportunity score: ${analysis.conjunctionInfo.opportunity_score}/100
-- Window remaining: ${analysis.conjunctionInfo.window_remaining}
-- Success examples: ${analysis.conjunctionInfo.success_examples.map(e => e.name).join(', ')}
-- Key characteristics: ${analysis.conjunctionInfo.characteristics.join(', ')}
+  // Hot genres to consider
+  const hotGenres = getHotRobloxGenres();
+  context += `HOT GENRES ON ROBLOX RIGHT NOW:
+${hotGenres.map(g => {
+  const info = getRobloxGenreInfo(g);
+  return info ? `- ${info.name}: ${info.notes}` : '';
+}).filter(Boolean).join('\n')}
 
 `;
-  }
 
-  // Add anti-patterns
-  const antiPatterns = getAntiPatterns();
-  context += `ANTI-PATTERNS TO FLAG:
-Development: ${antiPatterns.development.map(p => p.pattern).join(', ')}
-Marketing: ${antiPatterns.marketing.map(p => p.pattern).join(', ')}
+  // Anti-patterns
+  const antiPatterns = getRobloxAntiPatterns();
+  context += `ROBLOX-SPECIFIC ANTI-PATTERNS TO FLAG:
+Development: ${antiPatterns.development.slice(0, 3).map(p => p.pattern).join(', ')}
+Design: ${antiPatterns.design.slice(0, 3).map(p => p.pattern).join(', ')}
+
+`;
+
+  // Roblox-specific factors
+  context += `ROBLOX AUDIENCE FACTORS:
+- Primary audience: Ages 9-15 (largest), 16-24 (growing, higher spending)
+- Device split: 55% mobile, 35% desktop, 10% console
+- Players expect weekly updates from top games
+- Social/multiplayer features are critical for retention
+- Streamability matters - horror and social games spread organically
 
 `;
 
   return context;
 }
+
+// Legacy exports for backward compatibility (redirect to Roblox versions)
+export const detectGenres = detectRobloxGenres;
+export const getGenreInfo = getRobloxGenreInfo;
+export const getAllGenres = getAllRobloxGenres;
+export const analyzeMarket = analyzeRobloxMarket;
+export const buildMarketContext = buildRobloxMarketContext;
+export const generatePivotSuggestions = generateRobloxPivotSuggestions;
+export const getAntiPatterns = getRobloxAntiPatterns;
+export const getDevBenchmarks = () => robloxBenchmarks.development_velocity;
+export const getSteamStats = getRobloxPlatformStats; // Redirect to Roblox stats
+export const getValidationTimeline = getRobloxValidationChecklist;
+export const getSuccessStories = getRobloxSuccessPatterns;
+export const getPriceInsights = () => []; // Not applicable for Roblox (Robux-based)
+
+// Type exports for backward compatibility
+export type GenreKey = RobloxGenreKey;
+export type GenreInfo = RobloxGenreInfo;
+export type MarketAnalysis = RobloxMarketAnalysis;

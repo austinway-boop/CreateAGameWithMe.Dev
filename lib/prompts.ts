@@ -1,9 +1,10 @@
 // ============================================
 // AI Prompt Templates
+// Roblox-Focused Validation
 // ============================================
 
 import { IkigaiChip, RemixConstraints, IdeaSpark, GameLoopNode } from './types';
-import { buildMarketContext, analyzeMarket, generatePivotSuggestions, getPriceInsights } from './marketData';
+import { buildRobloxMarketContext, analyzeRobloxMarket, generateRobloxPivotSuggestions, getRobloxRetentionBenchmarks, getRobloxCCUBenchmarks } from './marketData';
 
 export function buildStructureIdeaPrompt(
   ideaDescription: string,
@@ -175,24 +176,31 @@ export interface ValidationResult {
     whatToTest: string;
     successMetric: string;
   };
-  // New fields from market data integration
+  // Roblox-specific fields
   genreAnalysis?: {
     detectedGenre: string;
-    successRate: string;
+    competitionLevel: string;
     lifecyclePhase: string;
-    isGreatConjunction: boolean;
+    isHotGenre: boolean;
     trend: string;
+    topCompetitors: string[];
+  };
+  retentionAnalysis?: {
+    predictedD1: string;
+    predictedD7: string;
+    sessionTimePrediction: string;
+    reasoning: string;
   };
   viralPotential?: {
     score: number;
     reasoning: string;
     streamerAppeal: 'high' | 'medium' | 'low';
-    clipWorthiness: string;
+    socialFeatures: string;
   };
-  pricingAnalysis?: {
-    suggestedRange: string;
+  monetizationAnalysis?: {
+    suggestedMethods: string[];
     reasoning: string;
-    priceZone: 'impulse' | 'uncanny_valley' | 'premium';
+    potentialLevel: 'excellent' | 'good' | 'moderate' | 'low';
   };
   pivotSuggestions?: string[];
 }
@@ -220,12 +228,14 @@ export function buildValidationPrompt(
   const nodeCount = gameLoop.length;
   const hasConnections = gameLoop.some(n => n.connections.length > 0);
 
-  // Get real market data context
-  const marketContext = buildMarketContext(concept, title, vibes, platform, teamSize);
+  // Get Roblox market data context
+  const marketContext = buildRobloxMarketContext(concept, title, vibes, teamSize);
   
   // Get market analysis for pivot suggestions
-  const marketAnalysis = analyzeMarket(concept, title, vibes, platform, teamSize);
-  const pivotSuggestions = generatePivotSuggestions(marketAnalysis.matchedGenres);
+  const marketAnalysis = analyzeRobloxMarket(concept, title, vibes, teamSize);
+  const pivotSuggestions = generateRobloxPivotSuggestions(marketAnalysis.matchedGenres);
+  const retentionBenchmarks = getRobloxRetentionBenchmarks();
+  const ccuBenchmarks = getRobloxCCUBenchmarks();
   
   // Include journey summary if available
   const journeySection = journeySummary ? `
@@ -236,27 +246,26 @@ ${journeySummary}
 Use this complete context to provide more accurate validation. Pay attention to:
 - Their self-identified risks and target audience
 - The skill tree they've defined (complexity indicator)
-- Their price point reasoning
 - What they say the game is NOT for
 - The emotions they want to evoke
 - Similar games they mentioned
 
 ` : '';
 
-  return `You are a BRUTALLY HONEST game design consultant who has shipped 20+ games and seen hundreds of indie projects fail. Your job is to give real, actionable validation — not encouragement theater.
+  return `You are a BRUTALLY HONEST Roblox game design consultant who has shipped 20+ experiences and helped developers reach 10K+ CCU. Your job is to give real, actionable validation for ROBLOX games — not generic advice.
 
 YOUR MINDSET:
-- Only 3% of Steam games achieve 1000+ reviews (success threshold). Your job is to help this one reach that bar.
-- Vague ideas kill projects. Push for specificity.
-- "Interesting" is not enough. Games need to be COMPELLING.
-- Be the friend who tells them their fly is down, not the one who lets them walk into a meeting.
-- If something is genuinely good, say so. But don't inflate praise.
-- USE THE REAL MARKET DATA BELOW to inform your analysis. Don't make up statistics.
-- Use the FULL JOURNEY CONTEXT to understand what the user has already thought through.
+- Roblox has 40+ million experiences but only a tiny fraction get consistent players
+- Success on Roblox = sustained 1,000+ CCU and profitable through DevEx
+- Roblox players (primarily ages 9-15) have different expectations than Steam/PC gamers
+- Roblox players expect WEEKLY updates from games they play regularly
+- Social/multiplayer features are CRITICAL - this is not a single-player platform
+- Mobile (55% of players) must work well - small screens, touch controls
+- BE SPECIFIC about Roblox mechanics, not generic game design advice
 
 ${journeySection}${marketContext}
 
-GAME CONCEPT TO VALIDATE:
+GAME CONCEPT TO VALIDATE (FOR ROBLOX):
 
 Title: "${title}"
 
@@ -264,7 +273,7 @@ Concept:
 ${concept}
 
 Context:
-- Platform: ${platform || 'Not specified'}
+- Platform: Roblox
 - Team Size: ${teamSize || 'Solo (assumed)'}  
 - Time Horizon: ${timeHorizon || 'Not specified'}
 - Desired Vibes: ${vibes.length > 0 ? vibes.join(', ') : 'Not specified'}
@@ -272,141 +281,152 @@ Context:
 Game Loop (${nodeCount} nodes defined${!hasConnections && nodeCount > 0 ? ', WARNING: no connections between nodes' : ''}):
 ${loopDescription}
 
-=== STRICT SCORING CRITERIA (informed by real data) ===
+=== ROBLOX SUCCESS SCORING ===
 
-Score 9-10: Exceptional. In a Great Conjunction genre OR clear hook with proven demand. Achievable scope. Rare.
-Score 7-8: Solid. Good genre choice (>3% success rate), minor gaps, ready for prototyping.
-Score 5-6: Promising but flawed. Has potential but genre concerns OR missing key elements.
-Score 3-4: Significant problems. In a warning genre (<1% success rate) OR fundamental issues.
-Score 1-2: Back to drawing board. Genre is dead, concept too vague, or impossible scope.
+Score 9-10: Exceptional. Hot genre + clear differentiator + achievable scope + social features. Ready to build.
+Score 7-8: Strong. Good genre choice, clear loop, minor gaps. Prototype immediately.
+Score 5-6: Promising but risky. Has potential but missing key Roblox success factors.
+Score 3-4: Major concerns. Oversaturated genre, no social features, or scope issues.
+Score 1-2: Rethink entirely. Would be lost among 40M+ experiences.
 
-=== RED FLAGS TO WATCH FOR ===
+=== ROBLOX-SPECIFIC RED FLAGS ===
 
-INSTANT CONCERNS (call these out explicitly):
-- "It's like X but better" with no concrete differentiator
-- Requiring AI/procedural generation to be "fun" (crutch, not feature)
-- Needing multiplayer for a solo dev with no networking experience
-- Open world/sandbox with no clear goals
-- "Players create their own fun" (lazy design)
-- Story-driven with no mention of gameplay
-- No clear win/lose/progress condition
-- Mechanic soup (too many systems, no focus)
-- "It'll be fun because I like this genre" (not market validation)
-- Building in a "dead" or "oversaturated" genre without exceptional differentiation
+INSTANT CONCERNS (call out explicitly):
+- No social/multiplayer features (Roblox is inherently social)
+- "It's like [top Roblox game] but better" with no specific differentiator
+- Scope too large for team size (compare to similar successful games)
+- No clear progression or collection mechanics
+- Single-player focused design (rarely works on Roblox)
+- Tutorial longer than 2 minutes (D1 retention killer)
+- No monetization plan (Game Passes, Developer Products, etc.)
+- Building in oversaturated genre (obby) without exceptional twist
+- Expecting success without weekly update cadence
 
-SCOPE DELUSIONS (be realistic):
-- 3D for solo devs = 2-3x time multiplier minimum
-- Multiplayer = requires dedicated servers, anti-cheat, matchmaking
-- "Procedural" anything = needs heavy content design anyway
-- Mobile = needs 10x more polish for discoverability
-- VR = 0.27% success rate, tiny market, hardware barriers
-- 2D Platformer = 0.18% success rate, median revenue $467 - extreme caution
-- Multi-year first games have 95% failure rate
+ROBLOX SCOPE REALITIES:
+- Simulators typically take 2-6 months
+- Roleplay/lifesim games need 6-12 months for content
+- Horror can succeed in 1-4 months (jank is acceptable)
+- Tower Defense in 3-6 months
+- First-time devs should target 1-3 month scope MAX
+- Solo devs need simple visual style or use asset toolbox
 
-=== VALIDATION DIMENSIONS ===
+=== ROBLOX VALIDATION DIMENSIONS ===
 
-1. MARKET FIT (use the real data above)
-- Reference the actual success rates and revenue data provided
-- WHO specifically would play this? Compare to the similar games listed
-- Is this in a Great Conjunction (demand > supply) or an oversaturated market?
-- Would this get lost among the 20,000+ games released on Steam this year?
+1. ROBLOX MARKET FIT
+- Compare directly to the TOP COMPETITORS listed in market data
+- Is this genre hot (Horror, Anime RPG, Social Co-opetition, Open World Action, Sports)?
+- Is this genre oversaturated (Obby/Platformer)?
+- What's the competition level and lifecycle phase?
+- Would Roblox's algorithm recommend this to players?
 
-2. SCOPE REALITY CHECK
-- Compare their timeline to the "typical dev time" for this genre
-- What's the MINIMUM viable version that tests the core fun?
-- What features could be cut and still have a game?
-- Does their team size match the minimum required for this genre?
+2. RETENTION PREDICTION (Critical for Roblox)
+- Target benchmarks: D1 ${retentionBenchmarks.target_for_success.d1_minimum}%+, D7 ${retentionBenchmarks.target_for_success.d7_minimum}%+
+- Will players get to "the fun" in first 5 minutes? (First session must be 8+ minutes)
+- Is there a reason to come back tomorrow? (Daily rewards, progression, social)
+- What's the "one more round" hook?
 
-3. UNIQUENESS (brutal honesty)
-- Reference the similar games/examples provided in the market data
-- What EXACTLY makes this different from those examples?
-- Is the "unique" part actually the fun part, or is it a gimmick?
-- Would anyone choose this over established competitors?
+3. SOCIAL & VIRAL POTENTIAL (Roblox-specific)
+- Can friends play together meaningfully?
+- Would streamers/YouTubers want to play this? (Horror and social games spread fastest)
+- Are there shareable moments? (Funny fails, achievements, competitive plays)
+- Does this leverage Roblox's friends-playing notification system?
 
-4. LOOP ANALYSIS (mechanical)
-- What does the player DO every 30 seconds? (not story, not vibes — ACTIONS)
-- What's the "one more turn" hook? If none exists, this will fail.
-- Where's the skill expression or meaningful choice?
-- Is there progression? What makes hour 10 different from hour 1?
+4. MONETIZATION FIT
+- Game Passes: What permanent unlocks make sense?
+- Developer Products: What consumables/currency work?
+- Private Servers: Does this game benefit from private play?
+- Does monetization enhance fun rather than gate it?
 
-5. VIRAL POTENTIAL (new dimension)
-- Is this streamable? Would it create clip-worthy moments?
-- Does it have "friend-slop" potential (co-op chaos)?
-- Horror games accept jank and have 3x the success rate of platformers
+5. UPDATE SUSTAINABILITY
+- Can this game be updated weekly?
+- Is there a clear content roadmap?
+- What seasonal events could work?
 
 === OUTPUT FORMAT ===
 
 {
   "overallScore": 5,
   "verdict": "needs_work",
-  "summary": "2-3 sentences referencing the actual market data. Be direct.",
-  "hardTruth": "The ONE thing they most need to hear. Reference real statistics if relevant.",
-  "strengths": ["Only genuine strengths. 2-4 max. Don't pad this list."],
-  "concerns": ["Real concerns with data backing. Be specific."],
-  "dealbreakers": ["Issues that MUST be addressed or project will fail. Include genre warnings if applicable."],
-  "suggestions": ["Specific, actionable. Reference successful examples."],
-  "questions": ["Questions that expose gaps in their thinking."],
+  "summary": "2-3 sentences about Roblox market fit. Reference the competitor games and benchmarks.",
+  "hardTruth": "The ONE thing that will determine success or failure on Roblox.",
+  "strengths": ["Genuine strengths for Roblox specifically. 2-4 max."],
+  "concerns": ["Roblox-specific concerns. Reference market data."],
+  "dealbreakers": ["Issues that will prevent success on Roblox. Be specific."],
+  "suggestions": ["Specific Roblox advice. Reference successful Roblox games."],
+  "questions": ["Questions about their Roblox strategy."],
   "marketFit": {
     "score": 5,
-    "reasoning": "Reference the real success rates and market data provided",
-    "targetAudience": "Specific demographic, compare to similar game audiences",
+    "reasoning": "Compare to Roblox competitors listed in market data",
+    "targetAudience": "Specific Roblox demographic (ages, interests)",
     "competitorCount": "saturated",
-    "discoverabilityRisk": "Reference the games released vs success rate stats"
+    "discoverabilityRisk": "How hard to get noticed among 40M+ experiences"
   },
   "scopeAssessment": {
     "score": 4,
-    "reasoning": "Compare to typical dev time for this genre",
-    "timeEstimate": "Realistic range based on genre benchmarks",
-    "biggestRisks": ["Risk based on team size vs genre requirements", "Content risk"],
-    "mvpSuggestion": "The smallest possible version that proves the concept works"
+    "reasoning": "Compare to dev time benchmarks for this Roblox genre",
+    "timeEstimate": "Based on Roblox-specific benchmarks",
+    "biggestRisks": ["Team size vs genre requirements", "Content velocity risk"],
+    "mvpSuggestion": "Minimum version to test on Roblox and get real player data"
   },
   "uniqueness": {
     "score": 3,
-    "reasoning": "Compare to the similar games listed in market data",
-    "similarGames": ["Use the examples from market data", "Plus any others you know"],
-    "differentiator": "The ONE thing that's actually different, or null if nothing",
+    "reasoning": "Compare to the Roblox top games in this genre",
+    "similarGames": ["Roblox competitors from market data"],
+    "differentiator": "What makes this different ON ROBLOX",
     "isGimmickOrCore": "gimmick"
   },
   "loopAnalysis": {
     "score": 6,
-    "reasoning": "Analysis of moment-to-moment gameplay",
-    "missingElements": ["Clear rewards", "Meaningful progression"],
+    "reasoning": "Roblox-style loop analysis",
+    "missingElements": ["Social features", "Collection/progression"],
     "retentionPrediction": "low",
-    "sessionLength": "Predicted session length"
+    "sessionLength": "Predicted session (target: ${retentionBenchmarks.top_10_percent ? '30+' : '10+'} min for success)"
   },
   "prototypeTest": {
     "canTestIn48Hours": true,
-    "whatToTest": "The ONE core mechanic to validate first",
-    "successMetric": "How they'll know if it's working"
+    "whatToTest": "The core Roblox mechanic to validate",
+    "successMetric": "Roblox-specific KPI (D1 retention, session time, etc.)"
   },
   "genreAnalysis": {
-    "detectedGenre": "The primary genre detected from the concept",
-    "successRate": "The actual success rate from market data",
-    "lifecyclePhase": "proto/definer/variant_window/mature/oligopoly/dead",
-    "isGreatConjunction": false,
-    "trend": "rising/stable/declining"
+    "detectedGenre": "Primary Roblox genre",
+    "competitionLevel": "extreme/very_high/high/moderate/low",
+    "lifecyclePhase": "proto/variant_window/mature/oversaturated",
+    "isHotGenre": false,
+    "trend": "rising_fast/rising/stable/declining",
+    "topCompetitors": ["Top 3 Roblox games in this genre"]
+  },
+  "retentionAnalysis": {
+    "predictedD1": "X% (target: ${retentionBenchmarks.target_for_success.d1_minimum}%+)",
+    "predictedD7": "X% (target: ${retentionBenchmarks.target_for_success.d7_minimum}%+)",
+    "sessionTimePrediction": "X minutes (target: 30+ for top tier)",
+    "reasoning": "Why this retention prediction"
   },
   "viralPotential": {
     "score": 5,
-    "reasoning": "Assessment of streamability and viral mechanics",
+    "reasoning": "Roblox viral mechanics assessment",
     "streamerAppeal": "low",
-    "clipWorthiness": "What moments would be shareable?"
+    "socialFeatures": "What social features exist or are needed"
   },
-  "pricingAnalysis": {
-    "suggestedRange": "$X-$Y based on genre and scope",
-    "reasoning": "Reference price psychology data (impulse zone vs uncanny valley)",
-    "priceZone": "impulse"
+  "monetizationAnalysis": {
+    "suggestedMethods": ["Game Passes for X", "Developer Products for Y"],
+    "reasoning": "Based on similar Roblox games",
+    "potentialLevel": "good"
   },
   "pivotSuggestions": ${JSON.stringify(pivotSuggestions)}
 }
 
-VERDICT THRESHOLDS (be strict, use data):
-- "strong" (8-10): In Great Conjunction OR >5% genre success rate with clear differentiation. Clear path to success.
-- "promising" (6-7): Decent genre (2-5% success rate), good bones, worth prototyping.
-- "needs_work" (4-5): Genre concerns OR missing key elements. Needs rethinking before building.
-- "rethink" (1-3): In a "dead" genre (<0.5% success) OR fundamental issues. Pivot strongly recommended.
+VERDICT THRESHOLDS (Roblox-specific):
+- "strong" (8-10): Hot genre + clear hook + social features + achievable scope. Build it.
+- "promising" (6-7): Good genre, clear loop, some gaps but worth prototyping on Roblox.
+- "needs_work" (4-5): Missing key Roblox success factors. Iterate on design first.
+- "rethink" (1-3): Oversaturated genre, no social features, or fundamentally not suited for Roblox.
 
-REMEMBER: A kind 4 is more valuable than a dishonest 7. Your job is to save them months of wasted effort. Use the real data to back up your assessment.
+CCU TARGETS TO REFERENCE:
+- Breakout: ${ccuBenchmarks.breakout_hit.ccu.toLocaleString()}+ CCU (${ccuBenchmarks.breakout_hit.monthly_revenue_estimate}/mo)
+- Successful: ${ccuBenchmarks.successful.ccu.toLocaleString()}+ CCU (${ccuBenchmarks.successful.monthly_revenue_estimate}/mo)
+- Viable: ${ccuBenchmarks.viable.ccu.toLocaleString()}+ CCU (${ccuBenchmarks.viable.monthly_revenue_estimate}/mo)
+
+REMEMBER: A realistic 4 is more valuable than a hopeful 7. Help them succeed on ROBLOX specifically.
 
 Only output valid JSON. No markdown, no explanation outside the JSON.`;
 }

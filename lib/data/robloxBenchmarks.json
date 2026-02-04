@@ -1,0 +1,264 @@
+{
+  "platform_stats_2025": {
+    "daily_active_users": 111800000,
+    "hours_per_day_average": 2.7,
+    "quarterly_bookings_q2": 1400000000,
+    "total_experiences": 40000000,
+    "creator_earnings_annual": 923000000,
+    "devex_participants": 24500,
+    "median_creator_earnings": 1575,
+    "top_10_creator_earnings": 36000000,
+    "top_100_creator_earnings": 6000000,
+    "top_1000_creator_earnings": 1000000
+  },
+
+  "retention_benchmarks": {
+    "description": "Day 1, 7, and 30 retention rates by performance tier",
+    "top_10_percent": {
+      "d1": 45,
+      "d7": 22,
+      "d30": 12
+    },
+    "top_25_percent": {
+      "d1": 38,
+      "d7": 16,
+      "d30": 8
+    },
+    "median": {
+      "d1": 28,
+      "d7": 10,
+      "d30": 4
+    },
+    "bottom_25_percent": {
+      "d1": 18,
+      "d7": 5,
+      "d30": 2
+    },
+    "target_for_success": {
+      "d1_minimum": 30,
+      "d7_minimum": 12,
+      "d30_minimum": 5,
+      "notes": "Hit these minimums to be viable for monetization"
+    }
+  },
+
+  "session_time_benchmarks": {
+    "description": "Average session duration by performance tier",
+    "top_10_percent": {
+      "minutes": 45,
+      "interpretation": "Highly engaging, strong retention indicator"
+    },
+    "top_25_percent": {
+      "minutes": 25,
+      "interpretation": "Good engagement, profitable"
+    },
+    "median": {
+      "minutes": 12,
+      "interpretation": "Average, needs improvement"
+    },
+    "bottom_25_percent": {
+      "minutes": 5,
+      "interpretation": "Low engagement, likely to fail"
+    },
+    "magic_threshold": {
+      "minutes": 30,
+      "meaning": "Sessions over 30 min indicate strong core loop - everything viral happens naturally"
+    },
+    "first_session_critical": {
+      "target_minutes": 8,
+      "notes": "If players don't hit 8+ minutes in first session, retention drops dramatically"
+    }
+  },
+
+  "concurrent_users_benchmarks": {
+    "description": "CCU (Concurrent Users) targets for different success levels",
+    "breakout_hit": {
+      "ccu": 50000,
+      "monthly_revenue_estimate": "$500K-2M",
+      "notes": "Top 0.01% of games"
+    },
+    "successful": {
+      "ccu": 10000,
+      "monthly_revenue_estimate": "$100K-500K",
+      "notes": "Top 0.1% of games"
+    },
+    "viable": {
+      "ccu": 1000,
+      "monthly_revenue_estimate": "$10K-50K",
+      "notes": "Sustainable income for small team"
+    },
+    "growing": {
+      "ccu": 100,
+      "monthly_revenue_estimate": "$1K-5K",
+      "notes": "Promising but needs work"
+    },
+    "struggling": {
+      "ccu": 10,
+      "monthly_revenue_estimate": "<$500",
+      "notes": "Not viable, needs major changes"
+    }
+  },
+
+  "monetization_benchmarks": {
+    "payer_conversion": {
+      "excellent": 5.0,
+      "good": 2.5,
+      "average": 1.0,
+      "poor": 0.5,
+      "notes": "Percentage of players who make any purchase"
+    },
+    "arpu": {
+      "description": "Average Revenue Per User (monthly)",
+      "top_games": "$0.15-0.50",
+      "good_games": "$0.05-0.15",
+      "average_games": "$0.01-0.05"
+    },
+    "arppu": {
+      "description": "Average Revenue Per Paying User (monthly)",
+      "top_games": "$15-50",
+      "good_games": "$5-15",
+      "average_games": "$2-5"
+    },
+    "monetization_methods": [
+      {"method": "Game Passes", "typical_usage": "One-time permanent unlocks", "effectiveness": "High for simulators"},
+      {"method": "Developer Products", "typical_usage": "Consumables, currency", "effectiveness": "Highest revenue potential"},
+      {"method": "Premium Payouts", "typical_usage": "Premium player engagement", "effectiveness": "Bonus revenue stream"},
+      {"method": "Private Servers", "typical_usage": "Recurring subscription", "effectiveness": "Good for roleplay/social"},
+      {"method": "Avatar Items", "typical_usage": "In-game UGC items", "effectiveness": "Emerging, high potential"}
+    ]
+  },
+
+  "discovery_benchmarks": {
+    "sponsored_ads": {
+      "typical_cpc": "5-50 Robux",
+      "good_ctr": "2-5%",
+      "notes": "Cost per click varies by competition"
+    },
+    "search_optimization": {
+      "title_importance": "Critical - include genre keywords",
+      "icon_importance": "Critical - must stand out in 150x150px",
+      "thumbnail_importance": "High - first impression in discovery"
+    },
+    "organic_growth_signals": [
+      "Home page recommendation placement",
+      "Friends playing notification",
+      "Search result ranking",
+      "Similar games recommendation"
+    ],
+    "streamer_impact": {
+      "high": "Horror, social games, PVP",
+      "medium": "Simulators, roleplay",
+      "low": "Obbies, single-player focused"
+    }
+  },
+
+  "development_velocity": {
+    "optimal_update_cadence": {
+      "frequency": "Weekly",
+      "notes": "Top games update 1-2 times per week"
+    },
+    "minimum_viable": {
+      "frequency": "Bi-weekly",
+      "notes": "Absolute minimum to maintain engagement"
+    },
+    "content_expectations": {
+      "major_update": "Monthly - new features, areas, items",
+      "minor_update": "Weekly - bug fixes, balancing, small additions",
+      "events": "Seasonal events expected by players"
+    },
+    "first_game_timeline": {
+      "recommended": "1-3 months to playable",
+      "warning": "6+ months first game has high failure rate"
+    }
+  },
+
+  "success_patterns": {
+    "rapid_wins": [
+      {
+        "game": "DOORS",
+        "dev_time": "~4 months",
+        "key_factor": "Horror multiplayer + unique monster design + streamable moments"
+      },
+      {
+        "game": "Dress to Impress",
+        "dev_time": "~3 months",
+        "key_factor": "Social voting + fashion expression + quick rounds"
+      },
+      {
+        "game": "Toilet Tower Defense",
+        "dev_time": "~2 months",
+        "key_factor": "Meme culture + gacha collecting + riding trend"
+      }
+    ],
+    "common_traits": [
+      "Clear core loop within 30 seconds",
+      "Social or multiplayer focus",
+      "Regular content updates",
+      "Strong visual identity",
+      "Streamable/shareable moments"
+    ]
+  },
+
+  "anti_patterns": {
+    "development": [
+      {"pattern": "Feature creep before launch", "failure_risk": "Very High"},
+      {"pattern": "Solo developing massive scope", "failure_risk": "Very High"},
+      {"pattern": "Copying top games exactly", "failure_risk": "High"},
+      {"pattern": "Ignoring analytics data", "failure_risk": "High"},
+      {"pattern": "No update plan post-launch", "failure_risk": "Very High"}
+    ],
+    "design": [
+      {"pattern": "Tutorial longer than 2 minutes", "impact": "D1 retention drops 50%"},
+      {"pattern": "No clear goal in first 30 seconds", "impact": "Players leave immediately"},
+      {"pattern": "Pay-to-win mechanics", "impact": "Review bombing, player exodus"},
+      {"pattern": "No social features", "impact": "Limited organic growth"}
+    ],
+    "monetization": [
+      {"pattern": "Aggressive paywalls early", "impact": "Players leave before hooked"},
+      {"pattern": "Only cosmetic monetization in simulator", "impact": "Missing 80% of revenue"},
+      {"pattern": "Prices too high for Roblox audience", "impact": "Most players are young, budget-conscious"}
+    ]
+  },
+
+  "validation_checklist": {
+    "before_building": [
+      "Check genre competition on Roblox charts",
+      "Play top 5 games in your genre",
+      "Identify your unique hook",
+      "Confirm scope matches team size",
+      "Plan monetization strategy"
+    ],
+    "soft_launch_metrics": {
+      "d1_retention_target": 30,
+      "session_time_target": 10,
+      "return_rate_target": 40,
+      "notes": "Hit these before spending on ads"
+    },
+    "kill_criteria": [
+      "D1 retention under 20% after 3 iterations",
+      "Session time under 5 minutes consistently",
+      "No organic CCU growth after 1 month",
+      "Monetization under $0.01 ARPU"
+    ]
+  },
+
+  "roblox_specific_factors": {
+    "audience_demographics": {
+      "primary": "Ages 9-15 (largest segment)",
+      "secondary": "Ages 16-24 (growing, higher spending)",
+      "implication": "Design for younger audience, but older players monetize better"
+    },
+    "device_distribution": {
+      "mobile": "55%",
+      "desktop": "35%",
+      "console": "10%",
+      "implication": "Must work well on mobile - small screens, touch controls"
+    },
+    "update_velocity_expectation": {
+      "notes": "Roblox players expect frequent updates - weekly is standard for top games"
+    },
+    "social_features_importance": {
+      "notes": "Friends playing together is primary retention driver. Build for groups."
+    }
+  }
+}
