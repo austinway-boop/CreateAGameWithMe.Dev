@@ -100,6 +100,13 @@ function formatNumber(num: string | number): string {
   return num.toString();
 }
 
+// Parse percentage from string like "25% (target: 30%+)"
+function parsePercentage(str: string | undefined, fallback: number): number {
+  if (!str) return fallback;
+  const match = str.match(/(\d+)/);
+  return match ? parseInt(match[1], 10) : fallback;
+}
+
 // Roblox-style game card
 function GameCard({ name, visits, revenue, rank }: { name: string; visits: string; revenue: string; rank?: number }) {
   return (
@@ -201,8 +208,8 @@ export default function ValidationPage() {
 
   // Get genre data for comparison
   const genreData = useMemo(() => {
-    if (!validation?.genreAnalysis?.detected_genres) return null;
-    const primaryGenre = validation.genreAnalysis.detected_genres[0]?.toLowerCase().replace(/[\s\/]/g, '_');
+    if (!validation?.genreAnalysis?.detectedGenre) return null;
+    const primaryGenre = validation.genreAnalysis.detectedGenre.toLowerCase().replace(/[\s\/]/g, '_');
     const genres = robloxGenreData.genres as Record<string, any>;
     return genres[primaryGenre] || genres['simulator'];
   }, [validation]);
@@ -343,7 +350,7 @@ export default function ValidationPage() {
           </div>
 
           <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4 space-y-3">
-            {readiness.requirements.map((req) => (
+            {readiness.allRequirements.map((req) => (
               <div key={req.id} className="flex items-center gap-3">
                 <div className={`w-5 h-5 rounded-full flex items-center justify-center ${req.completed ? 'bg-[#00FF00]/20 text-[#00FF00]' : 'bg-[#333] text-[#666]'}`}>
                   {req.completed ? '✓' : '○'}
@@ -482,15 +489,15 @@ export default function ValidationPage() {
           {/* Score Display */}
           <div className="flex justify-center gap-8 mt-4">
             <div className="text-center">
-              <div className="text-3xl font-black text-white">{validation.scores?.overall || 0}</div>
+              <div className="text-3xl font-black text-white">{validation.overallScore || 0}</div>
               <div className="text-[#888] text-xs">OVERALL</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-black text-[#00FF00]">{validation.scores?.market || 0}</div>
+              <div className="text-3xl font-black text-[#00FF00]">{validation.marketFit?.score || 0}</div>
               <div className="text-[#888] text-xs">MARKET FIT</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-black text-[#00A2FF]">{validation.scores?.engagement || 0}</div>
+              <div className="text-3xl font-black text-[#00A2FF]">{validation.loopAnalysis?.score || 0}</div>
               <div className="text-[#888] text-xs">ENGAGEMENT</div>
             </div>
           </div>
@@ -580,23 +587,22 @@ export default function ValidationPage() {
           
           <div className="p-4 space-y-4">
             <RobloxProgress 
-              value={validation.retentionAnalysis?.d1_prediction || 25}
+              value={parsePercentage(validation.retentionAnalysis?.predictedD1, 25)}
               max={60}
               label="Day 1 Retention (predicted)"
               benchmark={benchmarks.target_for_success.d1_minimum}
             />
             <RobloxProgress 
-              value={validation.retentionAnalysis?.d7_prediction || 10}
+              value={parsePercentage(validation.retentionAnalysis?.predictedD7, 10)}
               max={30}
               label="Day 7 Retention (predicted)"
               benchmark={benchmarks.target_for_success.d7_minimum}
             />
-            <RobloxProgress 
-              value={validation.retentionAnalysis?.d30_prediction || 4}
-              max={15}
-              label="Day 30 Retention (predicted)"
-              benchmark={benchmarks.target_for_success.d30_minimum}
-            />
+            {validation.retentionAnalysis?.reasoning && (
+              <div className="text-sm text-[#888] bg-[#1a1a1a] rounded-lg p-3 mt-2">
+                {validation.retentionAnalysis.reasoning}
+              </div>
+            )}
             
             <div className="grid grid-cols-3 gap-2 mt-4 text-center text-xs">
               <div className="bg-[#1a1a1a] rounded p-2">
@@ -655,7 +661,7 @@ export default function ValidationPage() {
           <div className="p-4 space-y-4">
             {validation.monetizationAnalysis && (
               <div className="text-sm text-[#888]">
-                {validation.monetizationAnalysis.strategy}
+                {validation.monetizationAnalysis.reasoning}
               </div>
             )}
             
@@ -709,50 +715,50 @@ export default function ValidationPage() {
             </div>
             
             <div className="p-4 space-y-3">
-              <div className="text-sm text-[#888]">{validation.viralPotential.analysis}</div>
+              <div className="text-sm text-[#888]">{validation.viralPotential.reasoning}</div>
               
               <div className="bg-[#1a1a1a] rounded-lg p-3">
-                <div className="text-xs text-[#888] mb-2">STREAMABILITY (Critical for Roblox)</div>
-                <div className="text-sm text-white">{robloxBenchmarks.discovery_benchmarks.streamer_impact.high} = HIGH impact</div>
+                <div className="text-xs text-[#888] mb-2">STREAMER APPEAL</div>
+                <div className="text-sm text-white capitalize">{validation.viralPotential.streamerAppeal || 'unknown'}</div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Red Flags */}
-        {validation.redFlags && validation.redFlags.length > 0 && (
+        {/* Dealbreakers / Red Flags */}
+        {validation.dealbreakers && validation.dealbreakers.length > 0 && (
           <div className="bg-[#111] border border-[#FF4444] rounded-xl overflow-hidden">
             <div className="px-4 py-3 border-b border-[#FF4444]/30 bg-[#FF4444]/10 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-[#FF4444]" />
-              <span className="font-bold text-[#FF4444]">RED FLAGS</span>
+              <span className="font-bold text-[#FF4444]">CRITICAL ISSUES</span>
             </div>
             
             <div className="p-4 space-y-2">
-              {validation.redFlags.map((flag, i) => (
+              {validation.dealbreakers.map((issue, i) => (
                 <div key={i} className="flex items-start gap-2 text-sm">
                   <span className="text-[#FF4444]">•</span>
-                  <span className="text-[#888]">{flag}</span>
+                  <span className="text-[#888]">{issue}</span>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Next Steps */}
-        {validation.nextSteps && validation.nextSteps.length > 0 && (
+        {/* Suggestions */}
+        {validation.suggestions && validation.suggestions.length > 0 && (
           <div className="bg-[#111] border border-[#00A2FF] rounded-xl overflow-hidden">
             <div className="px-4 py-3 border-b border-[#00A2FF]/30 bg-[#00A2FF]/10 flex items-center gap-2">
               <ChevronRight className="w-5 h-5 text-[#00A2FF]" />
-              <span className="font-bold text-[#00A2FF]">NEXT STEPS</span>
+              <span className="font-bold text-[#00A2FF]">SUGGESTIONS</span>
             </div>
             
             <div className="p-4 space-y-2">
-              {validation.nextSteps.map((step, i) => (
+              {validation.suggestions.map((suggestion, i) => (
                 <div key={i} className="flex items-start gap-3 text-sm">
                   <span className="w-5 h-5 bg-[#00A2FF] text-black rounded flex items-center justify-center text-xs font-bold shrink-0">
                     {i + 1}
                   </span>
-                  <span className="text-white">{step}</span>
+                  <span className="text-white">{suggestion}</span>
                 </div>
               ))}
             </div>
