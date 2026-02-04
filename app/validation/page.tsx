@@ -245,25 +245,55 @@ export default function ValidationPage() {
 
   // Expose dev helpers immediately on mount
   useEffect(() => {
-    // Define directly on window
-    (window as any).devTestBadGame = () => {
-      console.log('%c🎮 Testing BAD game: "Super Jump Obby 2"', 'color: #FF4444; font-weight: bold;');
-      runDevTest(BAD_GAME_DATA);
+    // Standalone test function that doesn't depend on React state
+    const testWithData = async (testData: Partial<Project>, name: string) => {
+      console.log(`%c🎮 Testing: "${name}"`, 'color: #ff6b00; font-weight: bold;');
+      console.log('Sending data:', testData);
+      
+      try {
+        const res = await fetch('/api/validateIdea', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ project: { id: 'dev-test', ...testData } }),
+        });
+        
+        if (!res.ok) {
+          const err = await res.json();
+          console.error('%c❌ API Error:', 'color: red;', err);
+          return;
+        }
+        
+        const result = await res.json();
+        console.log('%c✅ Validation Result:', 'color: green; font-weight: bold;');
+        console.log('Overall Score:', result.overallScore);
+        console.log('Verdict:', result.verdict);
+        console.log('Genre:', result.genreAnalysis?.detectedGenre);
+        console.log('Summary:', result.summary);
+        console.log('Hard Truth:', result.hardTruth);
+        console.log('Full result:', result);
+        
+        // Also update the UI
+        setValidation(result);
+        setValidationState('complete');
+        setDevMode(true);
+      } catch (err) {
+        console.error('%c❌ Fetch Error:', 'color: red;', err);
+      }
     };
 
-    (window as any).devTestGoodGame = () => {
-      console.log('%c🎮 Testing GOOD game: "Possessed Academy"', 'color: #00FF00; font-weight: bold;');
-      runDevTest(GOOD_GAME_DATA);
-    };
-
+    (window as any).devTestBadGame = () => testWithData(BAD_GAME_DATA, 'Super Jump Obby 2 (BAD)');
+    (window as any).devTestGoodGame = () => testWithData(GOOD_GAME_DATA, 'Possessed Academy (GOOD)');
     (window as any).devClearGame = () => {
-      console.log('%c🎮 Cleared test data', 'color: #00A2FF; font-weight: bold;');
       setValidation(null);
       setValidationState('idle');
       setDevMode(false);
+      console.log('%c🎮 Cleared', 'color: #00A2FF;');
     };
 
-    console.log('%c🎮 Dev Commands Ready: devTestBadGame() | devTestGoodGame() | devClearGame()', 'color: #58cc02; font-weight: bold;');
+    console.log('%c🎮 Dev Commands Ready:', 'color: #58cc02; font-weight: bold;');
+    console.log('  devTestBadGame()  - Test oversaturated obby');
+    console.log('  devTestGoodGame() - Test horror social game');
+    console.log('  devClearGame()    - Reset');
   }, []); // Empty deps - run once on mount
 
   // Auto-run validation
