@@ -1,19 +1,95 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ArrowLeft, Loader2, RefreshCw, ChevronRight, Users, Eye, TrendingUp, TrendingDown, Zap, Target, Clock, AlertTriangle, Trophy, Gamepad2, DollarSign, BarChart3 } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { Button } from '@/components/ui/button';
 import { CardSkeleton } from '@/components/LoadingScreen';
 import { ValidationResult } from '@/lib/prompts';
 import { checkValidationReadiness, ValidationReadiness } from '@/lib/validationRequirements';
+import { Project } from '@/lib/types';
 
 // Import Roblox data
 import robloxGenreData from '@/lib/data/robloxGenreData.json';
 import robloxBenchmarks from '@/lib/data/robloxBenchmarks.json';
 
 type ValidationState = 'idle' | 'validating' | 'complete' | 'error' | 'incomplete';
+
+// ============================================
+// DEV TEST DATA - Bad and Good game examples
+// ============================================
+
+const BAD_GAME_DATA: Partial<Project> = {
+  hasIdea: true,
+  platform: 'Roblox',
+  teamSize: 'Solo',
+  timeHorizon: '6 months',
+  ideaDescription: 'An obby where you jump on platforms to reach the end. There are 100 levels and you can buy skips with Robux. Its like Tower of Hell but easier.',
+  vibeChips: ['Action'],
+  structuredIdea: {
+    title: 'Super Jump Obby 2',
+    conceptParagraph: 'A basic obby game where players jump across platforms to reach checkpoints. Each level gets harder with more obstacles. Players can purchase level skips and speed boosts.',
+    coreVerbs: ['Jump', 'Skip'],
+    loopHook: 'Complete levels to unlock more levels',
+  },
+  finalTitle: 'Super Jump Obby 2',
+  finalConcept: 'A basic obby game where players jump across platforms. Buy skips to progress faster.',
+  gameQuestions: {
+    oneSentence: 'Jump on platforms to beat levels',
+    genre: 'Obby',
+    genreSuccessRate: 'High',
+    emotions: ['Satisfaction'],
+    targetPlayer: 'Anyone who likes obbies',
+    playerGames: ['Tower of Hell', 'Escape Room'],
+    pricePoint: 'Free with paid skips',
+    priceReason: 'Everyone does it',
+    biggestRisk: 'Too many obbies exist',
+    notFor: 'People who hate jumping',
+    memorableThing: 'Its an obby',
+  },
+  currentPage: 'validation',
+};
+
+const GOOD_GAME_DATA: Partial<Project> = {
+  hasIdea: true,
+  platform: 'Roblox',
+  teamSize: '2–5',
+  timeHorizon: '3 months',
+  ideaDescription: 'A social horror game where 4 players explore a haunted school at night. One player secretly becomes possessed and must sabotage the others without being caught. Features proximity voice chat, flickering lights, and procedurally generated events. Inspired by DOORS but with social deduction.',
+  vibeChips: ['Horror', 'Social', 'Competitive'],
+  structuredIdea: {
+    title: 'Possessed Academy',
+    conceptParagraph: 'A 4-player horror experience set in a procedurally haunted school. Players must complete objectives while one secretly possessed player tries to eliminate others. Proximity voice chat creates tense moments. Streamable highlights include dramatic reveals and close escapes.',
+    coreVerbs: ['Survive', 'Deceive', 'Investigate', 'Escape'],
+    loopHook: 'Trust no one - anyone could be possessed',
+  },
+  finalTitle: 'Possessed Academy',
+  finalConcept: 'Social deduction meets horror. 4 players, one is possessed. Complete objectives, find the traitor, escape alive. Proximity voice chat for maximum tension.',
+  gameQuestions: {
+    oneSentence: 'Among Us meets DOORS in a haunted school',
+    genre: 'Horror',
+    genreSuccessRate: 'High - horror is trending',
+    emotions: ['Fear', 'Suspicion', 'Relief', 'Excitement'],
+    targetPlayer: 'Friend groups aged 13-18 who love horror streams',
+    playerGames: ['DOORS', 'Piggy', 'Murder Mystery 2', 'Among Us'],
+    pricePoint: 'Free with cosmetic skins and private servers',
+    priceReason: 'Horror players spend on cosmetics that show status',
+    biggestRisk: 'Needs 4 players minimum - matchmaking critical',
+    notFor: 'Solo players, very young kids',
+    memorableThing: 'The moment you realize your friend is possessed',
+  },
+  currentPage: 'validation',
+};
+
+// Global dev helpers type declaration
+declare global {
+  interface Window {
+    devTestBadGame?: () => void;
+    devTestGoodGame?: () => void;
+    devClearGame?: () => void;
+  }
+}
 
 // Format visits like Roblox (1.2B, 500M, etc.)
 function formatNumber(num: string | number): string {
@@ -111,10 +187,11 @@ function RobloxProgress({ value, max, label, benchmark }: { value: number; max: 
 
 export default function ValidationPage() {
   const router = useRouter();
-  const { project, loading } = useProject();
+  const { project, loading, updateProjectAndSave, resetProject } = useProject();
   const [validationState, setValidationState] = useState<ValidationState>('idle');
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [devMode, setDevMode] = useState(false);
 
   const aiEnabled = process.env.NEXT_PUBLIC_ENABLE_AI === 'true';
 
@@ -130,8 +207,74 @@ export default function ValidationPage() {
     return genres[primaryGenre] || genres['simulator'];
   }, [validation]);
 
+  // Run validation with custom project data
+  const runValidationWithData = useCallback(async (projectData: Partial<Project>) => {
+    setValidationState('validating');
+    setError(null);
+    setDevMode(true);
+
+    try {
+      // Merge with current project
+      const testProject = { ...project, ...projectData };
+      
+      const response = await fetch('/api/validateIdea', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project: testProject }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || 'Failed to validate');
+      }
+
+      const result: ValidationResult = await response.json();
+      setValidation(result);
+      setValidationState('complete');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setValidationState('error');
+    }
+  }, [project]);
+
+  // Expose dev helpers to window (development only)
   useEffect(() => {
-    if (project && validationState === 'idle' && aiEnabled) {
+    if (process.env.NODE_ENV === 'development') {
+      window.devTestBadGame = () => {
+        console.log('%c🎮 DEV: Loading BAD game data...', 'color: #FF4444; font-weight: bold;');
+        console.log('%cGame: "Super Jump Obby 2" - Generic obby, solo dev, 6 month scope', 'color: #888;');
+        runValidationWithData(BAD_GAME_DATA);
+      };
+
+      window.devTestGoodGame = () => {
+        console.log('%c🎮 DEV: Loading GOOD game data...', 'color: #00FF00; font-weight: bold;');
+        console.log('%cGame: "Possessed Academy" - Horror + social deduction, small team, 3 month scope', 'color: #888;');
+        runValidationWithData(GOOD_GAME_DATA);
+      };
+
+      window.devClearGame = () => {
+        console.log('%c🎮 DEV: Clearing test data...', 'color: #00A2FF; font-weight: bold;');
+        setValidation(null);
+        setValidationState('idle');
+        setDevMode(false);
+      };
+
+      // Log available commands
+      console.log('%c🎮 Validation Dev Commands Available:', 'color: #00A2FF; font-weight: bold; font-size: 14px;');
+      console.log('%c  devTestBadGame()  - Test with a generic obby (should get low scores)', 'color: #FF4444;');
+      console.log('%c  devTestGoodGame() - Test with horror social game (should get high scores)', 'color: #00FF00;');
+      console.log('%c  devClearGame()    - Clear test data and reset', 'color: #888;');
+
+      return () => {
+        delete window.devTestBadGame;
+        delete window.devTestGoodGame;
+        delete window.devClearGame;
+      };
+    }
+  }, [runValidationWithData]);
+
+  useEffect(() => {
+    if (project && validationState === 'idle' && aiEnabled && !devMode) {
       if (readiness.isReady) {
         runValidation();
       } else {
@@ -188,8 +331,8 @@ export default function ValidationPage() {
     );
   }
 
-  // Requirements checklist
-  if (validationState === 'incomplete' || (validationState === 'idle' && !readiness.isReady)) {
+  // Requirements checklist (skip in dev mode)
+  if (!devMode && (validationState === 'incomplete' || (validationState === 'idle' && !readiness.isReady))) {
     return (
       <div className="flex-1 overflow-auto bg-[#0a0a0a]">
         <div className="max-w-lg mx-auto p-6 space-y-6">
@@ -305,6 +448,31 @@ export default function ValidationPage() {
       </div>
 
       <div className="max-w-4xl mx-auto p-4 space-y-6">
+        {/* Dev Mode Banner */}
+        {devMode && (
+          <div className="bg-[#FF00FF]/10 border border-[#FF00FF] rounded-lg p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-[#FF00FF] text-lg">🧪</span>
+              <div>
+                <div className="text-[#FF00FF] font-bold text-sm">DEV TEST MODE</div>
+                <div className="text-[#888] text-xs">Using test data - not your actual project</div>
+              </div>
+            </div>
+            <Button 
+              size="sm" 
+              variant="ghost"
+              className="text-[#FF00FF] hover:bg-[#FF00FF]/20"
+              onClick={() => {
+                setValidation(null);
+                setValidationState('idle');
+                setDevMode(false);
+              }}
+            >
+              Clear
+            </Button>
+          </div>
+        )}
+
         {/* Verdict Banner */}
         <div className={`${verdictConfig?.bg} ${verdictConfig?.border} border-2 rounded-xl p-6 text-center`}>
           <div className="text-4xl mb-2">{verdictConfig?.icon}</div>
