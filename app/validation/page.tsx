@@ -163,10 +163,10 @@ function ValidationSkeleton() {
             <span className="font-bold text-pink-700">Running AI Analysis...</span>
           </div>
           <div className="flex justify-center gap-2">
-            <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full animate-pulse">🎯 Market</span>
-            <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full animate-pulse">🔄 Loop</span>
-            <span className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full animate-pulse">⚔️ Competitor</span>
-            <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full animate-pulse">✅ Verdict</span>
+            <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full animate-pulse">Market</span>
+            <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full animate-pulse">Loop</span>
+            <span className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full animate-pulse">Competitor</span>
+            <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full animate-pulse">Verdict</span>
           </div>
         </div>
 
@@ -220,10 +220,10 @@ function ValidationSkeleton() {
 // Score circle component with color coding - Duolingo style
 function ScoreCircle({ score, label }: { score: number; label: string }) {
   const getScoreStyle = (s: number) => {
-    if (s >= 8) return { border: 'border-[#58cc02]', bg: 'bg-[#d7ffb8]', text: 'text-[#58a700]', label: '🔥', shadow: 'shadow-[0_4px_0_#58a700]' };
-    if (s >= 6) return { border: 'border-[#1cb0f6]', bg: 'bg-[#ddf4ff]', text: 'text-[#1899d6]', label: '👍', shadow: 'shadow-[0_4px_0_#1899d6]' };
-    if (s >= 4) return { border: 'border-[#ff9600]', bg: 'bg-[#fff4e0]', text: 'text-[#ea7900]', label: '🤔', shadow: 'shadow-[0_4px_0_#ea7900]' };
-    return { border: 'border-[#ff4b4b]', bg: 'bg-[#ffe0e0]', text: 'text-[#ea2b2b]', label: '⚠️', shadow: 'shadow-[0_4px_0_#ea2b2b]' };
+    if (s >= 8) return { border: 'border-[#58cc02]', bg: 'bg-[#d7ffb8]', text: 'text-[#58a700]', label: 'Great', shadow: 'shadow-[0_4px_0_#58a700]' };
+    if (s >= 6) return { border: 'border-[#1cb0f6]', bg: 'bg-[#ddf4ff]', text: 'text-[#1899d6]', label: 'Good', shadow: 'shadow-[0_4px_0_#1899d6]' };
+    if (s >= 4) return { border: 'border-[#ff9600]', bg: 'bg-[#fff4e0]', text: 'text-[#ea7900]', label: 'Fair', shadow: 'shadow-[0_4px_0_#ea7900]' };
+    return { border: 'border-[#ff4b4b]', bg: 'bg-[#ffe0e0]', text: 'text-[#ea2b2b]', label: 'Low', shadow: 'shadow-[0_4px_0_#ea2b2b]' };
   };
   const style = getScoreStyle(score);
   
@@ -421,7 +421,7 @@ export default function ValidationPage() {
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-sm ${
                   req.completed ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
                 }`}>
-                  {req.completed ? '✓' : '○'}
+                  {req.completed ? '+' : '-'}
                 </div>
                 <div className="flex-1">
                   <div className={`text-sm font-medium ${req.completed ? 'text-green-600' : 'text-gray-900'}`}>
@@ -483,11 +483,11 @@ export default function ValidationPage() {
   const pivotSuggestions = finalVerdict?.pivotSuggestions || [];
 
   const verdictConfig = {
-    strong: { label: 'Build It!', color: 'text-[#58a700]', bg: 'bg-[#d7ffb8]', border: 'border-[#58cc02]', shadow: 'shadow-[0_4px_0_#58a700]', emoji: '🚀' },
-    promising: { label: 'Promising', color: 'text-[#1899d6]', bg: 'bg-[#ddf4ff]', border: 'border-[#1cb0f6]', shadow: 'shadow-[0_4px_0_#1899d6]', emoji: '👍' },
-    needs_work: { label: 'Needs Work', color: 'text-[#ea7900]', bg: 'bg-[#fff4e0]', border: 'border-[#ff9600]', shadow: 'shadow-[0_4px_0_#ea7900]', emoji: '🛠️' },
-    rethink: { label: 'Rethink', color: 'text-[#ea2b2b]', bg: 'bg-[#ffe0e0]', border: 'border-[#ff4b4b]', shadow: 'shadow-[0_4px_0_#ea2b2b]', emoji: '🔄' },
-  }[verdict] || { label: 'Unknown', color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200', shadow: 'shadow-[0_4px_0_#d1d5db]', emoji: '❓' };
+    strong: { label: 'Build It!', color: 'text-[#58a700]', bg: 'bg-[#d7ffb8]', border: 'border-[#58cc02]', shadow: 'shadow-[0_4px_0_#58a700]' },
+    promising: { label: 'Promising', color: 'text-[#1899d6]', bg: 'bg-[#ddf4ff]', border: 'border-[#1cb0f6]', shadow: 'shadow-[0_4px_0_#1899d6]' },
+    needs_work: { label: 'Needs Work', color: 'text-[#ea7900]', bg: 'bg-[#fff4e0]', border: 'border-[#ff9600]', shadow: 'shadow-[0_4px_0_#ea7900]' },
+    rethink: { label: 'Rethink', color: 'text-[#ea2b2b]', bg: 'bg-[#ffe0e0]', border: 'border-[#ff4b4b]', shadow: 'shadow-[0_4px_0_#ea2b2b]' },
+  }[verdict] || { label: 'Unknown', color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200', shadow: 'shadow-[0_4px_0_#d1d5db]' };
 
   const benchmarks = robloxBenchmarks.retention_benchmarks;
 
@@ -512,7 +512,7 @@ export default function ValidationPage() {
         {devMode && (
           <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-lg">🧪</span>
+              <div className="w-6 h-6 bg-purple-500 rounded-lg flex items-center justify-center text-white text-xs font-bold">T</div>
               <div>
                 <div className="text-purple-700 font-semibold text-sm">Dev Test Mode</div>
                 <div className="text-purple-500 text-xs">Using test data</div>
@@ -526,7 +526,6 @@ export default function ValidationPage() {
 
         {/* Verdict Card - Duolingo Style */}
         <div className={`${verdictConfig.bg} ${verdictConfig.border} border-2 rounded-2xl ${verdictConfig.shadow} p-6 text-center`}>
-          <div className="text-5xl mb-3">{verdictConfig.emoji}</div>
           <div className={`text-2xl font-black ${verdictConfig.color} uppercase tracking-wide`}>{verdictConfig.label}</div>
           <p className="text-gray-600 mt-3 text-sm leading-relaxed max-w-md mx-auto">{summary}</p>
           
@@ -540,10 +539,10 @@ export default function ValidationPage() {
           
           {/* Score Legend */}
           <div className="flex justify-center gap-3 mt-4 text-[10px] font-bold uppercase tracking-wider">
-            <span className="text-[#58a700]">🔥 8+</span>
-            <span className="text-[#1899d6]">👍 6-7</span>
-            <span className="text-[#ea7900]">🤔 4-5</span>
-            <span className="text-[#ea2b2b]">⚠️ 1-3</span>
+            <span className="text-[#58a700]">8+ Great</span>
+            <span className="text-[#1899d6]">6-7 Good</span>
+            <span className="text-[#ea7900]">4-5 Fair</span>
+            <span className="text-[#ea2b2b]">1-3 Low</span>
           </div>
         </div>
 
@@ -552,7 +551,9 @@ export default function ValidationPage() {
           <div className="space-y-3">
             <div className="bg-[#fff4e0] border-2 border-[#ff9600] rounded-2xl shadow-[0_4px_0_#ea7900] p-4">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-[#ff9600] rounded-xl flex items-center justify-center text-xl shadow-[0_2px_0_#ea7900]">💡</div>
+                <div className="w-10 h-10 bg-[#ff9600] rounded-xl flex items-center justify-center shadow-[0_2px_0_#ea7900]">
+                  <AlertTriangle className="w-5 h-5 text-white" />
+                </div>
                 <div className="flex-1">
                   <div className="font-bold text-[#ea7900] text-sm uppercase tracking-wide">Hard Truth</div>
                   <p className="text-gray-700 text-sm mt-1 leading-relaxed">{hardTruth}</p>
@@ -562,7 +563,9 @@ export default function ValidationPage() {
             {buildRecommendation && (
               <div className="bg-[#ddf4ff] border-2 border-[#1cb0f6] rounded-2xl shadow-[0_4px_0_#1899d6] p-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-[#1cb0f6] rounded-xl flex items-center justify-center text-xl shadow-[0_2px_0_#1899d6]">🎯</div>
+                  <div className="w-10 h-10 bg-[#1cb0f6] rounded-xl flex items-center justify-center shadow-[0_2px_0_#1899d6]">
+                    <Target className="w-5 h-5 text-white" />
+                  </div>
                   <div className="flex-1">
                     <div className="font-bold text-[#1899d6] text-sm uppercase tracking-wide">Recommendation</div>
                     <p className="text-gray-700 text-sm mt-1 leading-relaxed">{buildRecommendation}</p>
@@ -573,61 +576,783 @@ export default function ValidationPage() {
           </div>
         )}
 
-        {/* Your Competition - Duolingo Style */}
-        {validation.competitorAnalysis?.directCompetitors && validation.competitorAnalysis.directCompetitors.length > 0 && (
+        {/* Your Competition - Enhanced */}
+        {validation.competitorAnalysis && (
           <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
             <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3 border-b-2 border-[#ff9600]">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-[#ff9600] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#ea7900]">⚔️</div>
-                <span className="font-bold text-[#ea7900] uppercase tracking-wide text-sm">Your Competition</span>
+                <div className="w-7 h-7 bg-[#ff9600] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#ea7900]">
+                  <Trophy className="w-4 h-4" />
+                </div>
+                <span className="font-bold text-[#ea7900] uppercase tracking-wide text-sm">Competitive Analysis</span>
+                <span className="ml-auto text-xs bg-[#ff9600] text-white px-2 py-0.5 rounded-full font-bold">{competitorScore}/10</span>
               </div>
               <p className="text-gray-500 text-xs mt-1">{validation.marketAnalysis?.genre || 'Unknown'} genre</p>
             </div>
             
+            <div className="p-4 space-y-4">
+              {/* Direct Competitors with Details */}
+              {validation.competitorAnalysis.directCompetitors?.length > 0 && (
+                <div className="space-y-3">
+                  <div className="text-xs font-bold text-gray-600 uppercase">Direct Competitors</div>
+                  {validation.competitorAnalysis.directCompetitors.slice(0, 3).map((comp, i) => (
+                    <div key={i} className="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
+                      <div className="flex items-center gap-3 p-3 border-b border-gray-100">
+                        <div className="w-8 h-8 bg-gradient-to-br from-[#ff9600] to-[#ff4b4b] text-white rounded-lg flex items-center justify-center font-black text-sm shadow-[0_2px_0_#ea7900]">
+                          {i + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-gray-900 truncate">{comp.name}</div>
+                          <div className="text-xs text-gray-500">{comp.visits}</div>
+                        </div>
+                      </div>
+                      <div className="p-3 space-y-2 bg-white">
+                        {comp.whatTheyDoWell && (
+                          <div className="text-xs">
+                            <span className="font-bold text-green-600">+ Strong:</span>
+                            <span className="text-gray-600 ml-1">{comp.whatTheyDoWell}</span>
+                          </div>
+                        )}
+                        {comp.weakness && (
+                          <div className="text-xs">
+                            <span className="font-bold text-amber-600">↳ Weakness:</span>
+                            <span className="text-gray-600 ml-1">{comp.weakness}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Differentiation Analysis */}
+              {validation.competitorAnalysis.differentiationAnalysis && (
+                <div className={`p-3 rounded-xl border ${
+                  validation.competitorAnalysis.differentiationAnalysis.toLowerCase().includes('weak') ||
+                  validation.competitorAnalysis.differentiationAnalysis.toLowerCase().includes('unclear') ||
+                  validation.competitorAnalysis.differentiationAnalysis.toLowerCase().includes("doesn't")
+                    ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
+                }`}>
+                  <div className="text-xs font-bold uppercase mb-1 text-gray-600">Your Differentiation</div>
+                  <div className="text-sm text-gray-700">{validation.competitorAnalysis.differentiationAnalysis}</div>
+                </div>
+              )}
+
+              {/* Competitive Advantages & Disadvantages */}
+              <div className="grid grid-cols-2 gap-3">
+                {validation.competitorAnalysis.competitiveAdvantages?.length > 0 && (
+                  <div className="bg-green-50 p-3 rounded-xl border border-green-200">
+                    <div className="text-xs font-bold text-green-700 uppercase mb-2">Your Advantages</div>
+                    <ul className="space-y-1">
+                      {validation.competitorAnalysis.competitiveAdvantages.map((adv, i) => (
+                        <li key={i} className="text-xs text-gray-700 flex items-start gap-1">
+                          <span className="text-green-500">+</span>
+                          {adv}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {validation.competitorAnalysis.competitiveDisadvantages?.length > 0 && (
+                  <div className="bg-red-50 p-3 rounded-xl border border-red-200">
+                    <div className="text-xs font-bold text-red-700 uppercase mb-2">Their Advantages</div>
+                    <ul className="space-y-1">
+                      {validation.competitorAnalysis.competitiveDisadvantages.map((dis, i) => (
+                        <li key={i} className="text-xs text-gray-700 flex items-start gap-1">
+                          <span className="text-red-500">-</span>
+                          {dis}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              {/* Market Positioning */}
+              {validation.competitorAnalysis.marketPositioning && (
+                <div className="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                  <div className="text-xs font-bold text-[#1899d6] uppercase mb-1">Market Position</div>
+                  <div className="text-sm text-gray-700">{validation.competitorAnalysis.marketPositioning}</div>
+                </div>
+              )}
+
+              {/* Indirect Competitors */}
+              {validation.competitorAnalysis.indirectCompetitors?.length > 0 && (
+                <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                  <div className="text-xs font-bold text-gray-600 uppercase mb-2">Also Competing for Attention</div>
+                  <div className="flex flex-wrap gap-2">
+                    {validation.competitorAnalysis.indirectCompetitors.map((comp, i) => (
+                      <span key={i} className="text-xs bg-white text-gray-600 px-2 py-1 rounded-full border border-gray-200">
+                        {comp}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Market Deep Dive - NEW */}
+        {validation.marketAnalysis && (
+          <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-4 py-3 border-b-2 border-[#1cb0f6]">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-[#1cb0f6] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#1899d6]">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
+                <span className="font-bold text-[#1899d6] uppercase tracking-wide text-sm">Market Analysis</span>
+                <span className="ml-auto text-xs bg-[#1cb0f6] text-white px-2 py-0.5 rounded-full font-bold">{marketScore}/10</span>
+              </div>
+            </div>
+            <div className="p-4 space-y-3">
+              {/* Genre & Market Size */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                  <div className="text-xs font-bold text-[#1899d6] uppercase mb-1">Genre</div>
+                  <div className="text-sm font-medium text-gray-800">{validation.marketAnalysis.genre}</div>
+                  {validation.marketAnalysis.subGenres?.length > 0 && (
+                    <div className="text-xs text-gray-500 mt-1">{validation.marketAnalysis.subGenres.join(', ')}</div>
+                  )}
+                </div>
+                <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                  <div className="text-xs font-bold text-[#1899d6] uppercase mb-1">Market Size</div>
+                  <div className="text-sm font-medium text-gray-800">{validation.marketAnalysis.marketSize}</div>
+                </div>
+              </div>
+              
+              {/* Trend & Saturation */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className={`p-3 rounded-xl border ${
+                  validation.marketAnalysis.growthTrend?.includes('rising') ? 'bg-green-50 border-green-200' :
+                  validation.marketAnalysis.growthTrend?.includes('declining') ? 'bg-red-50 border-red-200' :
+                  'bg-gray-50 border-gray-200'
+                }`}>
+                  <div className="text-xs font-bold uppercase mb-1 text-gray-600">Growth Trend</div>
+                  <div className="text-sm font-medium text-gray-800 flex items-center gap-1">
+                    {validation.marketAnalysis.growthTrend?.includes('rising') && <TrendingUp className="w-4 h-4 text-green-500" />}
+                    {validation.marketAnalysis.growthTrend}
+                  </div>
+                </div>
+                <div className={`p-3 rounded-xl border ${
+                  validation.marketAnalysis.saturationLevel?.includes('extreme') || validation.marketAnalysis.saturationLevel?.includes('high') 
+                    ? 'bg-red-50 border-red-200' :
+                  validation.marketAnalysis.saturationLevel?.includes('low') ? 'bg-green-50 border-green-200' :
+                  'bg-amber-50 border-amber-200'
+                }`}>
+                  <div className="text-xs font-bold uppercase mb-1 text-gray-600">Saturation</div>
+                  <div className="text-sm font-medium text-gray-800">{validation.marketAnalysis.saturationLevel}</div>
+                </div>
+              </div>
+
+              {/* Opportunity Windows */}
+              {validation.marketAnalysis.opportunityWindows?.length > 0 && (
+                <div className="bg-green-50 p-3 rounded-xl border border-green-200">
+                  <div className="text-xs font-bold text-[#58a700] uppercase mb-2">Opportunity Windows</div>
+                  <ul className="space-y-1">
+                    {validation.marketAnalysis.opportunityWindows.map((opp, i) => (
+                      <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                        <span className="text-green-500 mt-0.5">→</span>
+                        {opp}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Market Risks */}
+              {validation.marketAnalysis.risks?.length > 0 && (
+                <div className="bg-amber-50 p-3 rounded-xl border border-amber-200">
+                  <div className="text-xs font-bold text-[#ea7900] uppercase mb-2">Market Risks</div>
+                  <ul className="space-y-1">
+                    {validation.marketAnalysis.risks.map((risk, i) => (
+                      <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                        <span className="text-amber-500 mt-0.5">•</span>
+                        {risk}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Audience Profile - NEW */}
+        {validation.marketAnalysis?.audienceProfile && (
+          <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+            <div className="bg-gradient-to-r from-pink-50 to-rose-50 px-4 py-3 border-b-2 border-[#ff4b93]">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-[#ff4b93] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#e6007a]">
+                  <Users className="w-4 h-4" />
+                </div>
+                <span className="font-bold text-[#e6007a] uppercase tracking-wide text-sm">Your Target Audience</span>
+              </div>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-pink-50 p-3 rounded-xl border border-pink-200">
+                  <div className="text-xs font-bold text-[#e6007a] uppercase mb-1">Age Range</div>
+                  <div className="text-sm font-medium text-gray-800">{validation.marketAnalysis.audienceProfile.ageRange}</div>
+                </div>
+                <div className="bg-pink-50 p-3 rounded-xl border border-pink-200">
+                  <div className="text-xs font-bold text-[#e6007a] uppercase mb-1">Spending Habits</div>
+                  <div className="text-sm font-medium text-gray-800">{validation.marketAnalysis.audienceProfile.spendingHabits}</div>
+                </div>
+              </div>
+              
+              {validation.marketAnalysis.audienceProfile.interests?.length > 0 && (
+                <div className="bg-pink-50 p-3 rounded-xl border border-pink-200">
+                  <div className="text-xs font-bold text-[#e6007a] uppercase mb-2">Their Interests</div>
+                  <div className="flex flex-wrap gap-2">
+                    {validation.marketAnalysis.audienceProfile.interests.map((interest, i) => (
+                      <span key={i} className="text-xs bg-white text-gray-700 px-2 py-1 rounded-full border border-pink-200">
+                        {interest}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {validation.marketAnalysis.audienceProfile.playPatterns && (
+                <div className="bg-pink-50 p-3 rounded-xl border border-pink-200">
+                  <div className="text-xs font-bold text-[#e6007a] uppercase mb-1">Play Patterns</div>
+                  <div className="text-sm text-gray-700">{validation.marketAnalysis.audienceProfile.playPatterns}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* First Session Experience - NEW */}
+        {validation.loopAnalysis?.firstSession && (
+          <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+            <div className="bg-gradient-to-r from-amber-50 to-yellow-50 px-4 py-3 border-b-2 border-[#ffc800]">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-[#ffc800] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#e6b400]">
+                  <Zap className="w-4 h-4" />
+                </div>
+                <span className="font-bold text-[#b38f00] uppercase tracking-wide text-sm">First 5 Minutes</span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Critical for player retention</p>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-amber-50 p-3 rounded-xl border border-amber-200">
+                  <div className="text-xs font-bold text-[#b38f00] uppercase mb-1 flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> Time to Fun
+                  </div>
+                  <div className="text-sm font-bold text-gray-800">{validation.loopAnalysis.firstSession.timeToFun}</div>
+                </div>
+                <div className="bg-amber-50 p-3 rounded-xl border border-amber-200">
+                  <div className="text-xs font-bold text-[#b38f00] uppercase mb-1">Tutorial Risk</div>
+                  <div className="text-sm font-medium text-gray-800">{validation.loopAnalysis.firstSession.tutorialRisk}</div>
+                </div>
+              </div>
+              
+              {validation.loopAnalysis.firstSession.hookMoment && (
+                <div className="bg-green-50 p-3 rounded-xl border border-green-200">
+                  <div className="text-xs font-bold text-[#58a700] uppercase mb-1">Hook Moment</div>
+                  <div className="text-sm text-gray-700">{validation.loopAnalysis.firstSession.hookMoment}</div>
+                </div>
+              )}
+              
+              {validation.loopAnalysis.firstSession.ahaMoment && (
+                <div className="bg-purple-50 p-3 rounded-xl border border-purple-200">
+                  <div className="text-xs font-bold text-[#8b47cc] uppercase mb-1">"Aha!" Moment</div>
+                  <div className="text-sm text-gray-700">{validation.loopAnalysis.firstSession.ahaMoment}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Moment-to-Moment Feel - NEW */}
+        {validation.loopAnalysis?.momentToMoment && (
+          <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+            <div className="bg-gradient-to-r from-cyan-50 to-teal-50 px-4 py-3 border-b-2 border-[#00bcd4]">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-[#00bcd4] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#00a0b4]">
+                  <Gamepad2 className="w-4 h-4" />
+                </div>
+                <span className="font-bold text-[#00838f] uppercase tracking-wide text-sm">Gameplay Feel</span>
+              </div>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-cyan-50 p-3 rounded-xl border border-cyan-200">
+                  <div className="text-xs font-bold text-[#00838f] uppercase mb-1">Core Verb</div>
+                  <div className="text-lg font-bold text-gray-800">{validation.loopAnalysis.momentToMoment.coreVerb}</div>
+                </div>
+                <div className="bg-cyan-50 p-3 rounded-xl border border-cyan-200">
+                  <div className="text-xs font-bold text-[#00838f] uppercase mb-1">The Feeling</div>
+                  <div className="text-sm font-medium text-gray-800">{validation.loopAnalysis.momentToMoment.feeling}</div>
+                </div>
+              </div>
+              
+              {validation.loopAnalysis.momentToMoment.satisfactionSource && (
+                <div className="bg-green-50 p-3 rounded-xl border border-green-200">
+                  <div className="text-xs font-bold text-[#58a700] uppercase mb-1">Satisfaction Source</div>
+                  <div className="text-sm text-gray-700">{validation.loopAnalysis.momentToMoment.satisfactionSource}</div>
+                </div>
+              )}
+              
+              {validation.loopAnalysis.momentToMoment.frustrationRisks?.length > 0 && (
+                <div className="bg-red-50 p-3 rounded-xl border border-red-200">
+                  <div className="text-xs font-bold text-[#ea2b2b] uppercase mb-2">Frustration Risks</div>
+                  <ul className="space-y-1">
+                    {validation.loopAnalysis.momentToMoment.frustrationRisks.map((risk, i) => (
+                      <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                        <span className="text-red-400 mt-0.5">•</span>
+                        {risk}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Loop Insights - Enhanced */}
+        {validation.loopAnalysis && (
+          <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-4 py-3 border-b-2 border-[#a560e8]">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-[#a560e8] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#8b47cc]">
+                  <RefreshCw className="w-4 h-4" />
+                </div>
+                <span className="font-bold text-[#8b47cc] uppercase tracking-wide text-sm">Core Loop</span>
+                <span className="ml-auto text-xs bg-[#a560e8] text-white px-2 py-0.5 rounded-full font-bold">{loopScore}/10</span>
+              </div>
+            </div>
+            <div className="p-4 space-y-3">
+              {validation.loopAnalysis.primaryLoop && (
+                <div className="bg-purple-50 p-3 rounded-xl border border-purple-100">
+                  <div className="text-xs font-bold text-[#8b47cc] uppercase mb-1">Primary Loop</div>
+                  <div className="text-sm text-gray-700 font-medium">{validation.loopAnalysis.primaryLoop}</div>
+                </div>
+              )}
+              
+              {validation.loopAnalysis.loopStrength && (
+                <div className={`p-3 rounded-xl border ${
+                  validation.loopAnalysis.loopStrength.includes('strong') ? 'bg-green-50 border-green-200' :
+                  validation.loopAnalysis.loopStrength.includes('weak') ? 'bg-red-50 border-red-200' :
+                  'bg-amber-50 border-amber-200'
+                }`}>
+                  <div className="text-xs font-bold uppercase mb-1 text-gray-600">Loop Strength</div>
+                  <div className="text-sm text-gray-700">{validation.loopAnalysis.loopStrength}</div>
+                </div>
+              )}
+              
+              {validation.loopAnalysis.coreMechanics?.length > 0 && (
+                <div className="bg-purple-50 p-3 rounded-xl border border-purple-100">
+                  <div className="text-xs font-bold text-[#8b47cc] uppercase mb-2">Core Mechanics</div>
+                  <div className="flex flex-wrap gap-2">
+                    {validation.loopAnalysis.coreMechanics.map((mech, i) => (
+                      <span key={i} className="text-xs bg-white text-gray-700 px-2 py-1 rounded-full border border-purple-200">
+                        {mech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {validation.loopAnalysis.secondaryLoops?.length > 0 && (
+                <div className="bg-purple-50 p-3 rounded-xl border border-purple-100">
+                  <div className="text-xs font-bold text-[#8b47cc] uppercase mb-2">Secondary Loops</div>
+                  <ul className="space-y-1">
+                    {validation.loopAnalysis.secondaryLoops.map((loop, i) => (
+                      <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                        <span className="text-purple-400 mt-0.5">↻</span>
+                        {loop}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Retention Deep Dive - Enhanced */}
+        {validation.loopAnalysis?.retention && (
+          <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 border-b-2 border-[#58cc02]">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-[#58cc02] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#58a700]">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
+                <span className="font-bold text-[#58a700] uppercase tracking-wide text-sm">Retention Analysis</span>
+              </div>
+            </div>
+            <div className="p-4 space-y-3">
+              {/* Return Reasons Timeline */}
+              <div className="space-y-2">
+                {validation.loopAnalysis.retention.whyComeBackToday && (
+                  <div className="bg-green-50 p-3 rounded-xl border border-green-200">
+                    <div className="text-xs font-bold text-[#58a700] uppercase mb-1">This Session</div>
+                    <div className="text-sm text-gray-700">{validation.loopAnalysis.retention.whyComeBackToday}</div>
+                  </div>
+                )}
+                {validation.loopAnalysis.retention.whyComeBackTomorrow && (
+                  <div className="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                    <div className="text-xs font-bold text-[#1899d6] uppercase mb-1">Tomorrow</div>
+                    <div className="text-sm text-gray-700">{validation.loopAnalysis.retention.whyComeBackTomorrow}</div>
+                  </div>
+                )}
+                {validation.loopAnalysis.retention.whyComeBackNextWeek && (
+                  <div className="bg-purple-50 p-3 rounded-xl border border-purple-200">
+                    <div className="text-xs font-bold text-[#8b47cc] uppercase mb-1">Next Week</div>
+                    <div className="text-sm text-gray-700">{validation.loopAnalysis.retention.whyComeBackNextWeek}</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Daily & Weekly Hooks */}
+              <div className="grid grid-cols-2 gap-3">
+                {validation.loopAnalysis.retention.dailyHooks?.length > 0 && (
+                  <div className="bg-amber-50 p-3 rounded-xl border border-amber-200">
+                    <div className="text-xs font-bold text-[#ea7900] uppercase mb-2">Daily Hooks</div>
+                    <ul className="space-y-1">
+                      {validation.loopAnalysis.retention.dailyHooks.map((hook, i) => (
+                        <li key={i} className="text-xs text-gray-700">• {hook}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {validation.loopAnalysis.retention.weeklyHooks?.length > 0 && (
+                  <div className="bg-cyan-50 p-3 rounded-xl border border-cyan-200">
+                    <div className="text-xs font-bold text-[#00838f] uppercase mb-2">Weekly Hooks</div>
+                    <ul className="space-y-1">
+                      {validation.loopAnalysis.retention.weeklyHooks.map((hook, i) => (
+                        <li key={i} className="text-xs text-gray-700">• {hook}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              {/* Retention Killers */}
+              {validation.loopAnalysis.retention.retentionKillers?.length > 0 && (
+                <div className="bg-red-50 p-3 rounded-xl border border-red-200">
+                  <div className="text-xs font-bold text-[#ea2b2b] uppercase mb-2">Retention Killers</div>
+                  <ul className="space-y-1">
+                    {validation.loopAnalysis.retention.retentionKillers.map((killer, i) => (
+                      <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                        <span className="text-red-500 mt-0.5">x</span>
+                        {killer}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Session Structure - NEW */}
+        {validation.loopAnalysis?.sessionStructure && (
+          <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+            <div className="bg-gradient-to-r from-indigo-50 to-violet-50 px-4 py-3 border-b-2 border-[#6366f1]">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-[#6366f1] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#4f46e5]">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <span className="font-bold text-[#4f46e5] uppercase tracking-wide text-sm">Session Structure</span>
+              </div>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-200">
+                  <div className="text-xs font-bold text-[#4f46e5] uppercase mb-1">Ideal Session</div>
+                  <div className="text-sm font-bold text-gray-800">{validation.loopAnalysis.sessionStructure.idealLength}</div>
+                </div>
+                <div className="bg-green-50 p-3 rounded-xl border border-green-200">
+                  <div className="text-xs font-bold text-[#58a700] uppercase mb-1">"One More Round"</div>
+                  <div className="text-sm text-gray-700">{validation.loopAnalysis.sessionStructure.oneMoreRoundFactor}</div>
+                </div>
+              </div>
+              
+              {validation.loopAnalysis.sessionStructure.sessionFlow && (
+                <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-200">
+                  <div className="text-xs font-bold text-[#4f46e5] uppercase mb-1">Session Flow</div>
+                  <div className="text-sm text-gray-700">{validation.loopAnalysis.sessionStructure.sessionFlow}</div>
+                </div>
+              )}
+              
+              {validation.loopAnalysis.sessionStructure.naturalBreakPoints?.length > 0 && (
+                <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                  <div className="text-xs font-bold text-gray-600 uppercase mb-2">Natural Break Points</div>
+                  <div className="flex flex-wrap gap-2">
+                    {validation.loopAnalysis.sessionStructure.naturalBreakPoints.map((bp, i) => (
+                      <span key={i} className="text-xs bg-white text-gray-700 px-2 py-1 rounded-full border border-gray-200">
+                        {bp}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Progression Roadmap - NEW */}
+        {validation.loopAnalysis?.progression && (
+          <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+            <div className="bg-gradient-to-r from-orange-50 to-red-50 px-4 py-3 border-b-2 border-[#ff6b35]">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-[#ff6b35] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#e5551f]">
+                  <Target className="w-4 h-4" />
+                </div>
+                <span className="font-bold text-[#e5551f] uppercase tracking-wide text-sm">Progression Roadmap</span>
+              </div>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="space-y-2">
+                {validation.loopAnalysis.progression.shortTerm && (
+                  <div className="bg-green-50 p-3 rounded-xl border-l-4 border-green-400">
+                    <div className="text-xs font-bold text-green-700 uppercase mb-1">This Session</div>
+                    <div className="text-sm text-gray-700">{validation.loopAnalysis.progression.shortTerm}</div>
+                  </div>
+                )}
+                {validation.loopAnalysis.progression.mediumTerm && (
+                  <div className="bg-blue-50 p-3 rounded-xl border-l-4 border-blue-400">
+                    <div className="text-xs font-bold text-blue-700 uppercase mb-1">This Week</div>
+                    <div className="text-sm text-gray-700">{validation.loopAnalysis.progression.mediumTerm}</div>
+                  </div>
+                )}
+                {validation.loopAnalysis.progression.longTerm && (
+                  <div className="bg-purple-50 p-3 rounded-xl border-l-4 border-purple-400">
+                    <div className="text-xs font-bold text-purple-700 uppercase mb-1">End Game</div>
+                    <div className="text-sm text-gray-700">{validation.loopAnalysis.progression.longTerm}</div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                {validation.loopAnalysis.progression.masteryDepth && (
+                  <div className={`p-3 rounded-xl border ${
+                    validation.loopAnalysis.progression.masteryDepth.includes('deep') ? 'bg-green-50 border-green-200' :
+                    validation.loopAnalysis.progression.masteryDepth.includes('shallow') ? 'bg-red-50 border-red-200' :
+                    'bg-amber-50 border-amber-200'
+                  }`}>
+                    <div className="text-xs font-bold uppercase mb-1 text-gray-600">Mastery Depth</div>
+                    <div className="text-sm text-gray-700">{validation.loopAnalysis.progression.masteryDepth}</div>
+                  </div>
+                )}
+                {validation.loopAnalysis.progression.contentVelocity && (
+                  <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                    <div className="text-xs font-bold uppercase mb-1 text-gray-600">Content Velocity</div>
+                    <div className="text-sm text-gray-700">{validation.loopAnalysis.progression.contentVelocity}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Social & Viral Potential - NEW */}
+        {validation.loopAnalysis?.social && validation.loopAnalysis.social.integrationLevel !== 'none' && (
+          <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+            <div className="bg-gradient-to-r from-fuchsia-50 to-pink-50 px-4 py-3 border-b-2 border-[#d946ef]">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-[#d946ef] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#c026d3]">
+                  <Users className="w-4 h-4" />
+                </div>
+                <span className="font-bold text-[#c026d3] uppercase tracking-wide text-sm">Social & Viral</span>
+                <span className="ml-auto text-xs bg-[#d946ef] text-white px-2 py-0.5 rounded-full font-bold capitalize">{validation.loopAnalysis.social.integrationLevel}</span>
+              </div>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                {validation.loopAnalysis.social.coopElements?.length > 0 && (
+                  <div className="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                    <div className="text-xs font-bold text-[#1899d6] uppercase mb-2">Co-op Elements</div>
+                    <ul className="space-y-1">
+                      {validation.loopAnalysis.social.coopElements.map((el, i) => (
+                        <li key={i} className="text-xs text-gray-700">• {el}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {validation.loopAnalysis.social.competitiveElements?.length > 0 && (
+                  <div className="bg-red-50 p-3 rounded-xl border border-red-200">
+                    <div className="text-xs font-bold text-[#ea2b2b] uppercase mb-2">Competitive</div>
+                    <ul className="space-y-1">
+                      {validation.loopAnalysis.social.competitiveElements.map((el, i) => (
+                        <li key={i} className="text-xs text-gray-700">• {el}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              {validation.loopAnalysis.social.socialHooks?.length > 0 && (
+                <div className="bg-fuchsia-50 p-3 rounded-xl border border-fuchsia-200">
+                  <div className="text-xs font-bold text-[#c026d3] uppercase mb-2">Social Hooks</div>
+                  <ul className="space-y-1">
+                    {validation.loopAnalysis.social.socialHooks.map((hook, i) => (
+                      <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                        <span className="text-fuchsia-400 mt-0.5">→</span>
+                        {hook}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {validation.loopAnalysis.social.viralMoments?.length > 0 && (
+                <div className="bg-gradient-to-r from-pink-50 to-orange-50 p-3 rounded-xl border border-pink-200">
+                  <div className="text-xs font-bold text-[#e6007a] uppercase mb-2">Viral/Streamable Moments</div>
+                  <ul className="space-y-1">
+                    {validation.loopAnalysis.social.viralMoments.map((moment, i) => (
+                      <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                        <span className="text-pink-400 mt-0.5">*</span>
+                        {moment}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Skill Mastery Curve - NEW */}
+        {validation.loopAnalysis?.skillCurve && (
+          <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-4 py-3 border-b-2 border-[#10b981]">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-[#10b981] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#059669]">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
+                <span className="font-bold text-[#059669] uppercase tracking-wide text-sm">Skill Mastery</span>
+              </div>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                {validation.loopAnalysis.skillCurve.floorDescription && (
+                  <div className="bg-green-50 p-3 rounded-xl border border-green-200">
+                    <div className="text-xs font-bold text-green-700 uppercase mb-1">Skill Floor</div>
+                    <div className="text-sm text-gray-700">{validation.loopAnalysis.skillCurve.floorDescription}</div>
+                  </div>
+                )}
+                {validation.loopAnalysis.skillCurve.ceilingDescription && (
+                  <div className="bg-purple-50 p-3 rounded-xl border border-purple-200">
+                    <div className="text-xs font-bold text-purple-700 uppercase mb-1">Skill Ceiling</div>
+                    <div className="text-sm text-gray-700">{validation.loopAnalysis.skillCurve.ceilingDescription}</div>
+                  </div>
+                )}
+              </div>
+
+              {validation.loopAnalysis.skillCurve.skillExpression?.length > 0 && (
+                <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-200">
+                  <div className="text-xs font-bold text-[#059669] uppercase mb-2">Skill Expression</div>
+                  <div className="flex flex-wrap gap-2">
+                    {validation.loopAnalysis.skillCurve.skillExpression.map((skill, i) => (
+                      <span key={i} className="text-xs bg-white text-gray-700 px-2 py-1 rounded-full border border-emerald-200">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {validation.loopAnalysis.skillCurve.learningMoments?.length > 0 && (
+                <div className="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                  <div className="text-xs font-bold text-[#1899d6] uppercase mb-2">Learning Milestones</div>
+                  <ul className="space-y-1">
+                    {validation.loopAnalysis.skillCurve.learningMoments.map((moment, i) => (
+                      <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                        <span className="text-blue-400 font-bold">{i + 1}.</span>
+                        {moment}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Quick Wins - NEW */}
+        {validation.loopAnalysis?.quickWins && validation.loopAnalysis.quickWins.length > 0 && (
+          <div className="bg-white rounded-2xl border-2 border-[#58cc02] shadow-[0_4px_0_#58a700] overflow-hidden">
+            <div className="bg-[#d7ffb8] px-4 py-3 border-b-2 border-[#58cc02] flex items-center gap-2">
+              <div className="w-7 h-7 bg-[#58cc02] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#58a700]">
+                <Zap className="w-4 h-4" />
+              </div>
+              <span className="font-bold text-[#58a700] uppercase tracking-wide text-sm">Quick Wins</span>
+              <span className="ml-auto text-xs text-[#58a700]">Easy improvements to make now</span>
+            </div>
             <div className="p-4 space-y-2">
-              {validation.competitorAnalysis.directCompetitors.slice(0, 3).map((comp, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                  <div className="w-8 h-8 bg-gradient-to-br from-[#ff9600] to-[#ff4b4b] text-white rounded-lg flex items-center justify-center font-black text-sm shadow-[0_2px_0_#ea7900]">
-                    {i + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-bold text-gray-900 truncate">{comp.name}</div>
-                    <div className="text-xs text-gray-500">{comp.visits}</div>
-                  </div>
+              {validation.loopAnalysis.quickWins.map((win, i) => (
+                <div key={i} className="flex items-start gap-3 p-3 bg-green-50 rounded-xl border border-green-100">
+                  <span className="w-6 h-6 bg-[#58cc02] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</span>
+                  <span className="text-sm text-gray-700">{win}</span>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Loop Insights - Duolingo Style */}
-        {validation.loopAnalysis && (
+        {/* Missing Elements - NEW */}
+        {validation.loopAnalysis?.missingElements && validation.loopAnalysis.missingElements.length > 0 && (
           <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-4 py-3 border-b-2 border-[#a560e8]">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-[#a560e8] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#8b47cc]">🔄</div>
-                <span className="font-bold text-[#8b47cc] uppercase tracking-wide text-sm">Loop Insights</span>
+            <div className="bg-amber-50 px-4 py-3 border-b-2 border-[#ff9600] flex items-center gap-2">
+              <div className="w-7 h-7 bg-[#ff9600] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#ea7900]">
+                <AlertTriangle className="w-4 h-4" />
               </div>
+              <span className="font-bold text-[#ea7900] uppercase tracking-wide text-sm">Missing Elements</span>
             </div>
-            <div className="p-4 space-y-3">
-              {validation.loopAnalysis.primaryLoop && (
-                <div className="bg-purple-50 p-3 rounded-xl border border-purple-100">
-                  <div className="text-xs font-bold text-[#8b47cc] uppercase mb-1">Core Loop</div>
-                  <div className="text-sm text-gray-700">{validation.loopAnalysis.primaryLoop}</div>
+            <div className="p-4 space-y-2">
+              {validation.loopAnalysis.missingElements.map((element, i) => (
+                <div key={i} className="flex items-start gap-3 text-sm">
+                  <span className="w-5 h-5 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-xs font-bold shrink-0">?</span>
+                  <span className="text-gray-700">{element}</span>
                 </div>
-              )}
-              {validation.loopAnalysis.retention?.whyComeBackTomorrow && (
-                <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
-                  <div className="text-xs font-bold text-[#1899d6] uppercase mb-1">Why They Return</div>
-                  <div className="text-sm text-gray-700">{validation.loopAnalysis.retention.whyComeBackTomorrow}</div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Critical Flaws from Loop Analysis - NEW */}
+        {validation.loopAnalysis?.criticalFlaws && validation.loopAnalysis.criticalFlaws.length > 0 && (
+          <div className="bg-white rounded-2xl border-2 border-[#ff4b4b] shadow-[0_4px_0_#ea2b2b] overflow-hidden">
+            <div className="bg-red-50 px-4 py-3 border-b-2 border-[#ff4b4b] flex items-center gap-2">
+              <div className="w-7 h-7 bg-[#ff4b4b] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#ea2b2b]">
+                <AlertTriangle className="w-4 h-4" />
+              </div>
+              <span className="font-bold text-[#ea2b2b] uppercase tracking-wide text-sm">Loop Critical Flaws</span>
+            </div>
+            <div className="p-4 space-y-2">
+              {validation.loopAnalysis.criticalFlaws.map((flaw, i) => (
+                <div key={i} className="flex items-start gap-3 text-sm">
+                  <span className="w-5 h-5 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-xs font-bold shrink-0">!</span>
+                  <span className="text-gray-700">{flaw}</span>
                 </div>
-              )}
-              {validation.loopAnalysis.sessionStructure?.oneMoreRoundFactor && (
-                <div className="bg-green-50 p-3 rounded-xl border border-green-100">
-                  <div className="text-xs font-bold text-[#58a700] uppercase mb-1">"One More Round" Factor</div>
-                  <div className="text-sm text-gray-700">{validation.loopAnalysis.sessionStructure.oneMoreRoundFactor}</div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* AI Suggestions - NEW */}
+        {validation.loopAnalysis?.suggestions && validation.loopAnalysis.suggestions.length > 0 && (
+          <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+            <div className="bg-gradient-to-r from-violet-50 to-purple-50 px-4 py-3 border-b-2 border-[#8b5cf6] flex items-center gap-2">
+              <div className="w-7 h-7 bg-[#8b5cf6] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#7c3aed]">
+                <Zap className="w-4 h-4" />
+              </div>
+              <span className="font-bold text-[#7c3aed] uppercase tracking-wide text-sm">AI Suggestions</span>
+            </div>
+            <div className="p-4 space-y-2">
+              {validation.loopAnalysis.suggestions.map((suggestion, i) => (
+                <div key={i} className="flex items-start gap-3 p-3 bg-violet-50 rounded-xl border border-violet-100">
+                  <span className="w-6 h-6 bg-[#8b5cf6] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">→</span>
+                  <span className="text-sm text-gray-700">{suggestion}</span>
                 </div>
-              )}
+              ))}
             </div>
           </div>
         )}
@@ -636,13 +1361,13 @@ export default function ValidationPage() {
         {strengths.length > 0 && (
           <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
             <div className="bg-[#d7ffb8] px-4 py-3 border-b-2 border-[#58cc02] flex items-center gap-2">
-              <div className="w-7 h-7 bg-[#58cc02] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#58a700]">✓</div>
+              <div className="w-7 h-7 bg-[#58cc02] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#58a700]">+</div>
               <span className="font-bold text-[#58a700] uppercase tracking-wide text-sm">Strengths</span>
             </div>
             <div className="p-4 space-y-2">
               {strengths.map((s, i) => (
                 <div key={i} className="flex items-start gap-3 text-sm">
-                  <span className="w-5 h-5 bg-[#58cc02] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">✓</span>
+                  <span className="w-5 h-5 bg-[#58cc02] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">+</span>
                   <span className="text-gray-700">{s}</span>
                 </div>
               ))}
@@ -672,13 +1397,13 @@ export default function ValidationPage() {
         {dealbreakers.length > 0 && (
           <div className="bg-white rounded-2xl border-2 border-[#ff4b4b] shadow-[0_4px_0_#ea2b2b] overflow-hidden">
             <div className="bg-[#ffe0e0] px-4 py-3 border-b-2 border-[#ff4b4b] flex items-center gap-2">
-              <div className="w-7 h-7 bg-[#ff4b4b] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#ea2b2b]">✗</div>
+              <div className="w-7 h-7 bg-[#ff4b4b] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#ea2b2b]">x</div>
               <span className="font-bold text-[#ea2b2b] uppercase tracking-wide text-sm">Dealbreakers</span>
             </div>
             <div className="p-4 space-y-2">
               {dealbreakers.map((d, i) => (
                 <div key={i} className="flex items-start gap-3 text-sm">
-                  <span className="w-5 h-5 bg-[#ff4b4b] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">✗</span>
+                  <span className="w-5 h-5 bg-[#ff4b4b] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">x</span>
                   <span className="text-gray-700">{d}</span>
                 </div>
               ))}
@@ -690,7 +1415,9 @@ export default function ValidationPage() {
         {actionItems.length > 0 && (
           <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
             <div className="bg-[#ddf4ff] px-4 py-3 border-b-2 border-[#1cb0f6] flex items-center gap-2">
-              <div className="w-7 h-7 bg-[#1cb0f6] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#1899d6]">📋</div>
+              <div className="w-7 h-7 bg-[#1cb0f6] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#1899d6]">
+                <Target className="w-4 h-4" />
+              </div>
               <span className="font-bold text-[#1899d6] uppercase tracking-wide text-sm">Action Items</span>
             </div>
             <div className="p-4 space-y-3">
@@ -719,7 +1446,9 @@ export default function ValidationPage() {
         {pivotSuggestions.length > 0 && (
           <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
             <div className="bg-[#f0e6ff] px-4 py-3 border-b-2 border-[#a560e8] flex items-center gap-2">
-              <div className="w-7 h-7 bg-[#a560e8] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#8b47cc]">💡</div>
+              <div className="w-7 h-7 bg-[#a560e8] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#8b47cc]">
+                <RefreshCw className="w-4 h-4" />
+              </div>
               <span className="font-bold text-[#8b47cc] uppercase tracking-wide text-sm">Pivot Ideas</span>
             </div>
             <div className="p-4 space-y-2">
@@ -733,9 +1462,34 @@ export default function ValidationPage() {
           </div>
         )}
 
+        {/* Validation Summary Stats */}
+        <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-2xl border border-gray-200 p-4 mt-6">
+          <div className="text-center mb-3">
+            <div className="text-xs font-bold text-gray-500 uppercase tracking-wide">Validation Summary</div>
+          </div>
+          <div className="grid grid-cols-4 gap-2 text-center text-xs">
+            <div>
+              <div className="font-bold text-gray-800">{validation.marketAnalysis?.genre || '-'}</div>
+              <div className="text-gray-500">Genre</div>
+            </div>
+            <div>
+              <div className="font-bold text-gray-800">{validation.loopAnalysis?.social?.integrationLevel || '-'}</div>
+              <div className="text-gray-500">Social</div>
+            </div>
+            <div>
+              <div className="font-bold text-gray-800">{validation.loopAnalysis?.firstSession?.timeToFun || '-'}</div>
+              <div className="text-gray-500">Time to Fun</div>
+            </div>
+            <div>
+              <div className="font-bold text-gray-800">{validation.competitorAnalysis?.directCompetitors?.length || 0}</div>
+              <div className="text-gray-500">Competitors</div>
+            </div>
+          </div>
+        </div>
+
         {/* Data source */}
-        <p className="text-center text-xs text-gray-400 pb-4">
-          Powered by 4 specialized AI agents • Roblox market data
+        <p className="text-center text-xs text-gray-400 pb-4 mt-4">
+          Powered by 4 specialized AI agents analyzing market data, game loops, competition, and player psychology
         </p>
       </div>
 
