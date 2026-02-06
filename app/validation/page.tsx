@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, RefreshCw, ChevronRight, Zap, AlertTriangle, Trophy, Gamepad2, TrendingUp } from 'lucide-react';
+import { ArrowLeft, RefreshCw, ChevronRight, Zap, AlertTriangle, Trophy, Gamepad2, TrendingUp, Flag, Bot, CheckCircle2, X } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { Button } from '@/components/ui/button';
 import { CardSkeleton } from '@/components/LoadingScreen';
@@ -137,18 +137,25 @@ function ValidationSkeleton() {
       </div>
 
       <div className="max-w-2xl mx-auto p-4 space-y-4">
-        {/* Agent Status */}
-        <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-4 border-2 border-pink-200">
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
-            <span className="font-bold text-pink-700">Running AI Analysis...</span>
+        {/* AI Working Banner */}
+        <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-6 border-2 border-pink-200">
+          <div className="flex flex-col items-center gap-3 mb-4">
+            <div className="relative">
+              <Bot className="w-10 h-10 text-pink-600" />
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse" />
+            </div>
+            <div className="text-center">
+              <div className="font-bold text-pink-700 text-lg">AI is Analyzing Your Game</div>
+              <p className="text-pink-500 text-sm mt-1">4 specialized agents are reviewing your idea...</p>
+            </div>
           </div>
           <div className="flex justify-center gap-2">
-            <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full animate-pulse">Market</span>
-            <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full animate-pulse">Loop</span>
-            <span className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full animate-pulse">Competitor</span>
-            <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full animate-pulse">Verdict</span>
+            <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full animate-pulse font-medium">Market Agent</span>
+            <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full animate-pulse font-medium">Loop Agent</span>
+            <span className="text-xs bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full animate-pulse font-medium">Competitor Agent</span>
+            <span className="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded-full animate-pulse font-medium">Verdict Agent</span>
           </div>
+          <p className="text-center text-xs text-pink-400 mt-3">This usually takes 15-30 seconds</p>
         </div>
 
         {/* Verdict Skeleton */}
@@ -218,11 +225,105 @@ function ScoreCircle({ score, label }: { score: number; label: string }) {
   );
 }
 
+// Report button component for each feedback section
+function ReportButton({ validationRunId, section, sectionLabel }: { validationRunId: string | null; section: string; sectionLabel: string }) {
+  const [open, setOpen] = useState(false);
+  const [reportType, setReportType] = useState<'inaccurate' | 'unhelpful' | null>(null);
+  const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  if (!validationRunId) return null;
+
+  const handleSubmit = async () => {
+    if (!reportType) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/reportFeedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ validationRunId, section, reportType, comment: comment.trim() || undefined }),
+      });
+      if (res.ok) {
+        setSubmitted(true);
+        setTimeout(() => { setOpen(false); setSubmitted(false); setReportType(null); setComment(''); }, 1500);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className="flex items-center gap-1 text-xs text-green-600 font-medium mt-2">
+        <CheckCircle2 className="w-3.5 h-3.5" />
+        Report submitted
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative mt-2">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+      >
+        <Flag className="w-3 h-3" />
+        Report issue
+      </button>
+      {open && (
+        <div className="absolute bottom-full mb-2 left-0 z-20 bg-white rounded-xl border border-gray-200 shadow-lg p-3 w-64">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-gray-700 uppercase">Report {sectionLabel}</span>
+            <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="flex gap-2 mb-2">
+            <button
+              onClick={() => setReportType('inaccurate')}
+              className={`flex-1 text-xs py-1.5 px-2 rounded-lg border font-medium transition-colors ${
+                reportType === 'inaccurate' ? 'bg-red-50 border-red-300 text-red-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              Inaccurate
+            </button>
+            <button
+              onClick={() => setReportType('unhelpful')}
+              className={`flex-1 text-xs py-1.5 px-2 rounded-lg border font-medium transition-colors ${
+                reportType === 'unhelpful' ? 'bg-amber-50 border-amber-300 text-amber-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              Unhelpful
+            </button>
+          </div>
+          <textarea
+            placeholder="Optional: tell us more..."
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            className="w-full text-xs border border-gray-200 rounded-lg p-2 mb-2 resize-none h-16 focus:outline-none focus:border-gray-400"
+          />
+          <button
+            onClick={handleSubmit}
+            disabled={!reportType || submitting}
+            className="w-full text-xs py-1.5 bg-gray-900 text-white rounded-lg font-medium disabled:opacity-40 hover:bg-gray-800 transition-colors"
+          >
+            {submitting ? 'Sending...' : 'Submit Report'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ValidationPage() {
   const router = useRouter();
   const { project, loading } = useProject();
   const [validationState, setValidationState] = useState<ValidationState>('idle');
   const [validation, setValidation] = useState<ComprehensiveValidation | null>(null);
+  const [validationRunId, setValidationRunId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [devMode, setDevMode] = useState(false);
   const [agentStatus, setAgentStatus] = useState<string>('');
@@ -324,8 +425,10 @@ export default function ValidationPage() {
         throw new Error(err.message || 'Failed to validate');
       }
 
-      const result: ComprehensiveValidation = await response.json();
-      setValidation(result);
+      const result = await response.json();
+      const { validationRunId: runId, ...validationData } = result;
+      setValidation(validationData as ComprehensiveValidation);
+      setValidationRunId(runId || null);
       setValidationState('complete');
       setAgentStatus('');
     } catch (err) {
@@ -467,6 +570,12 @@ export default function ValidationPage() {
           </div>
         )}
 
+        {/* AI Badge */}
+        <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+          <Bot className="w-4 h-4" />
+          <span className="font-medium">Analyzed by AI — 4 specialized agents</span>
+        </div>
+
         {/* Verdict Card - Duolingo Style */}
         <div className={`${verdictConfig.bg} ${verdictConfig.border} border-2 rounded-2xl ${verdictConfig.shadow} p-6 text-center`}>
           <div className={`text-2xl font-black ${verdictConfig.color} uppercase tracking-wide`}>{verdictConfig.label}</div>
@@ -487,6 +596,7 @@ export default function ValidationPage() {
             <span className="text-[#ea7900]">4-5 Fair</span>
             <span className="text-[#ea2b2b]">1-3 Low</span>
           </div>
+          <ReportButton validationRunId={validationRunId} section="verdict" sectionLabel="Verdict" />
         </div>
 
         {/* Hard Truth */}
@@ -499,6 +609,7 @@ export default function ValidationPage() {
               <div className="flex-1">
                 <div className="font-bold text-[#ea7900] text-sm uppercase tracking-wide">Hard Truth</div>
                 <p className="text-gray-700 text-sm mt-1 leading-relaxed">{hardTruth}</p>
+                <ReportButton validationRunId={validationRunId} section="hardTruth" sectionLabel="Hard Truth" />
               </div>
             </div>
           </div>
@@ -579,6 +690,7 @@ export default function ValidationPage() {
                   )}
                 </div>
               )}
+              <ReportButton validationRunId={validationRunId} section="competition" sectionLabel="Competition" />
             </div>
           </div>
         )}
@@ -635,6 +747,7 @@ export default function ValidationPage() {
                   </ul>
                 </div>
               )}
+              <ReportButton validationRunId={validationRunId} section="market" sectionLabel="Market" />
             </div>
           </div>
         )}
@@ -668,6 +781,7 @@ export default function ValidationPage() {
                   <div className="text-sm text-gray-700">{validation.loopAnalysis.firstSession.hookMoment}</div>
                 </div>
               )}
+              <ReportButton validationRunId={validationRunId} section="firstSession" sectionLabel="First 5 Minutes" />
             </div>
           </div>
         )}
@@ -701,6 +815,7 @@ export default function ValidationPage() {
                   <div className="text-sm text-gray-700">{validation.loopAnalysis.loopStrength}</div>
                 </div>
               )}
+              <ReportButton validationRunId={validationRunId} section="loop" sectionLabel="Core Loop" />
             </div>
           </div>
         )}
@@ -747,6 +862,7 @@ export default function ValidationPage() {
                   </ul>
                 </div>
               )}
+              <ReportButton validationRunId={validationRunId} section="retention" sectionLabel="Retention" />
             </div>
           </div>
         )}
@@ -765,6 +881,7 @@ export default function ValidationPage() {
                   <span className="text-gray-700">{d}</span>
                 </div>
               ))}
+              <ReportButton validationRunId={validationRunId} section="dealbreakers" sectionLabel="Dealbreakers" />
             </div>
           </div>
         )}

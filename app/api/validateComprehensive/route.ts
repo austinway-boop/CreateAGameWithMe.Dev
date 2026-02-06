@@ -13,6 +13,8 @@ import {
   FinalVerdictResult,
   ComprehensiveValidation,
 } from '@/lib/validationAgents';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
@@ -134,7 +136,28 @@ export async function POST(request: NextRequest) {
       finalVerdict,
     };
 
-    return NextResponse.json(result);
+    // Persist the validation run if user is authenticated and has a real project
+    let validationRunId: string | undefined;
+    try {
+      const session = await auth();
+      const projectId = project?.id;
+      if (session?.user?.id && projectId && projectId !== 'dev-test') {
+        const run = await prisma.validationRun.create({
+          data: {
+            projectId,
+            userId: session.user.id,
+            result: result as any,
+          },
+        });
+        validationRunId = run.id;
+        console.log('ValidationRun saved:', validationRunId);
+      }
+    } catch (saveErr) {
+      // Don't fail the whole request if saving fails
+      console.error('Failed to save ValidationRun:', saveErr);
+    }
+
+    return NextResponse.json({ ...result, validationRunId });
   } catch (error) {
     console.error('Comprehensive validation error:', error);
     return NextResponse.json(

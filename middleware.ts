@@ -16,6 +16,7 @@ const protectedRoutes = [
   '/skilltree',
   '/validation',
   '/journey',
+  '/admin',
 ];
 
 export function middleware(request: NextRequest) {
