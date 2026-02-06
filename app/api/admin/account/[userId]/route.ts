@@ -21,39 +21,18 @@ export async function GET(
       name: true,
       email: true,
       image: true,
+      username: true,
+      onboardingComplete: true,
       createdAt: true,
       projects: {
         orderBy: { updatedAt: 'desc' },
-        select: {
-          id: true,
-          finalTitle: true,
-          finalConcept: true,
-          platform: true,
-          teamSize: true,
-          timeHorizon: true,
-          ideaDescription: true,
-          vibeChips: true,
-          gameLoop: true,
-          gameQuestions: true,
-          skillTree: true,
-          currentPage: true,
-          createdAt: true,
-          updatedAt: true,
+        // Fetch ALL project fields
+        include: {
           validationRuns: {
             orderBy: { createdAt: 'desc' },
-            select: {
-              id: true,
-              result: true,
-              createdAt: true,
+            include: {
               feedbackReports: {
                 orderBy: { createdAt: 'desc' },
-                select: {
-                  id: true,
-                  section: true,
-                  reportType: true,
-                  comment: true,
-                  createdAt: true,
-                },
               },
             },
           },
