@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
+import { getStripeServer } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import Stripe from 'stripe';
 
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     // In development/staging without a real webhook secret, we can be more lenient
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     if (webhookSecret && webhookSecret !== 'whsec_placeholder') {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      event = getStripeServer().webhooks.constructEvent(body, signature, webhookSecret);
     } else {
       // For development: parse the event directly (not secure for production)
       event = JSON.parse(body) as Stripe.Event;

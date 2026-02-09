@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { stripe, PLANS, PlanKey } from '@/lib/stripe';
+import { getStripeServer, PLANS, PlanKey } from '@/lib/stripe';
 
 const USE_MOCK_AUTH = process.env.NEXT_PUBLIC_MOCK_AUTH === 'true';
 const MOCK_USER_ID = 'dev-user-123';
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const origin = request.headers.get('origin') || 'http://localhost:3000';
 
     // Create Stripe Checkout Session
-    const checkoutSession = await stripe.checkout.sessions.create({
+    const checkoutSession = await getStripeServer().checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
       customer_email: userEmail || undefined,
