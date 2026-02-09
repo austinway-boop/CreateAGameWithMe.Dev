@@ -24,6 +24,7 @@ function SubscribeContent() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const [loading, setLoading] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [videoWatched, setVideoWatched] = useState(false);
   const [videoStarted, setVideoStarted] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
@@ -43,6 +44,7 @@ function SubscribeContent() {
 
   const handleSubscribe = async (plan: 'starter' | 'pro') => {
     setLoading(plan);
+    setCheckoutError(null);
     try {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
@@ -53,9 +55,11 @@ function SubscribeContent() {
       if (data.url) {
         window.location.href = data.url;
       } else {
+        setCheckoutError(data.error || 'Something went wrong. Please try again.');
         setLoading(null);
       }
-    } catch {
+    } catch (err) {
+      setCheckoutError('Could not connect. Please try again.');
       setLoading(null);
     }
   };
@@ -113,6 +117,12 @@ function SubscribeContent() {
         {cancelled && (
           <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 text-center">
             <p className="text-amber-700 font-medium text-sm">No worries -- try again or watch the video instead.</p>
+          </div>
+        )}
+
+        {checkoutError && (
+          <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-3 text-center">
+            <p className="text-red-700 font-medium text-sm">{checkoutError}</p>
           </div>
         )}
 

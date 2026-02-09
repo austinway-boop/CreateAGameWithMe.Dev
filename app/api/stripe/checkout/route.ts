@@ -7,6 +7,11 @@ const MOCK_USER_ID = 'dev-user-123';
 
 export async function POST(request: NextRequest) {
   try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error('STRIPE_SECRET_KEY is not set');
+      return NextResponse.json({ error: 'Payment system not configured. Please contact support.' }, { status: 500 });
+    }
+
     // Get user ID
     let userId: string | null = null;
     let userEmail: string | null = null;
