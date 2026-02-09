@@ -15,6 +15,7 @@ const protectedRoutes = [
   '/questions',
   '/skilltree',
   '/validation',
+  '/subscribe',
   '/journey',
   '/admin',
 ];

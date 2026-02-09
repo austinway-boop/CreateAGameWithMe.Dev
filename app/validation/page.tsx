@@ -327,8 +327,49 @@ export default function ValidationPage() {
   const [error, setError] = useState<string | null>(null);
   const [devMode, setDevMode] = useState(false);
   const [agentStatus, setAgentStatus] = useState<string>('');
+  const [hasAccess, setHasAccess] = useState(false);
+  const [accessChecked, setAccessChecked] = useState(false);
+  const [previewCountdown, setPreviewCountdown] = useState(10);
+  const [showPreviewOnly, setShowPreviewOnly] = useState(true);
 
   const aiEnabled = process.env.NEXT_PUBLIC_ENABLE_AI === 'true';
+
+  // Check if user has access (subscription or video unlock)
+  useEffect(() => {
+    const checkAccess = async () => {
+      try {
+        const res = await fetch('/api/stripe/check');
+        if (res.ok) {
+          const data = await res.json();
+          setHasAccess(data.hasAccess);
+          if (data.hasAccess) {
+            setShowPreviewOnly(false);
+          }
+        }
+      } catch {
+        // Default to no access
+      } finally {
+        setAccessChecked(true);
+      }
+    };
+    checkAccess();
+  }, []);
+
+  // Countdown timer when validation is complete and user doesn't have access
+  useEffect(() => {
+    if (validationState !== 'complete' || hasAccess || !showPreviewOnly) return;
+
+    if (previewCountdown <= 0) {
+      router.push('/subscribe');
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setPreviewCountdown((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [validationState, hasAccess, showPreviewOnly, previewCountdown, router]);
 
   const readiness: ValidationReadiness = useMemo(() => {
     return checkValidationReadiness(project);
@@ -576,28 +617,62 @@ export default function ValidationPage() {
           <span className="font-medium">Analyzed by AI — 4 specialized agents</span>
         </div>
 
-        {/* Verdict Card - Duolingo Style */}
+        {/* Main Score Card - Always Visible */}
         <div className={`${verdictConfig.bg} ${verdictConfig.border} border-2 rounded-2xl ${verdictConfig.shadow} p-6 text-center`}>
           <div className={`text-2xl font-black ${verdictConfig.color} uppercase tracking-wide`}>{verdictConfig.label}</div>
           <p className="text-gray-600 mt-3 text-sm leading-relaxed max-w-md mx-auto">{summary}</p>
           
-          {/* Scores */}
-          <div className="flex justify-center gap-3 mt-6 pt-4 border-t border-white/50">
-            <ScoreCircle score={overallScore} label="Overall" />
-            <ScoreCircle score={marketScore} label="Market" />
-            <ScoreCircle score={loopScore} label="Loop" />
-            <ScoreCircle score={competitorScore} label="Edge" />
+          {/* Overall Score - Prominent */}
+          <div className="flex justify-center mt-6 pt-4 border-t border-white/50">
+            <div className="text-center">
+              <div className={`w-20 h-20 rounded-2xl border-2 ${
+                overallScore >= 8 ? 'border-[#58cc02] bg-[#d7ffb8] shadow-[0_4px_0_#58a700]' :
+                overallScore >= 6 ? 'border-[#1cb0f6] bg-[#ddf4ff] shadow-[0_4px_0_#1899d6]' :
+                overallScore >= 4 ? 'border-[#ff9600] bg-[#fff4e0] shadow-[0_4px_0_#ea7900]' :
+                'border-[#ff4b4b] bg-[#ffe0e0] shadow-[0_4px_0_#ea2b2b]'
+              } flex items-center justify-center mx-auto mb-2`}>
+                <span className={`text-3xl font-black ${
+                  overallScore >= 8 ? 'text-[#58a700]' :
+                  overallScore >= 6 ? 'text-[#1899d6]' :
+                  overallScore >= 4 ? 'text-[#ea7900]' :
+                  'text-[#ea2b2b]'
+                }`}>{overallScore}</span>
+              </div>
+              <div className="text-sm font-bold text-gray-600 uppercase tracking-wide">Overall Score</div>
+            </div>
           </div>
-          
-          {/* Score Legend */}
-          <div className="flex justify-center gap-3 mt-4 text-[10px] font-bold uppercase tracking-wider">
-            <span className="text-[#58a700]">8+ Great</span>
-            <span className="text-[#1899d6]">6-7 Good</span>
-            <span className="text-[#ea7900]">4-5 Fair</span>
-            <span className="text-[#ea2b2b]">1-3 Low</span>
-          </div>
+
+          {/* Sub-scores only shown when user has access */}
+          {!showPreviewOnly && (
+            <div className="flex justify-center gap-3 mt-4">
+              <ScoreCircle score={marketScore} label="Market" />
+              <ScoreCircle score={loopScore} label="Loop" />
+              <ScoreCircle score={competitorScore} label="Edge" />
+            </div>
+          )}
+
           <ReportButton validationRunId={validationRunId} section="verdict" sectionLabel="Verdict" />
         </div>
+
+        {/* Preview Mode: See More / Countdown */}
+        {showPreviewOnly && !hasAccess && (
+          <div className="space-y-3">
+            <button
+              onClick={() => router.push('/subscribe')}
+              className="w-full bg-[#1cb0f6] hover:bg-[#1899d6] text-white font-bold py-4 px-6 rounded-2xl shadow-[0_4px_0_#1899d6] hover:shadow-[0_2px_0_#1899d6] hover:translate-y-[2px] transition-all uppercase tracking-wide text-sm flex items-center justify-center gap-2"
+            >
+              See Full Breakdown
+              <ChevronRight className="w-5 h-5" />
+            </button>
+            <p className="text-center text-xs text-gray-400">
+              Auto-redirecting in {previewCountdown}s
+            </p>
+          </div>
+        )}
+
+        {/* Full Validation Details - Gated behind access */}
+        {!showPreviewOnly && (
+        <>
 
         {/* Hard Truth */}
         {hardTruth && (
@@ -890,20 +965,25 @@ export default function ValidationPage() {
         <p className="text-center text-xs text-gray-400 pb-4 mt-4">
           AI-powered analysis of market data, game loops, and competition
         </p>
+
+        </>
+        )}
       </div>
 
       {/* Continue Button - Duolingo Style */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur border-t border-gray-200">
-        <div className="max-w-2xl mx-auto">
-          <button
-            onClick={() => router.push('/finalize')}
-            className="w-full bg-[#58cc02] hover:bg-[#4caf00] text-white font-bold py-4 px-6 rounded-2xl shadow-[0_4px_0_#58a700] hover:shadow-[0_2px_0_#58a700] hover:translate-y-[2px] transition-all uppercase tracking-wide flex items-center justify-center gap-2"
-          >
-            Continue to Game Plan
-            <ChevronRight className="h-5 w-5" />
-          </button>
+      {!showPreviewOnly && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur border-t border-gray-200">
+          <div className="max-w-2xl mx-auto">
+            <button
+              onClick={() => router.push('/finalize')}
+              className="w-full bg-[#58cc02] hover:bg-[#4caf00] text-white font-bold py-4 px-6 rounded-2xl shadow-[0_4px_0_#58a700] hover:shadow-[0_2px_0_#58a700] hover:translate-y-[2px] transition-all uppercase tracking-wide flex items-center justify-center gap-2"
+            >
+              Continue to Game Plan
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
