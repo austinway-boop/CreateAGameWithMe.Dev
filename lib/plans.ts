@@ -13,8 +13,9 @@ export const PLANS = {
       'AI 3D Generation',
       'Automated Calendar',
       'Gamified Goals',
-      '50 AI Credits / month',
     ],
+    creditsLabel: '50 AI Credits / month',
+    founderCall: '1-on-1 call with founder',
   },
   pro: {
     name: 'Pro',
@@ -29,8 +30,9 @@ export const PLANS = {
       'AI 3D Generation',
       'Automated Calendar',
       'Gamified Goals',
-      '500 AI Credits / month',
     ],
+    creditsLabel: '500 AI Credits / month',
+    founderCall: '1-on-1 call with founder',
     badge: 'Best Value',
   },
 } as const;

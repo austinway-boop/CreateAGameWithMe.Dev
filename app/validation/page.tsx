@@ -329,7 +329,6 @@ export default function ValidationPage() {
   const [agentStatus, setAgentStatus] = useState<string>('');
   const [hasAccess, setHasAccess] = useState(false);
   const [accessChecked, setAccessChecked] = useState(false);
-  const [previewCountdown, setPreviewCountdown] = useState(10);
   const [showPreviewOnly, setShowPreviewOnly] = useState(true);
 
   const aiEnabled = process.env.NEXT_PUBLIC_ENABLE_AI === 'true';
@@ -354,22 +353,6 @@ export default function ValidationPage() {
     };
     checkAccess();
   }, []);
-
-  // Countdown timer when validation is complete and user doesn't have access
-  useEffect(() => {
-    if (validationState !== 'complete' || hasAccess || !showPreviewOnly) return;
-
-    if (previewCountdown <= 0) {
-      router.push('/subscribe');
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setPreviewCountdown((prev) => prev - 1);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [validationState, hasAccess, showPreviewOnly, previewCountdown, router]);
 
   const readiness: ValidationReadiness = useMemo(() => {
     return checkValidationReadiness(project);
@@ -654,20 +637,15 @@ export default function ValidationPage() {
           <ReportButton validationRunId={validationRunId} section="verdict" sectionLabel="Verdict" />
         </div>
 
-        {/* Preview Mode: See More / Countdown */}
+        {/* Preview Mode: See More */}
         {showPreviewOnly && !hasAccess && (
-          <div className="space-y-3">
-            <button
-              onClick={() => router.push('/subscribe')}
-              className="w-full bg-[#1cb0f6] hover:bg-[#1899d6] text-white font-bold py-4 px-6 rounded-2xl shadow-[0_4px_0_#1899d6] hover:shadow-[0_2px_0_#1899d6] hover:translate-y-[2px] transition-all uppercase tracking-wide text-sm flex items-center justify-center gap-2"
-            >
-              See Full Breakdown
-              <ChevronRight className="w-5 h-5" />
-            </button>
-            <p className="text-center text-xs text-gray-400">
-              Auto-redirecting in {previewCountdown}s
-            </p>
-          </div>
+          <button
+            onClick={() => router.push('/subscribe')}
+            className="w-full bg-[#1cb0f6] hover:bg-[#1899d6] text-white font-bold py-4 px-6 rounded-2xl shadow-[0_4px_0_#1899d6] hover:shadow-[0_2px_0_#1899d6] hover:translate-y-[2px] transition-all uppercase tracking-wide text-sm flex items-center justify-center gap-2"
+          >
+            See Full Breakdown
+            <ChevronRight className="w-5 h-5" />
+          </button>
         )}
 
         {/* Full Validation Details - Gated behind access */}
