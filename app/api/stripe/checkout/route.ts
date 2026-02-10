@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         },
       ],
-      success_url: `${origin}/subscribe?success=true`,
+      success_url: `${origin}/subscribe?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/subscribe?cancelled=true`,
     });
 

@@ -31,16 +31,31 @@ function SubscribeContent() {
   const [videoProgress, setVideoProgress] = useState(0);
 
   const success = searchParams.get('success') === 'true';
+  const sessionId = searchParams.get('session_id');
   const cancelled = searchParams.get('cancelled') === 'true';
 
+  // On success redirect from Stripe, verify the session and create subscription
   useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => {
+    if (success && sessionId) {
+      const verifyAndRedirect = async () => {
+        try {
+          await fetch('/api/stripe/verify-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId }),
+          });
+        } catch {
+          // Still redirect even if verify fails -- webhook will catch it later
+        }
         router.push('/validation');
-      }, 3000);
+      };
+      verifyAndRedirect();
+    } else if (success) {
+      // Fallback if no session_id (shouldn't happen but just in case)
+      const timer = setTimeout(() => router.push('/validation'), 2000);
       return () => clearTimeout(timer);
     }
-  }, [success, router]);
+  }, [success, sessionId, router]);
 
   const handleSubscribe = async (plan: 'starter' | 'pro') => {
     setLoading(plan);
