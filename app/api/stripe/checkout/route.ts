@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     const planConfig = PLANS[plan];
     const origin = request.headers.get('origin') || 'http://localhost:3000';
 
-    // Create Stripe Checkout Session
+    // Create Stripe Checkout Session using existing Stripe price IDs
     const checkoutSession = await getStripeServer().checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -50,17 +50,7 @@ export async function POST(request: NextRequest) {
       },
       line_items: [
         {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `${planConfig.name} Plan`,
-              description: `${planConfig.credits} AI credits per month. Includes AI music, image, video, and 3D generation, automated calendar, and gamified goals.`,
-            },
-            unit_amount: planConfig.price,
-            recurring: {
-              interval: planConfig.interval,
-            },
-          },
+          price: planConfig.stripePriceId,
           quantity: 1,
         },
       ],
