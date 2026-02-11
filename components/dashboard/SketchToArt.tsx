@@ -62,6 +62,35 @@ export function SketchToArt({ credits, onCreditsUpdate }: Props) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<GeneratedResult[]>([]);
+  const [loadingResults, setLoadingResults] = useState(true);
+
+  // Load saved art on mount
+  useEffect(() => {
+    loadSavedArt();
+  }, []);
+
+  const loadSavedArt = async () => {
+    try {
+      const res = await fetch('/api/ai/sketch-to-art');
+      if (res.ok) {
+        const data = await res.json();
+        const loaded: GeneratedResult[] = data
+          .filter((item: any) => item.resultBase64)
+          .map((item: any) => ({
+            id: item.id,
+            imageUrl: `data:image/png;base64,${item.resultBase64}`,
+            description: item.prompt || '',
+            mode: 'scene' as GenerationMode,
+            fidelity: (item.style || 'balanced') as SketchFidelity,
+          }));
+        setResults(loaded);
+      }
+    } catch {
+      // Silently fail - not critical
+    } finally {
+      setLoadingResults(false);
+    }
+  };
 
   // Initialize canvas
   useEffect(() => {
@@ -566,7 +595,12 @@ export function SketchToArt({ credits, onCreditsUpdate }: Props) {
       </div>
 
       {/* Results */}
-      {results.length > 0 && (
+      {loadingResults ? (
+        <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-[0_4px_0_#e5e7eb] p-8 text-center">
+          <Loader2 className="w-5 h-5 animate-spin text-gray-400 mx-auto" />
+          <p className="text-xs text-gray-400 mt-2">Loading saved art...</p>
+        </div>
+      ) : results.length > 0 ? (
         <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-[0_4px_0_#e5e7eb] p-4">
           <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide">
             Your Generations ({results.length})
@@ -590,7 +624,7 @@ export function SketchToArt({ credits, onCreditsUpdate }: Props) {
             ))}
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

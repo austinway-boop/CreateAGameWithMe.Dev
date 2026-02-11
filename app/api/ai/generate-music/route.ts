@@ -7,6 +7,36 @@ export const maxDuration = 60;
 
 const LOUDLY_API_KEY = process.env.LOUDLY_API_KEY;
 
+// GET - Load saved generated music tracks
+export async function GET() {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const tracks = await prisma.generatedMusic.findMany({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      select: {
+        id: true,
+        title: true,
+        duration: true,
+        musicFileUrl: true,
+        bpm: true,
+        prompt: true,
+        createdAt: true,
+      },
+    });
+
+    return NextResponse.json(tracks);
+  } catch (error) {
+    console.error('Load music error:', error);
+    return NextResponse.json({ error: 'Failed to load music' }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();

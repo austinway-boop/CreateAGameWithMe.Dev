@@ -36,8 +36,38 @@ export function MusicGenerator({ credits, onCreditsUpdate }: Props) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tracks, setTracks] = useState<GeneratedTrack[]>([]);
+  const [loadingTracks, setLoadingTracks] = useState(true);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Load saved tracks on mount
+  useEffect(() => {
+    loadSavedTracks();
+  }, []);
+
+  const loadSavedTracks = async () => {
+    try {
+      const res = await fetch('/api/ai/generate-music');
+      if (res.ok) {
+        const data = await res.json();
+        const loaded: GeneratedTrack[] = data
+          .filter((item: any) => item.musicFileUrl)
+          .map((item: any) => ({
+            id: item.id,
+            title: item.title || 'AI Generated Track',
+            duration: item.duration || 0,
+            musicFileUrl: item.musicFileUrl,
+            bpm: item.bpm || null,
+            prompt: item.prompt || '',
+          }));
+        setTracks(loaded);
+      }
+    } catch {
+      // Silently fail - not critical
+    } finally {
+      setLoadingTracks(false);
+    }
+  };
 
   const handleRandomPrompt = () => {
     const random = PROMPT_SUGGESTIONS[Math.floor(Math.random() * PROMPT_SUGGESTIONS.length)];
@@ -173,7 +203,12 @@ export function MusicGenerator({ credits, onCreditsUpdate }: Props) {
       </div>
 
       {/* Generated Tracks */}
-      {tracks.length > 0 && (
+      {loadingTracks ? (
+        <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-[0_4px_0_#e5e7eb] p-8 text-center">
+          <Loader2 className="w-5 h-5 animate-spin text-gray-400 mx-auto" />
+          <p className="text-xs text-gray-400 mt-2">Loading saved tracks...</p>
+        </div>
+      ) : tracks.length > 0 ? (
         <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-[0_4px_0_#e5e7eb] p-4">
           <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide">
             Your Tracks ({tracks.length})
@@ -214,7 +249,7 @@ export function MusicGenerator({ credits, onCreditsUpdate }: Props) {
             ))}
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Copyright info */}
       <p className="text-center text-[10px] text-gray-400">

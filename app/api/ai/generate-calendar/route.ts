@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    const { projectId } = await request.json();
+    const { projectId, hoursPerDay, daysPerWeek, startDate } = await request.json();
 
     // Load project data
     const project = await prisma.project.findFirst({
@@ -43,45 +43,60 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    const prompt = `You are a game development project planner. Based on the following game project details, create a detailed development calendar/roadmap.
+    // Calculate total weeks from time horizon
+    const weeksMap: Record<string, number> = {
+      '1 week': 1,
+      '1 month': 4,
+      '3 months': 13,
+      '6 months': 26,
+    };
+    const totalWeeks = weeksMap[project.timeHorizon || '3 months'] || 13;
+    const maxTokens = Math.min(8000, 2000 + totalWeeks * daysPerWeek * 50);
 
-PROJECT DETAILS:
+    const prompt = `You are a game development schedule planner. Create a daily work schedule for a game developer.
+
+PROJECT:
 - Title: ${project.finalTitle || 'Untitled Game'}
-- Concept: ${project.finalConcept || project.ideaDescription || 'No concept provided'}
+- Concept: ${project.finalConcept || project.ideaDescription || 'Not specified'}
 - Platform: ${project.platform || 'Not specified'}
-- Team Size: ${project.teamSize || 'Solo'}
-- Time Horizon: ${project.timeHorizon || '3 months'}
-- Game Loop: ${JSON.stringify(project.gameLoop || []).substring(0, 500)}
-- Skills Required: ${JSON.stringify(project.skillTree || []).substring(0, 500)}
+- Team: ${project.teamSize || 'Solo'}
+- Timeline: ${project.timeHorizon || '3 months'} (${totalWeeks} weeks)
+- Game Loop: ${JSON.stringify(project.gameLoop || []).substring(0, 300)}
+- Skills: ${JSON.stringify(project.skillTree || []).substring(0, 300)}
 
-Create a structured development plan with:
-1. Phases (e.g., Pre-production, Prototype, Alpha, Beta, Polish, Launch)
-2. Each phase has milestones with estimated dates
-3. Each milestone has specific tasks
+SCHEDULE:
+- ${hoursPerDay} hours per working day
+- ${daysPerWeek} working days per week
+- ${totalWeeks} weeks total
 
-Return ONLY valid JSON in this exact format (no markdown, no explanation):
+RULES:
+1. Each week has EXACTLY ${daysPerWeek} days
+2. Each day has 2-3 goals that sum to EXACTLY ${hoursPerDay} hours
+3. Use ONLY these categories: planning, design, art, code, audio, testing, polish
+4. Task titles: SHORT (5-8 words), SPECIFIC to this game
+5. Tasks progress logically (design→code→test→polish)
+6. Each week has a clear focus and milestone
+7. Hours must be: 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, or 8
+8. IDs follow pattern: w{week}d{day}g{goal} (e.g. w1d1g1)
+
+Return ONLY valid JSON (no markdown, no explanation):
 {
-  "phases": [
+  "weeks": [
     {
-      "name": "Phase Name",
-      "startWeek": 1,
-      "endWeek": 4,
-      "color": "#hex",
-      "milestones": [
+      "week": 1,
+      "focus": "Phase Focus Area",
+      "days": [
         {
-          "name": "Milestone Name",
-          "week": 2,
-          "tasks": ["Task 1", "Task 2"]
+          "day": 1,
+          "goals": [
+            { "id": "w1d1g1", "title": "Short specific task name", "hours": 2, "category": "code" }
+          ]
         }
-      ]
+      ],
+      "milestone": "What is achieved by end of this week"
     }
-  ],
-  "totalWeeks": 12,
-  "tips": ["Tip 1", "Tip 2"]
-}
-
-Use these colors for phases: #58cc02 (green), #1cb0f6 (blue), #a560e8 (purple), #ff9600 (orange), #ff4b4b (red), #ffc800 (yellow).
-Make the plan realistic for the team size and time horizon. Be specific about game development tasks.`;
+  ]
+}`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -93,13 +108,13 @@ Make the plan realistic for the team size and time horizon. Be specific about ga
         model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
-        max_tokens: 2000,
+        max_tokens: maxTokens,
       }),
     });
 
     if (!response.ok) {
       console.error('OpenAI error:', response.status);
-      return NextResponse.json({ error: 'Failed to generate calendar' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to generate schedule' }, { status: 500 });
     }
 
     const data = await response.json();
@@ -116,31 +131,56 @@ Make the plan realistic for the team size and time horizon. Be specific about ga
       calendarData = JSON.parse(jsonStr);
     } catch {
       console.error('Failed to parse calendar JSON:', content.substring(0, 200));
-      return NextResponse.json({ error: 'Failed to parse calendar data' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to parse schedule data' }, { status: 500 });
     }
 
-    // Save to database
-    let savedId: string | undefined;
-    try {
-      const saved = await prisma.calendarPlan.create({
-        data: {
-          userId,
-          projectId,
-          calendarData,
-        },
-      });
-      savedId = saved.id;
-    } catch (err) {
-      console.error('Failed to save calendar:', err);
-    }
+    // Add metadata
+    calendarData.hoursPerDay = hoursPerDay;
+    calendarData.daysPerWeek = daysPerWeek;
+    calendarData.totalWeeks = totalWeeks;
+    calendarData.startDate = startDate || new Date().toISOString().split('T')[0];
+
+    // Normalize and add completion tracking
+    calendarData.weeks = (calendarData.weeks || []).map((week: any, wi: number) => ({
+      ...week,
+      week: wi + 1,
+      focus: week.focus || `Week ${wi + 1}`,
+      milestone: week.milestone || '',
+      days: (week.days || []).slice(0, daysPerWeek).map((day: any, di: number) => ({
+        ...day,
+        day: di + 1,
+        goals: (day.goals || []).map((goal: any, gi: number) => ({
+          ...goal,
+          id: goal.id || `w${wi + 1}d${di + 1}g${gi + 1}`,
+          title: goal.title || 'Task',
+          hours: goal.hours || 1,
+          category: goal.category || 'planning',
+          completed: false,
+        })),
+      })),
+    }));
+
+    // Delete old calendar plans for this project
+    await prisma.calendarPlan.deleteMany({
+      where: { userId, projectId },
+    });
+
+    // Save new calendar
+    const saved = await prisma.calendarPlan.create({
+      data: {
+        userId,
+        projectId,
+        calendarData,
+      },
+    });
 
     return NextResponse.json({
-      id: savedId,
+      id: saved.id,
       calendarData,
       creditsRemaining: creditResult.remaining,
     });
   } catch (error: any) {
     console.error('Calendar generation error:', error);
-    return NextResponse.json({ error: 'Failed to generate calendar' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to generate schedule' }, { status: 500 });
   }
 }

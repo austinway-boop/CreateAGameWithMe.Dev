@@ -8,6 +8,34 @@ export const maxDuration = 60;
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// GET - Load saved generated art
+export async function GET() {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const artworks = await prisma.generatedArt.findMany({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: 'desc' },
+      take: 12,
+      select: {
+        id: true,
+        resultBase64: true,
+        prompt: true,
+        style: true,
+        createdAt: true,
+      },
+    });
+
+    return NextResponse.json(artworks);
+  } catch (error) {
+    console.error('Load art error:', error);
+    return NextResponse.json({ error: 'Failed to load art' }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
