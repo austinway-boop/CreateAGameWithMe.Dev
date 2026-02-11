@@ -59,6 +59,10 @@ export async function GET(request: NextRequest) {
       updateData.thumbnailUrl = status.thumbnail_url || null;
     }
 
+    if (status.status === 'FAILED') {
+      updateData.errorMessage = status.task_error?.message || 'Generation failed';
+    }
+
     await prisma.model3D.update({
       where: { meshyTaskId: taskId },
       data: updateData,

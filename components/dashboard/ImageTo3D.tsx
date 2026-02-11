@@ -36,13 +36,14 @@ export function ImageTo3D({ credits, onCreditsUpdate }: Props) {
 
   // Load existing models
   useEffect(() => {
-    loadModels();
+    if (project?.id) loadModels();
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project?.id]);
 
   const loadModels = async () => {
     try {
-      const res = await fetch('/api/ai/image-to-3d');
+      const res = await fetch(`/api/ai/image-to-3d?projectId=${project!.id}`);
       if (res.ok) {
         const data = await res.json();
         setModels(data);

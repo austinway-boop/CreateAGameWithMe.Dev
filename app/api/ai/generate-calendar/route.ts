@@ -51,45 +51,106 @@ export async function POST(request: NextRequest) {
       '6 months': 26,
     };
     const totalWeeks = weeksMap[project.timeHorizon || '3 months'] || 13;
-    const maxTokens = Math.min(8000, 2000 + totalWeeks * daysPerWeek * 50);
+    const maxTokens = Math.min(8000, 2500 + totalWeeks * daysPerWeek * 60);
 
-    const prompt = `You are a game development schedule planner. Create a daily work schedule for a game developer.
+    // Extract rich project data
+    const gameQuestions = project.gameQuestions as any;
+    const structuredIdea = project.structuredIdea as any;
+    const selectedSpark = project.selectedSpark as any;
+    const vibeChips = (project.vibeChips || []) as string[];
 
-PROJECT:
+    // Build a rich context block from all available project data
+    let projectContext = `GAME PROJECT:
 - Title: ${project.finalTitle || 'Untitled Game'}
 - Concept: ${project.finalConcept || project.ideaDescription || 'Not specified'}
 - Platform: ${project.platform || 'Not specified'}
-- Team: ${project.teamSize || 'Solo'}
-- Timeline: ${project.timeHorizon || '3 months'} (${totalWeeks} weeks)
-- Game Loop: ${JSON.stringify(project.gameLoop || []).substring(0, 300)}
-- Skills: ${JSON.stringify(project.skillTree || []).substring(0, 300)}
+- Team Size: ${project.teamSize || 'Solo'}
+- Timeline: ${project.timeHorizon || '3 months'} (${totalWeeks} weeks)`;
 
-SCHEDULE:
+    if (gameQuestions) {
+      projectContext += `\n\nGAME IDENTITY:`;
+      if (gameQuestions.oneSentence) projectContext += `\n- Pitch: ${gameQuestions.oneSentence}`;
+      if (gameQuestions.genre) projectContext += `\n- Genre: ${gameQuestions.genre}`;
+      if (gameQuestions.targetPlayer) projectContext += `\n- Target Player: ${gameQuestions.targetPlayer}`;
+      if (gameQuestions.emotions?.length) projectContext += `\n- Emotions: ${gameQuestions.emotions.join(', ')}`;
+      if (gameQuestions.memorableThing) projectContext += `\n- Memorable Thing: ${gameQuestions.memorableThing}`;
+      if (gameQuestions.biggestRisk) projectContext += `\n- Biggest Risk: ${gameQuestions.biggestRisk}`;
+      if (gameQuestions.pricePoint) projectContext += `\n- Price Point: ${gameQuestions.pricePoint}`;
+    }
+
+    if (structuredIdea) {
+      if (structuredIdea.coreVerbs?.length) projectContext += `\n\nCORE VERBS: ${structuredIdea.coreVerbs.join(', ')}`;
+      if (structuredIdea.loopHook) projectContext += `\nLOOP HOOK: ${structuredIdea.loopHook}`;
+    }
+
+    if (selectedSpark) {
+      if (selectedSpark.uniqueMechanic) projectContext += `\nUNIQUE MECHANIC: ${selectedSpark.uniqueMechanic}`;
+      if (selectedSpark.prototypePlan) projectContext += `\nPROTOTYPE PLAN: ${selectedSpark.prototypePlan}`;
+      if (selectedSpark.coreLoop) projectContext += `\nCORE LOOP: ${selectedSpark.coreLoop}`;
+    }
+
+    if (vibeChips.length > 0) {
+      projectContext += `\nVIBE: ${vibeChips.join(', ')}`;
+    }
+
+    const gameLoopStr = JSON.stringify(project.gameLoop || []).substring(0, 500);
+    if (gameLoopStr !== '[]') {
+      projectContext += `\n\nGAME LOOP DIAGRAM: ${gameLoopStr}`;
+    }
+
+    const skillTreeStr = JSON.stringify(project.skillTree || []).substring(0, 500);
+    if (skillTreeStr !== '[]') {
+      projectContext += `\nSKILL TREE: ${skillTreeStr}`;
+    }
+
+    // Determine appropriate game dev phases based on timeline
+    let phasesGuidance: string;
+    if (totalWeeks <= 1) {
+      phasesGuidance = `Phases for a 1-week jam: Quick Design (day 1), Build Core (days 2-4), Polish & Ship (day 5+)`;
+    } else if (totalWeeks <= 4) {
+      phasesGuidance = `Phases: Pre-Production (week 1), Prototype (week 2), Content & Polish (week 3), Testing & Launch (week 4)`;
+    } else if (totalWeeks <= 13) {
+      phasesGuidance = `Phases: Pre-Production (weeks 1-2), Prototype (weeks 3-4), Vertical Slice (weeks 5-6), Alpha (weeks 7-9), Beta (weeks 10-11), Polish & Launch (weeks 12-13)`;
+    } else {
+      phasesGuidance = `Phases: Pre-Production (weeks 1-3), Prototype (weeks 4-6), Vertical Slice (weeks 7-10), Alpha (weeks 11-16), Beta (weeks 17-21), Polish (weeks 22-24), Launch Prep (weeks 25-26)`;
+    }
+
+    const prompt = `You are an expert game development schedule planner. Create a realistic daily work schedule that follows real game dev methodology.
+
+${projectContext}
+
+SCHEDULE PARAMETERS:
 - ${hoursPerDay} hours per working day
 - ${daysPerWeek} working days per week
 - ${totalWeeks} weeks total
 
-RULES:
+PHASE STRUCTURE:
+${phasesGuidance}
+
+CRITICAL RULES:
 1. Each week has EXACTLY ${daysPerWeek} days
 2. Each day has 2-3 goals that sum to EXACTLY ${hoursPerDay} hours
-3. Use ONLY these categories: planning, design, art, code, audio, testing, polish
-4. Task titles: SHORT (5-8 words), SPECIFIC to this game
-5. Tasks progress logically (design→code→test→polish)
-6. Each week has a clear focus and milestone
-7. Hours must be: 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, or 8
-8. IDs follow pattern: w{week}d{day}g{goal} (e.g. w1d1g1)
+3. Categories: planning, design, art, code, audio, testing, polish
+4. Task titles must be SPECIFIC to THIS game (reference the actual mechanics, genre, platform)
+5. Each goal has a brief "why" explaining its purpose
+6. Each week has a "deliverable" — the tangible thing you should have by end of week
+7. Tasks progress through real game dev phases (design before code, code before test)
+8. Hours: 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, or 8 only
+9. IDs: w{week}d{day}g{goal} pattern (e.g. w1d1g1)
+10. Address the game's biggest risk early in the schedule
 
 Return ONLY valid JSON (no markdown, no explanation):
 {
   "weeks": [
     {
       "week": 1,
-      "focus": "Phase Focus Area",
+      "focus": "Phase: Focus Area",
+      "deliverable": "Tangible thing you have by end of this week",
       "days": [
         {
           "day": 1,
           "goals": [
-            { "id": "w1d1g1", "title": "Short specific task name", "hours": 2, "category": "code" }
+            { "id": "w1d1g1", "title": "Game-specific task name", "why": "Brief reason this matters now", "hours": 2, "category": "design" }
           ]
         }
       ],
@@ -145,6 +206,7 @@ Return ONLY valid JSON (no markdown, no explanation):
       ...week,
       week: wi + 1,
       focus: week.focus || `Week ${wi + 1}`,
+      deliverable: week.deliverable || '',
       milestone: week.milestone || '',
       days: (week.days || []).slice(0, daysPerWeek).map((day: any, di: number) => ({
         ...day,
@@ -153,6 +215,7 @@ Return ONLY valid JSON (no markdown, no explanation):
           ...goal,
           id: goal.id || `w${wi + 1}d${di + 1}g${gi + 1}`,
           title: goal.title || 'Task',
+          why: goal.why || '',
           hours: goal.hours || 1,
           category: goal.category || 'planning',
           completed: false,

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Target, Loader2, Sparkles, Clock, ChevronDown, ChevronRight,
   Check, Calendar, RotateCcw, Coffee, CheckCircle2, Circle, Play,
+  Flame, Package,
 } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { CreditInfo } from '@/lib/credits';
@@ -15,6 +16,7 @@ import { CreditInfo } from '@/lib/credits';
 interface DailyGoal {
   id: string;
   title: string;
+  why?: string;
   hours: number;
   category: 'design' | 'art' | 'code' | 'audio' | 'testing' | 'polish' | 'planning';
   completed: boolean;
@@ -28,6 +30,7 @@ interface DayPlan {
 interface WeekPlan {
   week: number;
   focus: string;
+  deliverable?: string;
   days: DayPlan[];
   milestone: string;
 }
@@ -100,7 +103,6 @@ function getTodayInfo(data: CalendarPlanData): TodayInfo {
     return { status: 'not_started', nextDate: start };
   }
 
-  // Check if today is a working day
   if (!isWorkingDay(today, data.daysPerWeek)) {
     const next = new Date(today);
     for (let i = 1; i <= 7; i++) {
@@ -112,7 +114,6 @@ function getTodayInfo(data: CalendarPlanData): TodayInfo {
     return { status: 'completed' };
   }
 
-  // Count working days from start to today (0-indexed)
   let workingDayIndex = 0;
   const cursor = new Date(start);
 
@@ -121,7 +122,6 @@ function getTodayInfo(data: CalendarPlanData): TodayInfo {
       workingDayIndex++;
     }
     cursor.setDate(cursor.getDate() + 1);
-    // Safety: don't loop beyond today
     if (cursor > today) return { status: 'completed' };
   }
 
@@ -198,6 +198,56 @@ function getLocalDateString(): string {
   return `${y}-${m}-${d}`;
 }
 
+/** Count consecutive completed working days ending at today */
+function getStreak(data: CalendarPlanData, todayInfo: TodayInfo): number {
+  if (todayInfo.status !== 'working_day') return 0;
+
+  let streak = 0;
+  // Walk backwards from the day BEFORE today
+  let wi = todayInfo.weekIndex;
+  let di = todayInfo.dayIndex - 1;
+
+  while (true) {
+    // Walk back to previous day
+    if (di < 0) {
+      wi--;
+      if (wi < 0) break;
+      di = (data.weeks[wi]?.days?.length || 1) - 1;
+    }
+
+    const day = data.weeks[wi]?.days[di];
+    if (!day || day.goals.length === 0) break;
+
+    const allDone = day.goals.every(g => g.completed);
+    if (!allDone) break;
+
+    streak++;
+    di--;
+  }
+
+  // Also check if today is fully done (adds to streak)
+  const today = data.weeks[todayInfo.weekIndex]?.days[todayInfo.dayIndex];
+  if (today && today.goals.length > 0 && today.goals.every(g => g.completed)) {
+    streak++;
+  }
+
+  return streak;
+}
+
+/** Get hours completed vs total for the current week */
+function getWeekHours(week: WeekPlan | null): { done: number; total: number } {
+  if (!week) return { done: 0, total: 0 };
+  let done = 0;
+  let total = 0;
+  for (const d of week.days) {
+    for (const g of d.goals) {
+      total += g.hours;
+      if (g.completed) done += g.hours;
+    }
+  }
+  return { done, total };
+}
+
 // ============================================
 // Component
 // ============================================
@@ -241,7 +291,6 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
         if (data.calendarData) {
           setCalendarData(data.calendarData);
           setCalendarId(data.id);
-          // Auto-expand current week
           const today = getTodayInfo(data.calendarData);
           if (today.status === 'working_day') {
             setExpandedWeek(today.weekIndex);
@@ -291,7 +340,6 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
   const toggleGoal = useCallback((goalId: string) => {
     if (!calendarData || !calendarId) return;
 
-    // Find current state of the goal
     let newCompleted = false;
     for (const w of calendarData.weeks) {
       for (const d of w.days) {
@@ -301,7 +349,6 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
       }
     }
 
-    // Update local state
     setCalendarData(prev => {
       if (!prev) return prev;
       return {
@@ -318,10 +365,8 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
       };
     });
 
-    // Batch pending saves
     pendingSavesRef.current.set(goalId, newCompleted);
 
-    // Debounced batch save
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(async () => {
       const saves = new Map(pendingSavesRef.current);
@@ -473,10 +518,12 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
   const todayWeek = todayInfo.status === 'working_day'
     ? calendarData.weeks[todayInfo.weekIndex]
     : null;
+  const streak = getStreak(calendarData, todayInfo);
+  const weekHours = getWeekHours(todayWeek);
 
   return (
     <div className="max-w-3xl mx-auto space-y-4">
-      {/* ── Progress Header ── */}
+      {/* Progress Header */}
       <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-[0_4px_0_#e5e7eb] px-5 py-4">
         <div className="flex items-center justify-between mb-3">
           <div>
@@ -488,6 +535,13 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            {/* Streak */}
+            {streak > 0 && (
+              <div className="flex items-center gap-1 bg-orange-50 border border-orange-200 rounded-xl px-2.5 py-1.5">
+                <Flame size={14} className="text-orange-500" />
+                <span className="text-xs font-black text-orange-600">{streak}</span>
+              </div>
+            )}
             <div className="text-right">
               <span className="text-xl font-black text-gray-900">{progress.percent}%</span>
               <p className="text-[10px] text-gray-400 font-medium">{progress.completed}/{progress.total} tasks</p>
@@ -512,7 +566,7 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
         </div>
       </div>
 
-      {/* ── Today Card ── */}
+      {/* Today Card */}
       {todayInfo.status === 'working_day' && todayGoals.length > 0 && (
         <div className="bg-white rounded-2xl border-2 border-[#58cc02] shadow-[0_4px_0_#58a700] p-5">
           <div className="flex items-center justify-between mb-4">
@@ -527,9 +581,19 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-1 text-xs text-gray-400 font-medium">
-              <Clock size={12} />
-              <span>{todayGoals.reduce((sum, g) => sum + g.hours, 0)}h</span>
+            <div className="flex items-center gap-3">
+              {/* Hours this week */}
+              {weekHours.total > 0 && (
+                <div className="text-right">
+                  <span className="text-xs font-bold text-gray-600">{weekHours.done}h</span>
+                  <span className="text-xs text-gray-400"> / {weekHours.total}h</span>
+                  <p className="text-[9px] text-gray-400">this week</p>
+                </div>
+              )}
+              <div className="flex items-center gap-1 text-xs text-gray-400 font-medium">
+                <Clock size={12} />
+                <span>{todayGoals.reduce((sum, g) => sum + g.hours, 0)}h today</span>
+              </div>
             </div>
           </div>
 
@@ -540,27 +604,34 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
                 <button
                   key={goal.id}
                   onClick={() => toggleGoal(goal.id)}
-                  className={`w-full flex items-center gap-3 p-3.5 rounded-xl transition-all text-left ${
+                  className={`w-full flex items-start gap-3 p-3.5 rounded-xl transition-all text-left ${
                     goal.completed
                       ? 'bg-[#58cc02]/5'
                       : 'bg-gray-50 hover:bg-gray-100'
                   }`}
                 >
-                  {goal.completed ? (
-                    <CheckCircle2 size={22} className="text-[#58cc02] shrink-0" />
-                  ) : (
-                    <Circle size={22} className="text-gray-300 shrink-0" />
-                  )}
-                  <span className={`flex-1 text-sm font-medium ${goal.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}>
-                    {goal.title}
-                  </span>
+                  <div className="mt-0.5">
+                    {goal.completed ? (
+                      <CheckCircle2 size={22} className="text-[#58cc02] shrink-0" />
+                    ) : (
+                      <Circle size={22} className="text-gray-300 shrink-0" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className={`text-sm font-medium block ${goal.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                      {goal.title}
+                    </span>
+                    {goal.why && !goal.completed && (
+                      <span className="text-[11px] text-gray-400 block mt-0.5">{goal.why}</span>
+                    )}
+                  </div>
                   <span
-                    className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0"
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 mt-0.5"
                     style={{ color: cat.color, backgroundColor: cat.bg }}
                   >
                     {cat.label}
                   </span>
-                  <span className="text-xs font-bold text-gray-400 shrink-0">
+                  <span className="text-xs font-bold text-gray-400 shrink-0 mt-0.5">
                     {goal.hours}h
                   </span>
                 </button>
@@ -570,7 +641,7 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
         </div>
       )}
 
-      {/* ── Status Messages ── */}
+      {/* Status Messages */}
       {todayInfo.status === 'rest_day' && (
         <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-[0_3px_0_#e5e7eb] p-5 text-center">
           <Coffee className="w-8 h-8 mx-auto text-gray-300 mb-2" />
@@ -601,7 +672,7 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
         </div>
       )}
 
-      {/* ── Week List ── */}
+      {/* Week List */}
       <div className="space-y-2">
         {calendarData.weeks.map((week, wi) => {
           const wp = getWeekProgress(week);
@@ -656,6 +727,15 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
               {/* Week Content */}
               {isExpanded && (
                 <div className="px-4 pb-4 space-y-3">
+                  {/* Deliverable */}
+                  {week.deliverable && (
+                    <div className="bg-blue-50 rounded-xl px-3 py-2 flex items-center gap-2">
+                      <Package size={12} className="text-blue-500 shrink-0" />
+                      <span className="text-xs text-blue-700 font-bold">Deliverable:</span>
+                      <span className="text-xs text-blue-600">{week.deliverable}</span>
+                    </div>
+                  )}
+
                   {/* Milestone */}
                   {week.milestone && (
                     <div className="bg-amber-50 rounded-xl px-3 py-2 flex items-center gap-2">
@@ -708,27 +788,34 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
                               <button
                                 key={goal.id}
                                 onClick={() => toggleGoal(goal.id)}
-                                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all text-left ${
+                                className={`w-full flex items-start gap-2.5 px-3 py-2 rounded-lg transition-all text-left ${
                                   goal.completed
                                     ? 'opacity-50'
                                     : 'hover:bg-gray-50'
                                 }`}
                               >
-                                {goal.completed ? (
-                                  <CheckCircle2 size={16} className="text-[#58cc02] shrink-0" />
-                                ) : (
-                                  <Circle size={16} className="text-gray-300 shrink-0" />
-                                )}
-                                <span className={`flex-1 text-xs ${goal.completed ? 'line-through text-gray-400' : 'text-gray-700'}`}>
-                                  {goal.title}
-                                </span>
+                                <div className="mt-0.5">
+                                  {goal.completed ? (
+                                    <CheckCircle2 size={16} className="text-[#58cc02] shrink-0" />
+                                  ) : (
+                                    <Circle size={16} className="text-gray-300 shrink-0" />
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <span className={`text-xs block ${goal.completed ? 'line-through text-gray-400' : 'text-gray-700'}`}>
+                                    {goal.title}
+                                  </span>
+                                  {goal.why && !goal.completed && (
+                                    <span className="text-[10px] text-gray-400 block mt-0.5">{goal.why}</span>
+                                  )}
+                                </div>
                                 <span
-                                  className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
+                                  className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 mt-0.5"
                                   style={{ color: cat.color, backgroundColor: cat.bg }}
                                 >
                                   {cat.label}
                                 </span>
-                                <span className="text-[10px] text-gray-400 font-medium shrink-0">
+                                <span className="text-[10px] text-gray-400 font-medium shrink-0 mt-0.5">
                                   {goal.hours}h
                                 </span>
                               </button>

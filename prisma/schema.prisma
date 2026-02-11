@@ -227,6 +227,7 @@ model Model3D {
   objUrl           String?
   usdzUrl          String?
   thumbnailUrl     String?
+  errorMessage     String?
   sourceImageBase64 String  @db.Text
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

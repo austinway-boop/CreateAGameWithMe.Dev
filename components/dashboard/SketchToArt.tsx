@@ -66,12 +66,14 @@ export function SketchToArt({ credits, onCreditsUpdate }: Props) {
 
   // Load saved art on mount
   useEffect(() => {
-    loadSavedArt();
-  }, []);
+    if (project?.id) loadSavedArt();
+    else setLoadingResults(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project?.id]);
 
   const loadSavedArt = async () => {
     try {
-      const res = await fetch('/api/ai/sketch-to-art');
+      const res = await fetch(`/api/ai/sketch-to-art?projectId=${project!.id}`);
       if (res.ok) {
         const data = await res.json();
         const loaded: GeneratedResult[] = data

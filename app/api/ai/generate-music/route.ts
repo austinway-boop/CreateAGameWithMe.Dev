@@ -8,15 +8,20 @@ export const maxDuration = 60;
 const LOUDLY_API_KEY = process.env.LOUDLY_API_KEY;
 
 // GET - Load saved generated music tracks
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const projectId = request.nextUrl.searchParams.get('projectId');
+
     const tracks = await prisma.generatedMusic.findMany({
-      where: { userId: session.user.id },
+      where: {
+        userId: session.user.id,
+        ...(projectId && { projectId }),
+      },
       orderBy: { createdAt: 'desc' },
       take: 20,
       select: {
@@ -69,6 +74,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Please provide a music prompt' }, { status: 400 });
     }
 
+    if (!projectId) {
+      return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
+    }
+
     // Call Loudly API
     const formData = new FormData();
     formData.append('prompt', prompt);
@@ -99,7 +108,7 @@ export async function POST(request: NextRequest) {
       const saved = await prisma.generatedMusic.create({
         data: {
           userId,
-          projectId: projectId || '',
+          projectId,
           loudlyId: song.id || '',
           title: song.title || 'AI Generated Track',
           duration: song.duration || 0,

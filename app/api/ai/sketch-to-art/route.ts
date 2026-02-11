@@ -9,15 +9,20 @@ export const maxDuration = 60;
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // GET - Load saved generated art
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const projectId = request.nextUrl.searchParams.get('projectId');
+
     const artworks = await prisma.generatedArt.findMany({
-      where: { userId: session.user.id },
+      where: {
+        userId: session.user.id,
+        ...(projectId && { projectId }),
+      },
       orderBy: { createdAt: 'desc' },
       take: 12,
       select: {
@@ -116,15 +121,19 @@ Generate art that represents what is shown in the sketch, rendered beautifully.`
       return NextResponse.json({ error: 'No image generated' }, { status: 500 });
     }
 
+    if (!projectId) {
+      return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
+    }
+
     // Save to database
     let savedId: string | undefined;
     try {
       const saved = await prisma.generatedArt.create({
         data: {
           userId,
-          projectId: projectId || '',
+          projectId,
           sketchBase64: sketchBase64.substring(0, 50000),
-          resultBase64: resultBase64.substring(0, 500000),
+          resultBase64,
           prompt: description,
           style: fidelity,
         },

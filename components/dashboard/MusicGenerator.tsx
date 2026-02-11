@@ -42,12 +42,14 @@ export function MusicGenerator({ credits, onCreditsUpdate }: Props) {
 
   // Load saved tracks on mount
   useEffect(() => {
-    loadSavedTracks();
-  }, []);
+    if (project?.id) loadSavedTracks();
+    else setLoadingTracks(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project?.id]);
 
   const loadSavedTracks = async () => {
     try {
-      const res = await fetch('/api/ai/generate-music');
+      const res = await fetch(`/api/ai/generate-music?projectId=${project!.id}`);
       if (res.ok) {
         const data = await res.json();
         const loaded: GeneratedTrack[] = data

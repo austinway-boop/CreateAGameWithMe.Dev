@@ -34,6 +34,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No image provided' }, { status: 400 });
     }
 
+    if (!projectId) {
+      return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
+    }
+
     const result = await createImageTo3DTask(imageBase64);
 
     if ('error' in result) {
@@ -44,7 +48,7 @@ export async function POST(request: NextRequest) {
     const model = await prisma.model3D.create({
       data: {
         userId,
-        projectId: projectId || '',
+        projectId,
         meshyTaskId: result.taskId,
         status: 'PENDING',
         progress: 0,
@@ -64,15 +68,20 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const projectId = request.nextUrl.searchParams.get('projectId');
+
     const models = await prisma.model3D.findMany({
-      where: { userId: session.user.id },
+      where: {
+        userId: session.user.id,
+        ...(projectId && { projectId }),
+      },
       orderBy: { createdAt: 'desc' },
       take: 20,
     });
