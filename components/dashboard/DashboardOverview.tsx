@@ -95,7 +95,7 @@ export function DashboardOverview() {
 
   if (!readiness.isReady) {
     return (
-      <div className="max-w-2xl mx-auto space-y-4">
+      <div className="max-w-5xl mx-auto space-y-4">
         <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-[0_4px_0_#e5e7eb] p-8 text-center space-y-3">
           <Gamepad2 className="w-12 h-12 mx-auto text-pink-500" />
           <h2 className="text-lg font-black text-gray-900">Complete Your Journey First</h2>
@@ -107,7 +107,7 @@ export function DashboardOverview() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto space-y-4">
+      <div className="max-w-5xl mx-auto space-y-4">
         <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-8 border-2 border-pink-200 text-center">
           <Bot className="w-12 h-12 text-pink-600 mx-auto mb-3" />
           <div className="font-black text-pink-700 text-xl">Loading Your Results</div>
@@ -120,7 +120,7 @@ export function DashboardOverview() {
 
   if (error) {
     return (
-      <div className="max-w-2xl mx-auto space-y-4">
+      <div className="max-w-5xl mx-auto space-y-4">
         <div className="bg-white rounded-2xl border-2 border-red-200 shadow-[0_4px_0_#fca5a5] p-8 text-center space-y-3">
           <AlertTriangle className="w-12 h-12 mx-auto text-red-500" />
           <h2 className="text-lg font-black text-gray-900">Validation Failed</h2>
@@ -152,7 +152,7 @@ export function DashboardOverview() {
   }[verdict] || { label: 'Unknown', color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200', shadow: 'shadow-[0_4px_0_#d1d5db]' };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 pb-8">
+    <div className="max-w-5xl mx-auto space-y-5 pb-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm text-gray-500">

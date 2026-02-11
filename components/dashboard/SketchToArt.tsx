@@ -378,7 +378,7 @@ export function SketchToArt({ credits, onCreditsUpdate }: Props) {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4">
+    <div className="max-w-5xl mx-auto space-y-4">
       {/* Toolbar */}
       <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-[0_4px_0_#e5e7eb] p-3">
         <div className="flex flex-wrap items-center gap-2">

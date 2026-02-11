@@ -75,7 +75,7 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
   // No calendar yet - show generator
   if (!calendarData) {
     return (
-      <div className="max-w-2xl mx-auto space-y-4">
+      <div className="max-w-5xl mx-auto space-y-4">
         <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-[0_4px_0_#e5e7eb] p-6 text-center">
           <Calendar className="w-12 h-12 mx-auto text-[#1cb0f6] mb-3" />
           <h3 className="font-bold text-gray-900 text-lg mb-1">AI Development Calendar</h3>
@@ -134,7 +134,7 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
 
   // Calendar view
   return (
-    <div className="max-w-3xl mx-auto space-y-4">
+    <div className="max-w-5xl mx-auto space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wide">

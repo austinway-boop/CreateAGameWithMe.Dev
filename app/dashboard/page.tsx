@@ -98,8 +98,8 @@ function DashboardContent() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-white border-b-2 border-gray-200 px-4 py-3">
-        <div className="max-w-4xl mx-auto">
+      <div className="bg-white border-b-2 border-gray-200 px-6 py-3">
+        <div className="max-w-6xl mx-auto">
           {/* Top row: title + credits */}
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -154,9 +154,9 @@ function DashboardContent() {
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-auto p-4 bg-gray-50">
+      <div className="flex-1 overflow-auto px-6 py-5 bg-gray-50">
         {needsSub ? (
-          <div className="max-w-sm mx-auto mt-16 text-center space-y-5">
+          <div className="max-w-md mx-auto mt-16 text-center space-y-5">
             <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto border-2 border-gray-200 shadow-[0_4px_0_#e5e7eb]">
               <Sparkles className="w-9 h-9 text-[#58cc02]" />
             </div>
