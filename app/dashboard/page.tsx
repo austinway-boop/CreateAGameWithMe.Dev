@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Paintbrush, Box, Music, Calendar,
-  Loader2, Lock, Sparkles, Crown,
+  Loader2, Lock, Sparkles, Crown, Zap,
 } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { CreditInfo } from '@/lib/credits';
@@ -23,6 +23,37 @@ const TABS: { id: TabId; label: string; icon: typeof LayoutDashboard; requiresSu
   { id: 'music', label: 'Music', icon: Music, requiresSub: true },
   { id: 'calendar', label: 'Calendar', icon: Calendar, requiresSub: true },
 ];
+
+function CreditBadge({ credits, onUpgrade }: { credits: CreditInfo; onUpgrade: () => void }) {
+  const pct = credits.total > 0 ? Math.round((credits.remaining / credits.total) * 100) : 0;
+  const planLabel = credits.plan === 'pro' ? 'Pro' : 'Starter';
+
+  // Color based on remaining percentage
+  const barColor = pct > 50 ? '#58cc02' : pct > 20 ? '#ff9600' : '#ff4b4b';
+  const barShadow = pct > 50 ? '#58a700' : pct > 20 ? '#ea7900' : '#ea2b2b';
+
+  return (
+    <div className="flex items-center gap-3">
+      {/* Credits display */}
+      <div className="bg-white border-2 border-gray-200 rounded-2xl shadow-[0_3px_0_#e5e7eb] px-3 py-2 min-w-[140px]">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-1.5">
+            <Zap className="w-3.5 h-3.5" style={{ color: barColor }} />
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">{planLabel}</span>
+          </div>
+          <span className="text-xs font-black text-gray-900">{credits.remaining}<span className="text-gray-400 font-bold">/{credits.total}</span></span>
+        </div>
+        {/* Progress bar */}
+        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{ width: `${pct}%`, backgroundColor: barColor }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function DashboardContent() {
   const router = useRouter();
@@ -50,11 +81,6 @@ function DashboardContent() {
   };
 
   const handleTabClick = (tab: TabId) => {
-    if (TABS.find(t => t.id === tab)?.requiresSub && !credits?.hasSubscription) {
-      // Show upgrade prompt instead of locking out entirely
-      setActiveTab(tab);
-      return;
-    }
     setActiveTab(tab);
   };
 
@@ -72,42 +98,37 @@ function DashboardContent() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3">
+      <div className="bg-white border-b-2 border-gray-200 px-4 py-3">
         <div className="max-w-4xl mx-auto">
+          {/* Top row: title + credits */}
           <div className="flex items-center justify-between mb-3">
             <div>
               <h1 className="text-lg font-black text-gray-900">
                 {project?.finalTitle || 'Your Game'}
               </h1>
               <p className="text-xs text-gray-500">
-                {project?.platform} &middot; {project?.teamSize} &middot; {project?.timeHorizon}
+                {[project?.platform, project?.teamSize, project?.timeHorizon].filter(Boolean).join(' \u00B7 ')}
               </p>
             </div>
 
-            {/* Credit Badge */}
+            {/* Credits / Upgrade */}
             {creditsLoading ? (
-              <div className="h-9 w-28 bg-gray-100 rounded-xl animate-pulse" />
+              <div className="h-10 w-36 bg-gray-100 rounded-2xl animate-pulse" />
             ) : credits?.hasSubscription ? (
-              <div className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 rounded-xl px-3 py-1.5">
-                <Sparkles className="w-4 h-4 text-purple-500" />
-                <div>
-                  <div className="text-sm font-black text-purple-700">{credits.remaining}</div>
-                  <div className="text-[9px] text-purple-500 uppercase font-bold tracking-wide">Credits</div>
-                </div>
-              </div>
+              <CreditBadge credits={credits} onUpgrade={() => router.push('/subscribe')} />
             ) : (
               <button
                 onClick={() => router.push('/subscribe')}
-                className="flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-amber-500 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-[0_3px_0_#d97706] hover:shadow-[0_1px_0_#d97706] hover:translate-y-[2px] transition-all"
+                className="flex items-center gap-2 bg-[#58cc02] text-white px-4 py-2.5 rounded-2xl text-xs font-bold shadow-[0_4px_0_#58a700] hover:shadow-[0_2px_0_#58a700] hover:translate-y-[2px] transition-all uppercase tracking-wide"
               >
-                <Crown className="w-3.5 h-3.5" />
-                Upgrade
+                <Crown className="w-4 h-4" />
+                Subscribe for AI Tools
               </button>
             )}
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex gap-1 overflow-x-auto pb-1 -mb-3">
+          <div className="flex gap-1 overflow-x-auto -mb-[2px]">
             {TABS.map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -116,15 +137,15 @@ function DashboardContent() {
                 <button
                   key={tab.id}
                   onClick={() => handleTabClick(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-t-xl text-xs font-bold whitespace-nowrap transition-all border-b-2 ${
+                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-t-xl text-xs font-bold whitespace-nowrap transition-all border-b-2 ${
                     isActive
-                      ? 'bg-white text-gray-900 border-[#58cc02]'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 border-transparent'
+                      ? 'bg-gray-50 text-gray-900 border-[#58cc02] shadow-[inset_0_-2px_0_#58cc02]'
+                      : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50 border-transparent'
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-[#58cc02]' : ''}`} />
                   {tab.label}
-                  {locked && <Lock className="w-3 h-3 text-gray-400" />}
+                  {locked && <Lock className="w-3 h-3 text-gray-300 ml-0.5" />}
                 </button>
               );
             })}
@@ -133,21 +154,23 @@ function DashboardContent() {
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-auto p-4 bg-gray-50">
         {needsSub ? (
-          <div className="max-w-md mx-auto mt-12 text-center space-y-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-2xl flex items-center justify-center mx-auto border-2 border-purple-200 shadow-[0_4px_0_#c4b5fd]">
-              <Lock className="w-7 h-7 text-purple-500" />
+          <div className="max-w-sm mx-auto mt-16 text-center space-y-5">
+            <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto border-2 border-gray-200 shadow-[0_4px_0_#e5e7eb]">
+              <Sparkles className="w-9 h-9 text-[#58cc02]" />
             </div>
-            <h2 className="text-lg font-black text-gray-900">
-              Unlock {currentTab.label}
-            </h2>
-            <p className="text-gray-500 text-sm">
-              Subscribe to get AI credits and access all creative tools.
-            </p>
+            <div>
+              <h2 className="text-xl font-black text-gray-900 mb-1">
+                Unlock {currentTab.label}
+              </h2>
+              <p className="text-gray-500 text-sm">
+                Subscribe to get AI credits and access all creative tools for your game.
+              </p>
+            </div>
             <button
               onClick={() => router.push('/subscribe')}
-              className="bg-[#58cc02] hover:bg-[#4caf00] text-white font-bold py-3 px-6 rounded-2xl shadow-[0_4px_0_#58a700] hover:shadow-[0_2px_0_#58a700] hover:translate-y-[2px] transition-all uppercase tracking-wide text-sm"
+              className="bg-[#58cc02] hover:bg-[#4caf00] text-white font-bold py-3.5 px-8 rounded-2xl shadow-[0_4px_0_#58a700] hover:shadow-[0_2px_0_#58a700] hover:translate-y-[2px] transition-all uppercase tracking-wide text-sm"
             >
               View Plans
             </button>

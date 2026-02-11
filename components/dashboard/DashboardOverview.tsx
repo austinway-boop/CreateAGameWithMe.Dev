@@ -5,8 +5,7 @@ import { useProject } from '@/hooks/useProject';
 import { ComprehensiveValidation } from '@/lib/validationAgents';
 import { checkValidationReadiness } from '@/lib/validationRequirements';
 import {
-  Bot, Trophy, TrendingUp, RefreshCw, AlertTriangle, Zap, Gamepad2,
-  ChevronRight, Loader2,
+  Bot, RefreshCw, AlertTriangle, Gamepad2, Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -31,23 +30,55 @@ function ScoreCircle({ score, label }: { score: number; label: string }) {
 export function DashboardOverview() {
   const { project } = useProject();
   const [validation, setValidation] = useState<ComprehensiveValidation | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSavedResult, setIsSavedResult] = useState(false);
 
   const readiness = useMemo(() => checkValidationReadiness(project), [project]);
   const aiEnabled = process.env.NEXT_PUBLIC_ENABLE_AI === 'true';
 
+  // On mount: try to load saved results first, only run new validation if none exist
   useEffect(() => {
-    if (project && !validation && !loading && readiness.isReady && aiEnabled) {
-      runValidation();
+    if (project?.id && !validation && readiness.isReady && aiEnabled) {
+      loadOrRunValidation();
+    } else if (project && !readiness.isReady) {
+      setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.id, readiness.isReady]);
+
+  const loadOrRunValidation = async () => {
+    if (!project) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Step 1: Try to load saved results
+      const savedRes = await fetch(`/api/validation-runs?projectId=${project.id}`);
+      if (savedRes.ok) {
+        const saved = await savedRes.json();
+        if (saved.found && saved.result) {
+          setValidation(saved.result as ComprehensiveValidation);
+          setIsSavedResult(true);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Step 2: No saved results -- run fresh validation
+      await runValidation();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setLoading(false);
+    }
+  };
 
   const runValidation = async () => {
     if (!project) return;
     setLoading(true);
     setError(null);
+    setIsSavedResult(false);
+
     try {
       const res = await fetch('/api/validateComprehensive', {
         method: 'POST',
@@ -67,7 +98,6 @@ export function DashboardOverview() {
 
   if (!project) return null;
 
-  // Not enough data yet
   if (!readiness.isReady) {
     return (
       <div className="max-w-2xl mx-auto space-y-4">
@@ -85,14 +115,9 @@ export function DashboardOverview() {
       <div className="max-w-2xl mx-auto space-y-4">
         <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-6 border-2 border-pink-200 text-center">
           <Bot className="w-10 h-10 text-pink-600 mx-auto mb-3" />
-          <div className="font-bold text-pink-700 text-lg">AI is Analyzing Your Game</div>
-          <p className="text-pink-500 text-sm mt-1">4 specialized agents are reviewing your idea...</p>
-          <div className="flex justify-center gap-2 mt-3">
-            <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full animate-pulse font-medium">Market</span>
-            <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full animate-pulse font-medium">Loop</span>
-            <span className="text-xs bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full animate-pulse font-medium">Competitor</span>
-            <span className="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded-full animate-pulse font-medium">Verdict</span>
-          </div>
+          <div className="font-bold text-pink-700 text-lg">Loading Your Results</div>
+          <p className="text-pink-500 text-sm mt-1">Checking for saved analysis...</p>
+          <Loader2 className="w-5 h-5 animate-spin mx-auto mt-3 text-pink-400" />
         </div>
       </div>
     );
@@ -131,10 +156,20 @@ export function DashboardOverview() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-4">
-      {/* AI Badge */}
-      <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-        <Bot className="w-4 h-4" />
-        <span className="font-medium">Analyzed by AI &mdash; 4 specialized agents</span>
+      {/* Header with re-run option */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <Bot className="w-4 h-4" />
+          <span className="font-medium">
+            {isSavedResult ? 'Saved AI Analysis' : 'Analyzed by AI'} &mdash; 4 specialized agents
+          </span>
+        </div>
+        <button
+          onClick={runValidation}
+          className="flex items-center gap-1 text-[10px] text-[#1cb0f6] font-bold hover:underline"
+        >
+          <RefreshCw size={10} /> Re-analyze
+        </button>
       </div>
 
       {/* Verdict Card */}
