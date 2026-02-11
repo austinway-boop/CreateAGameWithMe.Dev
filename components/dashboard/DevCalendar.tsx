@@ -124,7 +124,7 @@ function getTodayInfo(data: CalendarPlanData): TodayInfo {
     if (cursor > today) return { status: 'completed' };
   }
 
-  const totalWorkingDays = data.weeks.reduce((sum, w) => sum + w.days.length, 0);
+  const totalWorkingDays = (data.weeks || []).reduce((sum, w) => sum + (w.days?.length || 0), 0);
   if (workingDayIndex >= totalWorkingDays) return { status: 'completed' };
 
   const weekIndex = Math.floor(workingDayIndex / data.daysPerWeek);
@@ -153,7 +153,7 @@ function formatDeadline(date: Date): string {
 
 function getProgress(data: CalendarPlanData) {
   let total = 0, completed = 0;
-  for (const w of data.weeks) for (const d of w.days) for (const g of d.goals) { total++; if (g.completed) completed++; }
+  for (const w of data.weeks || []) for (const d of w.days || []) for (const g of d.goals || []) { total++; if (g.completed) completed++; }
   return { total, completed, percent: total > 0 ? Math.round((completed / total) * 100) : 0 };
 }
 
@@ -163,24 +163,24 @@ function getLocalDateString(): string {
 }
 
 function getStreak(data: CalendarPlanData, todayInfo: TodayInfo): number {
-  if (todayInfo.status !== 'working_day') return 0;
+  if (todayInfo.status !== 'working_day' || !data.weeks) return 0;
   let streak = 0;
   let wi = todayInfo.weekIndex, di = todayInfo.dayIndex - 1;
   while (true) {
     if (di < 0) { wi--; if (wi < 0) break; di = (data.weeks[wi]?.days?.length || 1) - 1; }
-    const day = data.weeks[wi]?.days[di];
-    if (!day || day.goals.length === 0 || !day.goals.every(g => g.completed)) break;
+    const day = data.weeks[wi]?.days?.[di];
+    if (!day || !day.goals?.length || !day.goals.every(g => g.completed)) break;
     streak++; di--;
   }
-  const today = data.weeks[todayInfo.weekIndex]?.days[todayInfo.dayIndex];
-  if (today && today.goals.length > 0 && today.goals.every(g => g.completed)) streak++;
+  const today = data.weeks[todayInfo.weekIndex]?.days?.[todayInfo.dayIndex];
+  if (today && today.goals?.length > 0 && today.goals.every(g => g.completed)) streak++;
   return streak;
 }
 
 function getWeekHours(week: WeekPlan | null) {
   if (!week) return { done: 0, total: 0 };
   let done = 0, total = 0;
-  for (const d of week.days) for (const g of d.goals) { total += g.hours; if (g.completed) done += g.hours; }
+  for (const d of week.days || []) for (const g of d.goals || []) { total += g.hours; if (g.completed) done += g.hours; }
   return { done, total };
 }
 
@@ -244,8 +244,8 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
 
   // Precompute all dates once when calendarData changes (not per-render)
   const dayDates = useMemo(() => {
-    if (!calendarData) return [];
-    const totalDays = calendarData.weeks.reduce((sum, w) => sum + w.days.length, 0);
+    if (!calendarData?.weeks) return [];
+    const totalDays = calendarData.weeks.reduce((sum, w) => sum + (w.days?.length || 0), 0);
     return precomputeDates(calendarData.startDate, calendarData.daysPerWeek, totalDays);
   }, [calendarData?.startDate, calendarData?.daysPerWeek, calendarData?.weeks?.length]);
 
@@ -254,14 +254,18 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
       const res = await fetch(`/api/ai/calendar?projectId=${project!.id}`);
       if (res.ok) {
         const data = await res.json();
-        if (data.calendarData) {
-          setCalendarData(data.calendarData);
+        const cal = data.calendarData;
+        // Validate the data has the expected format (weeks array with days/goals)
+        // Old calendar data (Gantt chart format) has "phases" instead of "weeks" — skip it
+        if (cal && Array.isArray(cal.weeks) && cal.weeks.length > 0 && cal.weeks[0].days) {
+          setCalendarData(cal);
           setCalendarId(data.id);
-          if (data.calendarData.timeline) setTimeline(data.calendarData.timeline);
-          const today = getTodayInfo(data.calendarData);
+          if (cal.timeline) setTimeline(cal.timeline);
+          const today = getTodayInfo(cal);
           if (today.status === 'working_day') setExpandedWeek(today.weekIndex);
-          else if (data.calendarData.weeks?.length > 0) setExpandedWeek(0);
+          else if (cal.weeks.length > 0) setExpandedWeek(0);
         }
+        // If old format, just show the setup form so user can regenerate
       }
     } catch (err) {
       console.error('Failed to load calendar:', err);
