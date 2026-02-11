@@ -2,17 +2,21 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import {
   LayoutDashboard, Paintbrush, Box, Music, Calendar,
   Loader2, Lock, Sparkles, Crown, Zap,
 } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { CreditInfo } from '@/lib/credits';
-import { DashboardOverview } from '@/components/dashboard/DashboardOverview';
-import { SketchToArt } from '@/components/dashboard/SketchToArt';
-import { ImageTo3D } from '@/components/dashboard/ImageTo3D';
-import { MusicGenerator } from '@/components/dashboard/MusicGenerator';
-import { DevCalendar } from '@/components/dashboard/DevCalendar';
+
+// Lazy-load each tab component — only downloaded when the tab is first visited
+const TabSpinner = () => <div className="flex justify-center pt-20"><Loader2 className="w-6 h-6 animate-spin text-gray-400" /></div>;
+const DashboardOverview = dynamic(() => import('@/components/dashboard/DashboardOverview').then(m => ({ default: m.DashboardOverview })), { ssr: false, loading: TabSpinner });
+const SketchToArt = dynamic(() => import('@/components/dashboard/SketchToArt').then(m => ({ default: m.SketchToArt })), { ssr: false, loading: TabSpinner });
+const ImageTo3D = dynamic(() => import('@/components/dashboard/ImageTo3D').then(m => ({ default: m.ImageTo3D })), { ssr: false, loading: TabSpinner });
+const MusicGenerator = dynamic(() => import('@/components/dashboard/MusicGenerator').then(m => ({ default: m.MusicGenerator })), { ssr: false, loading: TabSpinner });
+const DevCalendar = dynamic(() => import('@/components/dashboard/DevCalendar').then(m => ({ default: m.DevCalendar })), { ssr: false, loading: TabSpinner });
 
 type TabId = 'overview' | 'art' | '3d' | 'music' | 'calendar';
 
@@ -126,7 +130,7 @@ function DashboardContent() {
             ) : (
               <button
                 onClick={() => router.push('/subscribe')}
-                className="flex items-center gap-2 bg-[#58cc02] text-white px-4 py-2.5 rounded-2xl text-xs font-bold shadow-[0_4px_0_#58a700] hover:shadow-[0_2px_0_#58a700] hover:translate-y-[2px] transition-all uppercase tracking-wide"
+                className="flex items-center gap-2 bg-[#58cc02] text-white px-4 py-2.5 rounded-2xl text-xs font-bold shadow-[0_4px_0_#58a700] hover:shadow-[0_2px_0_#58a700] hover:translate-y-[2px] uppercase tracking-wide"
               >
                 <Crown className="w-4 h-4" />
                 Subscribe for AI Tools
@@ -144,7 +148,7 @@ function DashboardContent() {
                 <button
                   key={tab.id}
                   onClick={() => handleTabClick(tab.id)}
-                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-t-xl text-xs font-bold whitespace-nowrap transition-all border-b-2 ${
+                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-t-xl text-xs font-bold whitespace-nowrap border-b-2 ${
                     isActive
                       ? 'bg-gray-50 text-gray-900 border-[#58cc02] shadow-[inset_0_-2px_0_#58cc02]'
                       : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50 border-transparent'
@@ -177,7 +181,7 @@ function DashboardContent() {
             </div>
             <button
               onClick={() => router.push('/subscribe')}
-              className="bg-[#58cc02] hover:bg-[#4caf00] text-white font-bold py-3.5 px-8 rounded-2xl shadow-[0_4px_0_#58a700] hover:shadow-[0_2px_0_#58a700] hover:translate-y-[2px] transition-all uppercase tracking-wide text-sm"
+              className="bg-[#58cc02] hover:bg-[#4caf00] text-white font-bold py-3.5 px-8 rounded-2xl shadow-[0_4px_0_#58a700] hover:shadow-[0_2px_0_#58a700] hover:translate-y-[2px] uppercase tracking-wide text-sm"
             >
               View Plans
             </button>
