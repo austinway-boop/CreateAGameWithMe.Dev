@@ -59,7 +59,7 @@ function DashboardContent() {
   const router = useRouter();
   const { project, loading: projectLoading } = useProject();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
-  const [mountedTabs, setMountedTabs] = useState<Set<TabId>>(new Set(['overview']));
+  const [mountedTabs, setMountedTabs] = useState<Set<TabId>>(new Set<TabId>(['overview']));
   const [credits, setCredits] = useState<CreditInfo | null>(null);
   const [creditsLoading, setCreditsLoading] = useState(true);
 

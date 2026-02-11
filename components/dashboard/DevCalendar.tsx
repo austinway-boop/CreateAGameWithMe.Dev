@@ -236,17 +236,17 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
   useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-      const saves = new Map(pendingSavesRef.current);
       const cid = calendarIdRef.current;
-      if (saves.size > 0 && cid) {
+      if (pendingSavesRef.current.size > 0 && cid) {
+        const entries = Array.from(pendingSavesRef.current.entries());
         pendingSavesRef.current.clear();
-        for (const [gid, comp] of saves) {
+        entries.forEach(([gid, comp]) => {
           fetch('/api/ai/calendar', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ calendarId: cid, goalId: gid, completed: comp }),
           }).catch(() => {});
-        }
+        });
       }
     };
   }, []);
@@ -333,15 +333,15 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
     pendingSavesRef.current.set(goalId, newCompleted);
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(async () => {
-      const saves = new Map(pendingSavesRef.current);
+      const entries = Array.from(pendingSavesRef.current.entries());
       pendingSavesRef.current.clear();
-      for (const [gid, comp] of saves) {
+      entries.forEach(([gid, comp]) => {
         fetch('/api/ai/calendar', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ calendarId, goalId: gid, completed: comp }),
         }).catch(console.error);
-      }
+      });
     }, 800);
   }, [calendarData, calendarId]);
 
