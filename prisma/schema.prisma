@@ -24,12 +24,18 @@ model User {
   image              String?
   onboardingComplete Boolean           @default(false)
   hasVideoUnlock     Boolean           @default(false)
+  aiCreditsUsed      Int               @default(0)
+  aiCreditsResetAt   DateTime?
   accounts           Account[]
   sessions           Session[]
   projects           Project[]
   validationRuns     ValidationRun[]
   feedbackReports    FeedbackReport[]
   subscriptions      Subscription[]
+  generatedArt       GeneratedArt[]
+  models3D           Model3D[]
+  generatedMusic     GeneratedMusic[]
+  calendarPlans      CalendarPlan[]
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
 }
@@ -124,6 +130,12 @@ model Project {
   // Validation runs
   validationRuns ValidationRun[]
 
+  // AI-generated assets
+  generatedArt   GeneratedArt[]
+  models3D       Model3D[]
+  generatedMusic GeneratedMusic[]
+  calendarPlans  CalendarPlan[]
+
   @@index([userId])
 }
 
@@ -179,4 +191,79 @@ model Subscription {
 
   @@index([userId])
   @@index([stripeCustomerId])
+}
+
+// ============================================
+// AI-Generated Asset Models
+// ============================================
+
+model GeneratedArt {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sketchBase64   String   @db.Text // The user's sketch input
+  resultBase64   String   @db.Text // The AI-generated result
+  prompt         String   @default("")
+  style          String   @default("")
+  createdAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([projectId])
+}
+
+model Model3D {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId        String
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  meshyTaskId      String   @unique
+  status           String   @default("PENDING") // PENDING, IN_PROGRESS, SUCCEEDED, FAILED
+  progress         Int      @default(0)
+  glbUrl           String?
+  fbxUrl           String?
+  objUrl           String?
+  usdzUrl          String?
+  thumbnailUrl     String?
+  sourceImageBase64 String  @db.Text
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([meshyTaskId])
+}
+
+model GeneratedMusic {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  loudlyId        String   @default("")
+  title           String   @default("")
+  duration        Int      @default(0) // duration in seconds
+  musicFileUrl    String   @default("")
+  waveformUrl     String   @default("")
+  prompt          String   @default("")
+  bpm             Int?
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([projectId])
+}
+
+model CalendarPlan {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  calendarData Json     // Structured JSON with phases, milestones, weekly tasks
+  generatedAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([projectId])
 }

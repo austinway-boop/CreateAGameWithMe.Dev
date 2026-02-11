@@ -47,12 +47,12 @@ function SubscribeContent() {
         } catch {
           // Still redirect even if verify fails -- webhook will catch it later
         }
-        router.push('/validation');
+        router.push('/dashboard');
       };
       verifyAndRedirect();
     } else if (success) {
       // Fallback if no session_id (shouldn't happen but just in case)
-      const timer = setTimeout(() => router.push('/validation'), 2000);
+      const timer = setTimeout(() => router.push('/dashboard'), 2000);
       return () => clearTimeout(timer);
     }
   }, [success, sessionId, router]);
@@ -205,7 +205,7 @@ function SubscribeContent() {
           {videoWatched && (
             <div className="p-4 bg-white border-t border-gray-100">
               <button
-                onClick={() => router.push('/validation')}
+                onClick={() => router.push('/dashboard')}
                 disabled={unlocking}
                 className="w-full bg-[#58cc02] hover:bg-[#4caf00] text-white font-bold py-4 rounded-2xl shadow-[0_4px_0_#58a700] hover:shadow-[0_2px_0_#58a700] hover:translate-y-[2px] transition-all uppercase tracking-wide text-sm flex items-center justify-center gap-2 disabled:opacity-50"
               >

@@ -17,6 +17,7 @@ const protectedRoutes = [
   '/validation',
   '/subscribe',
   '/journey',
+  '/dashboard',
   '/admin',
 ];
 

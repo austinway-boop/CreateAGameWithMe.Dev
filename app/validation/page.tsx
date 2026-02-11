@@ -643,7 +643,7 @@ export default function ValidationPage() {
             onClick={() => router.push('/subscribe')}
             className="w-full bg-[#1cb0f6] hover:bg-[#1899d6] text-white font-bold py-4 px-6 rounded-2xl shadow-[0_4px_0_#1899d6] hover:shadow-[0_2px_0_#1899d6] hover:translate-y-[2px] transition-all uppercase tracking-wide text-sm flex items-center justify-center gap-2"
           >
-            See Full Breakdown
+            See Full Breakdown & AI Tools
             <ChevronRight className="w-5 h-5" />
           </button>
         )}
@@ -953,10 +953,10 @@ export default function ValidationPage() {
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur border-t border-gray-200">
           <div className="max-w-2xl mx-auto">
             <button
-              onClick={() => router.push('/finalize')}
+              onClick={() => router.push('/dashboard')}
               className="w-full bg-[#58cc02] hover:bg-[#4caf00] text-white font-bold py-4 px-6 rounded-2xl shadow-[0_4px_0_#58a700] hover:shadow-[0_2px_0_#58a700] hover:translate-y-[2px] transition-all uppercase tracking-wide flex items-center justify-center gap-2"
             >
-              Continue to Game Plan
+              Go to Dashboard
               <ChevronRight className="h-5 w-5" />
             </button>
           </div>
