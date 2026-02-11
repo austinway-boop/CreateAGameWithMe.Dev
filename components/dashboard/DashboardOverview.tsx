@@ -6,6 +6,7 @@ import { ComprehensiveValidation } from '@/lib/validationAgents';
 import { checkValidationReadiness } from '@/lib/validationRequirements';
 import {
   Bot, RefreshCw, AlertTriangle, Gamepad2, Loader2,
+  Trophy, TrendingUp, Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -37,7 +38,6 @@ export function DashboardOverview() {
   const readiness = useMemo(() => checkValidationReadiness(project), [project]);
   const aiEnabled = process.env.NEXT_PUBLIC_ENABLE_AI === 'true';
 
-  // On mount: try to load saved results first, only run new validation if none exist
   useEffect(() => {
     if (project?.id && !validation && readiness.isReady && aiEnabled) {
       loadOrRunValidation();
@@ -53,7 +53,6 @@ export function DashboardOverview() {
     setError(null);
 
     try {
-      // Step 1: Try to load saved results
       const savedRes = await fetch(`/api/validation-runs?projectId=${project.id}`);
       if (savedRes.ok) {
         const saved = await savedRes.json();
@@ -64,8 +63,6 @@ export function DashboardOverview() {
           return;
         }
       }
-
-      // Step 2: No saved results -- run fresh validation
       await runValidation();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
@@ -146,6 +143,8 @@ export function DashboardOverview() {
   const marketScore = validation.marketAnalysis?.score || 0;
   const loopScore = validation.loopAnalysis?.score || 0;
   const compScore = validation.competitorAnalysis?.score || 0;
+  const hardTruth = fv?.hardTruth || '';
+  const dealbreakers = fv?.dealbreakers || [];
 
   const vc = {
     strong: { label: 'Build It!', color: 'text-[#58a700]', bg: 'bg-[#d7ffb8]', border: 'border-[#58cc02]', shadow: 'shadow-[0_4px_0_#58a700]' },
@@ -156,7 +155,7 @@ export function DashboardOverview() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-4">
-      {/* Header with re-run option */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <Bot className="w-4 h-4" />
@@ -164,10 +163,7 @@ export function DashboardOverview() {
             {isSavedResult ? 'Saved AI Analysis' : 'Analyzed by AI'} &mdash; 4 specialized agents
           </span>
         </div>
-        <button
-          onClick={runValidation}
-          className="flex items-center gap-1 text-[10px] text-[#1cb0f6] font-bold hover:underline"
-        >
+        <button onClick={runValidation} className="flex items-center gap-1 text-[10px] text-[#1cb0f6] font-bold hover:underline">
           <RefreshCw size={10} /> Re-analyze
         </button>
       </div>
@@ -176,7 +172,6 @@ export function DashboardOverview() {
       <div className={`${vc.bg} ${vc.border} border-2 rounded-2xl ${vc.shadow} p-6 text-center`}>
         <div className={`text-2xl font-black ${vc.color} uppercase tracking-wide`}>{vc.label}</div>
         <p className="text-gray-600 mt-3 text-sm leading-relaxed max-w-md mx-auto">{fv?.summary}</p>
-
         <div className="flex justify-center mt-6 pt-4 border-t border-white/50">
           <div className="text-center">
             <div className={`w-20 h-20 rounded-2xl border-2 ${
@@ -186,15 +181,12 @@ export function DashboardOverview() {
               'border-[#ff4b4b] bg-[#ffe0e0] shadow-[0_4px_0_#ea2b2b]'
             } flex items-center justify-center mx-auto mb-2`}>
               <span className={`text-3xl font-black ${
-                overall >= 8 ? 'text-[#58a700]' :
-                overall >= 6 ? 'text-[#1899d6]' :
-                overall >= 4 ? 'text-[#ea7900]' : 'text-[#ea2b2b]'
+                overall >= 8 ? 'text-[#58a700]' : overall >= 6 ? 'text-[#1899d6]' : overall >= 4 ? 'text-[#ea7900]' : 'text-[#ea2b2b]'
               }`}>{overall}</span>
             </div>
             <div className="text-sm font-bold text-gray-600 uppercase tracking-wide">Overall Score</div>
           </div>
         </div>
-
         <div className="flex justify-center gap-3 mt-4">
           <ScoreCircle score={marketScore} label="Market" />
           <ScoreCircle score={loopScore} label="Loop" />
@@ -203,7 +195,7 @@ export function DashboardOverview() {
       </div>
 
       {/* Hard Truth */}
-      {fv?.hardTruth && (
+      {hardTruth && (
         <div className="bg-[#fff4e0] border-2 border-[#ff9600] rounded-2xl shadow-[0_4px_0_#ea7900] p-4">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 bg-[#ff9600] rounded-xl flex items-center justify-center shadow-[0_2px_0_#ea7900]">
@@ -211,47 +203,247 @@ export function DashboardOverview() {
             </div>
             <div className="flex-1">
               <div className="font-bold text-[#ea7900] text-sm uppercase tracking-wide">Hard Truth</div>
-              <p className="text-gray-700 text-sm mt-1 leading-relaxed">{fv.hardTruth}</p>
+              <p className="text-gray-700 text-sm mt-1 leading-relaxed">{hardTruth}</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Quick Stats Grid */}
+      {/* Competition */}
+      {validation.competitorAnalysis && (
+        <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3 border-b-2 border-[#ff9600]">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-[#ff9600] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#ea7900]">
+                <Trophy className="w-4 h-4" />
+              </div>
+              <span className="font-bold text-[#ea7900] uppercase tracking-wide text-sm">Competition</span>
+              <span className="ml-auto text-xs bg-[#ff9600] text-white px-2 py-0.5 rounded-full font-bold">{compScore}/10</span>
+            </div>
+          </div>
+          <div className="p-4 space-y-3">
+            {validation.competitorAnalysis.directCompetitors?.length > 0 && (
+              <div className="space-y-2">
+                {validation.competitorAnalysis.directCompetitors.slice(0, 3).map((comp: any, i: number) => (
+                  <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                    <div className="w-7 h-7 bg-[#ff9600] text-white rounded-lg flex items-center justify-center font-bold text-sm">{i + 1}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-gray-900 truncate">{comp.name}</div>
+                      <div className="text-xs text-gray-500">{comp.visits}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {validation.competitorAnalysis.differentiationAnalysis && (
+              <div className={`p-3 rounded-xl border ${
+                validation.competitorAnalysis.differentiationAnalysis.toLowerCase().includes('weak') ||
+                validation.competitorAnalysis.differentiationAnalysis.toLowerCase().includes('unclear')
+                  ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
+              }`}>
+                <div className="text-xs font-bold uppercase mb-1 text-gray-600">Your Differentiation</div>
+                <div className="text-sm text-gray-700">{validation.competitorAnalysis.differentiationAnalysis}</div>
+              </div>
+            )}
+            {(validation.competitorAnalysis.competitiveAdvantages?.length > 0 || validation.competitorAnalysis.competitiveDisadvantages?.length > 0) && (
+              <div className="grid grid-cols-2 gap-3">
+                {validation.competitorAnalysis.competitiveAdvantages?.length > 0 && (
+                  <div className="bg-green-50 p-3 rounded-xl border border-green-200">
+                    <div className="text-xs font-bold text-green-700 uppercase mb-2">Your Edge</div>
+                    <ul className="space-y-1">
+                      {validation.competitorAnalysis.competitiveAdvantages.slice(0, 3).map((adv: string, i: number) => (
+                        <li key={i} className="text-xs text-gray-700 flex items-start gap-1"><span className="text-green-500">+</span>{adv}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {validation.competitorAnalysis.competitiveDisadvantages?.length > 0 && (
+                  <div className="bg-red-50 p-3 rounded-xl border border-red-200">
+                    <div className="text-xs font-bold text-red-700 uppercase mb-2">Gaps</div>
+                    <ul className="space-y-1">
+                      {validation.competitorAnalysis.competitiveDisadvantages.slice(0, 3).map((dis: string, i: number) => (
+                        <li key={i} className="text-xs text-gray-700 flex items-start gap-1"><span className="text-red-500">-</span>{dis}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Market */}
       {validation.marketAnalysis && (
-        <div className="grid grid-cols-3 gap-2">
-          <div className="bg-white p-3 rounded-xl border-2 border-gray-200 shadow-[0_3px_0_#e5e7eb] text-center">
-            <div className="text-[10px] font-bold text-gray-500 uppercase">Genre</div>
-            <div className="text-sm font-medium text-gray-800 mt-1">{validation.marketAnalysis.genre}</div>
+        <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-4 py-3 border-b-2 border-[#1cb0f6]">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-[#1cb0f6] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#1899d6]">
+                <TrendingUp className="w-4 h-4" />
+              </div>
+              <span className="font-bold text-[#1899d6] uppercase tracking-wide text-sm">Market</span>
+              <span className="ml-auto text-xs bg-[#1cb0f6] text-white px-2 py-0.5 rounded-full font-bold">{marketScore}/10</span>
+            </div>
           </div>
-          <div className="bg-white p-3 rounded-xl border-2 border-gray-200 shadow-[0_3px_0_#e5e7eb] text-center">
-            <div className="text-[10px] font-bold text-gray-500 uppercase">Trend</div>
-            <div className="text-sm font-medium text-gray-800 mt-1">{validation.marketAnalysis.growthTrend}</div>
+          <div className="p-4 space-y-3">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="bg-blue-50 p-2 rounded-xl border border-blue-100 text-center">
+                <div className="text-[10px] font-bold text-[#1899d6] uppercase">Genre</div>
+                <div className="text-sm font-medium text-gray-800">{validation.marketAnalysis.genre}</div>
+              </div>
+              <div className={`p-2 rounded-xl border text-center ${
+                validation.marketAnalysis.growthTrend?.includes('rising') ? 'bg-green-50 border-green-200' :
+                validation.marketAnalysis.growthTrend?.includes('declining') ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'
+              }`}>
+                <div className="text-[10px] font-bold uppercase text-gray-600">Trend</div>
+                <div className="text-sm font-medium text-gray-800">{validation.marketAnalysis.growthTrend}</div>
+              </div>
+              <div className={`p-2 rounded-xl border text-center ${
+                validation.marketAnalysis.saturationLevel?.includes('extreme') || validation.marketAnalysis.saturationLevel?.includes('high')
+                  ? 'bg-red-50 border-red-200' : validation.marketAnalysis.saturationLevel?.includes('low') ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'
+              }`}>
+                <div className="text-[10px] font-bold uppercase text-gray-600">Saturation</div>
+                <div className="text-sm font-medium text-gray-800">{validation.marketAnalysis.saturationLevel}</div>
+              </div>
+            </div>
+            {validation.marketAnalysis.risks?.length > 0 && (
+              <div className="bg-amber-50 p-3 rounded-xl border border-amber-200">
+                <div className="text-xs font-bold text-[#ea7900] uppercase mb-2">Market Risks</div>
+                <ul className="space-y-1">
+                  {validation.marketAnalysis.risks.slice(0, 3).map((risk: string, i: number) => (
+                    <li key={i} className="text-sm text-gray-700 flex items-start gap-2"><span className="text-amber-500 mt-0.5">&#x2022;</span>{risk}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
-          <div className="bg-white p-3 rounded-xl border-2 border-gray-200 shadow-[0_3px_0_#e5e7eb] text-center">
-            <div className="text-[10px] font-bold text-gray-500 uppercase">Saturation</div>
-            <div className="text-sm font-medium text-gray-800 mt-1">{validation.marketAnalysis.saturationLevel}</div>
+        </div>
+      )}
+
+      {/* First 5 Minutes */}
+      {validation.loopAnalysis?.firstSession && (
+        <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 px-4 py-3 border-b-2 border-[#ffc800]">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-[#ffc800] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#e6b400]">
+                <Zap className="w-4 h-4" />
+              </div>
+              <span className="font-bold text-[#b38f00] uppercase tracking-wide text-sm">First 5 Minutes</span>
+            </div>
+          </div>
+          <div className="p-4 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-amber-50 p-3 rounded-xl border border-amber-200">
+                <div className="text-xs font-bold text-[#b38f00] uppercase mb-1">Time to Fun</div>
+                <div className="text-sm font-bold text-gray-800">{validation.loopAnalysis.firstSession.timeToFun}</div>
+              </div>
+              <div className="bg-amber-50 p-3 rounded-xl border border-amber-200">
+                <div className="text-xs font-bold text-[#b38f00] uppercase mb-1">Tutorial Risk</div>
+                <div className="text-sm font-medium text-gray-800">{validation.loopAnalysis.firstSession.tutorialRisk}</div>
+              </div>
+            </div>
+            {validation.loopAnalysis.firstSession.hookMoment && (
+              <div className="bg-green-50 p-3 rounded-xl border border-green-200">
+                <div className="text-xs font-bold text-[#58a700] uppercase mb-1">Hook Moment</div>
+                <div className="text-sm text-gray-700">{validation.loopAnalysis.firstSession.hookMoment}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Core Loop */}
+      {validation.loopAnalysis && (
+        <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-4 py-3 border-b-2 border-[#a560e8]">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-[#a560e8] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#8b47cc]">
+                <RefreshCw className="w-4 h-4" />
+              </div>
+              <span className="font-bold text-[#8b47cc] uppercase tracking-wide text-sm">Core Loop</span>
+              <span className="ml-auto text-xs bg-[#a560e8] text-white px-2 py-0.5 rounded-full font-bold">{loopScore}/10</span>
+            </div>
+          </div>
+          <div className="p-4 space-y-3">
+            {validation.loopAnalysis.primaryLoop && (
+              <div className="bg-purple-50 p-3 rounded-xl border border-purple-100">
+                <div className="text-sm text-gray-700 font-medium">{validation.loopAnalysis.primaryLoop}</div>
+              </div>
+            )}
+            {validation.loopAnalysis.loopStrength && (
+              <div className={`p-3 rounded-xl border ${
+                validation.loopAnalysis.loopStrength.includes('strong') ? 'bg-green-50 border-green-200' :
+                validation.loopAnalysis.loopStrength.includes('weak') ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'
+              }`}>
+                <div className="text-xs font-bold uppercase mb-1 text-gray-600">Loop Assessment</div>
+                <div className="text-sm text-gray-700">{validation.loopAnalysis.loopStrength}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Retention */}
+      {validation.loopAnalysis?.retention && (
+        <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 border-b-2 border-[#58cc02]">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-[#58cc02] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#58a700]">
+                <TrendingUp className="w-4 h-4" />
+              </div>
+              <span className="font-bold text-[#58a700] uppercase tracking-wide text-sm">Why Players Return</span>
+            </div>
+          </div>
+          <div className="p-4 space-y-3">
+            <div className="space-y-2">
+              {validation.loopAnalysis.retention.whyComeBackTomorrow && (
+                <div className="bg-green-50 p-3 rounded-xl border border-green-200">
+                  <div className="text-xs font-bold text-[#58a700] uppercase mb-1">Tomorrow</div>
+                  <div className="text-sm text-gray-700">{validation.loopAnalysis.retention.whyComeBackTomorrow}</div>
+                </div>
+              )}
+              {validation.loopAnalysis.retention.whyComeBackNextWeek && (
+                <div className="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                  <div className="text-xs font-bold text-[#1899d6] uppercase mb-1">Next Week</div>
+                  <div className="text-sm text-gray-700">{validation.loopAnalysis.retention.whyComeBackNextWeek}</div>
+                </div>
+              )}
+            </div>
+            {validation.loopAnalysis.retention.retentionKillers?.length > 0 && (
+              <div className="bg-red-50 p-3 rounded-xl border border-red-200">
+                <div className="text-xs font-bold text-[#ea2b2b] uppercase mb-2">Retention Killers</div>
+                <ul className="space-y-1">
+                  {validation.loopAnalysis.retention.retentionKillers.map((killer: string, i: number) => (
+                    <li key={i} className="text-sm text-gray-700 flex items-start gap-2"><span className="text-red-500 mt-0.5">x</span>{killer}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* Dealbreakers */}
-      {fv?.dealbreakers && fv.dealbreakers.length > 0 && (
+      {dealbreakers.length > 0 && (
         <div className="bg-white rounded-2xl border-2 border-[#ff4b4b] shadow-[0_4px_0_#ea2b2b] overflow-hidden">
           <div className="bg-[#ffe0e0] px-4 py-3 border-b-2 border-[#ff4b4b] flex items-center gap-2">
-            <div className="w-7 h-7 bg-[#ff4b4b] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#ea2b2b]">!</div>
+            <div className="w-7 h-7 bg-[#ff4b4b] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#ea2b2b]">x</div>
             <span className="font-bold text-[#ea2b2b] uppercase tracking-wide text-sm">Dealbreakers</span>
           </div>
           <div className="p-4 space-y-2">
-            {fv.dealbreakers.map((d: string, i: number) => (
+            {dealbreakers.map((d: string, i: number) => (
               <div key={i} className="flex items-start gap-3 text-sm">
-                <span className="w-5 h-5 bg-[#ff4b4b] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">!</span>
+                <span className="w-5 h-5 bg-[#ff4b4b] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">x</span>
                 <span className="text-gray-700">{d}</span>
               </div>
             ))}
           </div>
         </div>
       )}
+
+      <p className="text-center text-xs text-gray-400 pb-4 mt-4">
+        AI-powered analysis of market data, game loops, and competition
+      </p>
     </div>
   );
 }
