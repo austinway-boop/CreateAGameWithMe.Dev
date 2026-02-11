@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    const { projectId, hoursPerDay, daysPerWeek, startDate } = await request.json();
+    const { projectId, hoursPerDay, daysPerWeek, startDate, timeline } = await request.json();
 
     // Load project data
     const project = await prisma.project.findFirst({
@@ -43,14 +43,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    // Calculate total weeks from time horizon
+    // Calculate total weeks - prefer client-provided timeline over project.timeHorizon
+    const effectiveTimeline = timeline || project.timeHorizon || '3 months';
     const weeksMap: Record<string, number> = {
       '1 week': 1,
       '1 month': 4,
       '3 months': 13,
       '6 months': 26,
     };
-    const totalWeeks = weeksMap[project.timeHorizon || '3 months'] || 13;
+    const totalWeeks = weeksMap[effectiveTimeline] || 13;
     const maxTokens = Math.min(8000, 2500 + totalWeeks * daysPerWeek * 60);
 
     // Extract rich project data
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
 - Concept: ${project.finalConcept || project.ideaDescription || 'Not specified'}
 - Platform: ${project.platform || 'Not specified'}
 - Team Size: ${project.teamSize || 'Solo'}
-- Timeline: ${project.timeHorizon || '3 months'} (${totalWeeks} weeks)`;
+- Timeline: ${effectiveTimeline} (${totalWeeks} weeks)`;
 
     if (gameQuestions) {
       projectContext += `\n\nGAME IDENTITY:`;
@@ -199,6 +200,7 @@ Return ONLY valid JSON (no markdown, no explanation):
     calendarData.hoursPerDay = hoursPerDay;
     calendarData.daysPerWeek = daysPerWeek;
     calendarData.totalWeeks = totalWeeks;
+    calendarData.timeline = effectiveTimeline;
     calendarData.startDate = startDate || new Date().toISOString().split('T')[0];
 
     // Normalize and add completion tracking

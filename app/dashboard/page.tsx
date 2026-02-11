@@ -59,6 +59,7 @@ function DashboardContent() {
   const router = useRouter();
   const { project, loading: projectLoading } = useProject();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [mountedTabs, setMountedTabs] = useState<Set<TabId>>(new Set(['overview']));
   const [credits, setCredits] = useState<CreditInfo | null>(null);
   const [creditsLoading, setCreditsLoading] = useState(true);
 
@@ -82,6 +83,12 @@ function DashboardContent() {
 
   const handleTabClick = (tab: TabId) => {
     setActiveTab(tab);
+    setMountedTabs(prev => {
+      if (prev.has(tab)) return prev;
+      const next = new Set(prev);
+      next.add(tab);
+      return next;
+    });
   };
 
   if (projectLoading) {
@@ -177,11 +184,31 @@ function DashboardContent() {
           </div>
         ) : (
           <>
-            {activeTab === 'overview' && <DashboardOverview />}
-            {activeTab === 'art' && <SketchToArt credits={credits} onCreditsUpdate={fetchCredits} />}
-            {activeTab === '3d' && <ImageTo3D credits={credits} onCreditsUpdate={fetchCredits} />}
-            {activeTab === 'music' && <MusicGenerator credits={credits} onCreditsUpdate={fetchCredits} />}
-            {activeTab === 'calendar' && <DevCalendar credits={credits} onCreditsUpdate={fetchCredits} />}
+            {mountedTabs.has('overview') && (
+              <div style={{ display: activeTab === 'overview' ? undefined : 'none' }}>
+                <DashboardOverview />
+              </div>
+            )}
+            {mountedTabs.has('art') && (
+              <div style={{ display: activeTab === 'art' ? undefined : 'none' }}>
+                <SketchToArt credits={credits} onCreditsUpdate={fetchCredits} />
+              </div>
+            )}
+            {mountedTabs.has('3d') && (
+              <div style={{ display: activeTab === '3d' ? undefined : 'none' }}>
+                <ImageTo3D credits={credits} onCreditsUpdate={fetchCredits} />
+              </div>
+            )}
+            {mountedTabs.has('music') && (
+              <div style={{ display: activeTab === 'music' ? undefined : 'none' }}>
+                <MusicGenerator credits={credits} onCreditsUpdate={fetchCredits} />
+              </div>
+            )}
+            {mountedTabs.has('calendar') && (
+              <div style={{ display: activeTab === 'calendar' ? undefined : 'none' }}>
+                <DevCalendar credits={credits} onCreditsUpdate={fetchCredits} />
+              </div>
+            )}
           </>
         )}
       </div>
