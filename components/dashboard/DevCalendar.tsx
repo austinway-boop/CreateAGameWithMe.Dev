@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   Target, Loader2, Sparkles, Clock, ChevronDown, ChevronRight,
   Check, Calendar, RotateCcw, Coffee, CheckCircle2, Circle,
@@ -83,7 +83,7 @@ const TIMELINE_OPTIONS = [
 ];
 
 // ============================================
-// Helpers
+// Helpers (pure functions, no allocations on render)
 // ============================================
 
 function isWorkingDay(date: Date, daysPerWeek: number): boolean {
@@ -132,18 +132,19 @@ function getTodayInfo(data: CalendarPlanData): TodayInfo {
   return { status: 'working_day', weekIndex, dayIndex };
 }
 
-function getDateForWorkingDay(startDate: string, daysPerWeek: number, workingDayNumber: number): Date {
-  const start = new Date(startDate + 'T12:00:00');
-  const cursor = new Date(start);
+/** Precompute ALL working day dates in one pass instead of per-day O(n) */
+function precomputeDates(startDate: string, daysPerWeek: number, totalDays: number): Date[] {
+  const dates: Date[] = [];
+  const cursor = new Date(startDate + 'T12:00:00');
   let count = 0;
-  for (let i = 0; i < 500; i++) {
+  for (let i = 0; i < 1000 && count < totalDays; i++) {
     if (isWorkingDay(cursor, daysPerWeek)) {
+      dates.push(new Date(cursor));
       count++;
-      if (count === workingDayNumber) return new Date(cursor);
     }
     cursor.setDate(cursor.getDate() + 1);
   }
-  return new Date(cursor);
+  return dates;
 }
 
 function formatDeadline(date: Date): string {
@@ -183,7 +184,6 @@ function getWeekHours(week: WeekPlan | null) {
   return { done, total };
 }
 
-/** Is this a "short" plan where we show a flat task list instead of week accordion? */
 function isShortTimeline(data: CalendarPlanData): boolean {
   return data.totalWeeks <= 4;
 }
@@ -201,34 +201,25 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Setup inputs
   const [hoursPerDay, setHoursPerDay] = useState(4);
   const [daysPerWeek, setDaysPerWeek] = useState(5);
   const [timeline, setTimeline] = useState('1 month');
 
-  // View state
   const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
 
-  // Pending saves
   const pendingSavesRef = useRef<Map<string, boolean>>(new Map());
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const calendarIdRef = useRef<string | null>(null);
 
-  // Keep calendarIdRef in sync for the cleanup function
   useEffect(() => { calendarIdRef.current = calendarId; }, [calendarId]);
 
-  // Initialize timeline from project
   useEffect(() => {
     if (project?.timeHorizon) setTimeline(project.timeHorizon);
   }, [project?.timeHorizon]);
 
-  // Load existing calendar on mount
   useEffect(() => {
-    if (project?.id) {
-      loadCalendar();
-    } else {
-      setIsLoading(false);
-    }
+    if (project?.id) loadCalendar();
+    else setIsLoading(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.id]);
 
@@ -251,6 +242,13 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
     };
   }, []);
 
+  // Precompute all dates once when calendarData changes (not per-render)
+  const dayDates = useMemo(() => {
+    if (!calendarData) return [];
+    const totalDays = calendarData.weeks.reduce((sum, w) => sum + w.days.length, 0);
+    return precomputeDates(calendarData.startDate, calendarData.daysPerWeek, totalDays);
+  }, [calendarData?.startDate, calendarData?.daysPerWeek, calendarData?.weeks?.length]);
+
   const loadCalendar = async () => {
     try {
       const res = await fetch(`/api/ai/calendar?projectId=${project!.id}`);
@@ -259,14 +257,10 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
         if (data.calendarData) {
           setCalendarData(data.calendarData);
           setCalendarId(data.id);
-          // Restore settings from saved data
           if (data.calendarData.timeline) setTimeline(data.calendarData.timeline);
           const today = getTodayInfo(data.calendarData);
-          if (today.status === 'working_day') {
-            setExpandedWeek(today.weekIndex);
-          } else if (data.calendarData.weeks?.length > 0) {
-            setExpandedWeek(0);
-          }
+          if (today.status === 'working_day') setExpandedWeek(today.weekIndex);
+          else if (data.calendarData.weeks?.length > 0) setExpandedWeek(0);
         }
       }
     } catch (err) {
@@ -280,22 +274,14 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
     if (!project?.id) { setError('No project found'); return; }
     setIsGenerating(true);
     setError(null);
-
     try {
       const res = await fetch('/api/ai/generate-calendar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projectId: project.id,
-          hoursPerDay,
-          daysPerWeek,
-          timeline,
-          startDate: getLocalDateString(),
-        }),
+        body: JSON.stringify({ projectId: project.id, hoursPerDay, daysPerWeek, timeline, startDate: getLocalDateString() }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error); return; }
-
       setCalendarData(data.calendarData);
       setCalendarId(data.id);
       setExpandedWeek(0);
@@ -307,131 +293,53 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
     }
   };
 
+  // toggleGoal does NOT depend on calendarData — uses functional setState
   const toggleGoal = useCallback((goalId: string) => {
-    if (!calendarData || !calendarId) return;
-
-    let newCompleted = false;
-    for (const w of calendarData.weeks)
-      for (const d of w.days)
-        for (const g of d.goals)
-          if (g.id === goalId) newCompleted = !g.completed;
-
     setCalendarData(prev => {
       if (!prev) return prev;
       return {
         ...prev,
         weeks: prev.weeks.map(w => ({
           ...w,
-          days: w.days.map(d => ({
-            ...d,
-            goals: d.goals.map(g => g.id === goalId ? { ...g, completed: newCompleted } : g),
-          })),
+          days: w.days.map(d => {
+            const idx = d.goals.findIndex(g => g.id === goalId);
+            if (idx === -1) return d;
+            const newGoals = [...d.goals];
+            newGoals[idx] = { ...newGoals[idx], completed: !newGoals[idx].completed };
+            pendingSavesRef.current.set(goalId, newGoals[idx].completed);
+            return { ...d, goals: newGoals };
+          }),
         })),
       };
     });
 
-    pendingSavesRef.current.set(goalId, newCompleted);
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    saveTimeoutRef.current = setTimeout(async () => {
+    saveTimeoutRef.current = setTimeout(() => {
+      const cid = calendarIdRef.current;
+      if (!cid) return;
       const entries = Array.from(pendingSavesRef.current.entries());
       pendingSavesRef.current.clear();
       entries.forEach(([gid, comp]) => {
         fetch('/api/ai/calendar', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ calendarId, goalId: gid, completed: comp }),
+          body: JSON.stringify({ calendarId: cid, goalId: gid, completed: comp }),
         }).catch(console.error);
       });
     }, 800);
-  }, [calendarData, calendarId]);
+  }, []);
 
-  const handleNewSchedule = () => {
-    if (calendarData) {
-      setHoursPerDay(calendarData.hoursPerDay);
-      setDaysPerWeek(calendarData.daysPerWeek);
-      if (calendarData.timeline) setTimeline(calendarData.timeline);
-    }
-    setCalendarData(null);
+  const handleNewSchedule = useCallback(() => {
+    setCalendarData(prev => {
+      if (prev) {
+        setHoursPerDay(prev.hoursPerDay);
+        setDaysPerWeek(prev.daysPerWeek);
+        if (prev.timeline) setTimeline(prev.timeline);
+      }
+      return null;
+    });
     setCalendarId(null);
-  };
-
-  // ── Shared task row renderer ──
-  const renderTask = (task: Task, large: boolean = false) => {
-    const cat = CATEGORY_CONFIG[task.category] || CATEGORY_CONFIG.planning;
-    const iconSize = large ? 22 : 18;
-    return (
-      <button
-        key={task.id}
-        onClick={() => toggleGoal(task.id)}
-        className={`w-full flex items-start gap-3 px-3 ${large ? 'py-3.5' : 'py-2.5'} rounded-xl transition-all text-left ${
-          task.completed
-            ? large ? 'bg-[#58cc02]/5' : 'opacity-50'
-            : large ? 'bg-gray-50 hover:bg-gray-100' : 'hover:bg-gray-50'
-        }`}
-      >
-        <div className="mt-0.5">
-          {task.completed ? (
-            <CheckCircle2 size={iconSize} className="text-[#58cc02] shrink-0" />
-          ) : (
-            <Circle size={iconSize} className="text-gray-300 shrink-0" />
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <span className={`${large ? 'text-sm font-medium' : 'text-xs'} block ${task.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}>
-            {task.title}
-          </span>
-          {task.why && !task.completed && (
-            <span className="text-[10px] text-gray-400 block mt-0.5">{task.why}</span>
-          )}
-        </div>
-        <span
-          className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 mt-0.5"
-          style={{ color: cat.color, backgroundColor: cat.bg }}
-        >
-          {cat.label}
-        </span>
-        <span className="text-[10px] text-gray-400 font-medium shrink-0 mt-0.5">
-          {task.hours}h
-        </span>
-      </button>
-    );
-  };
-
-  // ── Day group renderer (used in both flat and week views) ──
-  const renderDayGroup = (day: DayPlan, wi: number, di: number, isToday: boolean) => {
-    const dayDate = getDateForWorkingDay(
-      calendarData!.startDate,
-      calendarData!.daysPerWeek,
-      wi * calendarData!.daysPerWeek + di + 1
-    );
-    const allDone = day.goals.length > 0 && day.goals.every(g => g.completed);
-    const dayHours = day.goals.reduce((sum, g) => sum + g.hours, 0);
-
-    return (
-      <div
-        key={`${wi}-${di}`}
-        className={`rounded-xl transition-all ${
-          isToday ? 'bg-[#1cb0f6]/5 border border-[#1cb0f6]/20 p-3' : 'py-1'
-        }`}
-      >
-        <div className={`flex items-center gap-2 mb-2 ${isToday ? '' : 'px-1'}`}>
-          {isToday && (
-            <span className="text-[9px] font-black text-white bg-[#1cb0f6] px-2 py-0.5 rounded uppercase">
-              Today
-            </span>
-          )}
-          <span className={`text-xs font-bold ${allDone ? 'text-[#58cc02]' : isToday ? 'text-[#1cb0f6]' : 'text-gray-700'}`}>
-            Complete by {formatDeadline(dayDate)}
-          </span>
-          {allDone && <CheckCircle2 size={12} className="text-[#58cc02]" />}
-          <span className="text-[10px] text-gray-400 ml-auto">{dayHours}h</span>
-        </div>
-        <div className="space-y-1">
-          {day.goals.map(task => renderTask(task, isToday))}
-        </div>
-      </div>
-    );
-  };
+  }, []);
 
   // ============================================
   // Loading
@@ -456,73 +364,41 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
           <div className="text-center mb-8">
             <Target className="w-10 h-10 mx-auto text-[#58cc02] mb-3" />
             <h3 className="font-black text-gray-900 text-xl mb-1">Plan Your Release</h3>
-            <p className="text-gray-500 text-sm">
-              Break your game into tasks with deadlines so you ship on time.
-            </p>
+            <p className="text-gray-500 text-sm">Break your game into tasks with deadlines so you ship on time.</p>
           </div>
 
-          {/* Timeline */}
           <div className="mb-5">
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">
-              Timeline
-            </label>
+            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Timeline</label>
             <div className="flex gap-2">
               {TIMELINE_OPTIONS.map(t => (
-                <button
-                  key={t.value}
-                  onClick={() => setTimeline(t.value)}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                    timeline === t.value
-                      ? 'bg-[#a560e8] text-white shadow-[0_3px_0_#8b47cc]'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {t.label}
-                </button>
+                <button key={t.value} onClick={() => setTimeline(t.value)}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold ${
+                    timeline === t.value ? 'bg-[#a560e8] text-white shadow-[0_3px_0_#8b47cc]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}>{t.label}</button>
               ))}
             </div>
           </div>
 
-          {/* Hours per day */}
           <div className="mb-5">
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">
-              Hours per day
-            </label>
+            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Hours per day</label>
             <div className="flex gap-2">
               {HOURS_OPTIONS.map(h => (
-                <button
-                  key={h}
-                  onClick={() => setHoursPerDay(h)}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                    hoursPerDay === h
-                      ? 'bg-[#58cc02] text-white shadow-[0_3px_0_#58a700]'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {h}h
-                </button>
+                <button key={h} onClick={() => setHoursPerDay(h)}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold ${
+                    hoursPerDay === h ? 'bg-[#58cc02] text-white shadow-[0_3px_0_#58a700]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}>{h}h</button>
               ))}
             </div>
           </div>
 
-          {/* Days per week */}
           <div className="mb-6">
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">
-              Days per week
-            </label>
+            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Days per week</label>
             <div className="flex gap-2">
               {DAYS_OPTIONS.map(d => (
-                <button
-                  key={d.value}
-                  onClick={() => setDaysPerWeek(d.value)}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                    daysPerWeek === d.value
-                      ? 'bg-[#1cb0f6] text-white shadow-[0_3px_0_#0099dd]'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {d.label}
-                </button>
+                <button key={d.value} onClick={() => setDaysPerWeek(d.value)}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-bold ${
+                    daysPerWeek === d.value ? 'bg-[#1cb0f6] text-white shadow-[0_3px_0_#0099dd]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}>{d.label}</button>
               ))}
             </div>
           </div>
@@ -532,36 +408,23 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
               <Calendar className="w-4 h-4 text-gray-400 shrink-0" />
               <div className="min-w-0">
                 <p className="text-sm font-bold text-gray-800 truncate">{project.finalTitle}</p>
-                <p className="text-xs text-gray-500">
-                  {[project.platform, project.teamSize].filter(Boolean).join(' · ')}
-                </p>
+                <p className="text-xs text-gray-500">{[project.platform, project.teamSize].filter(Boolean).join(' · ')}</p>
               </div>
             </div>
           )}
 
-          {error && (
-            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs mb-4">{error}</div>
-          )}
+          {error && <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs mb-4">{error}</div>}
 
-          <button
-            onClick={generateCalendar}
-            disabled={isGenerating || !project?.id}
-            className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+          <button onClick={generateCalendar} disabled={isGenerating || !project?.id}
+            className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 ${
               !isGenerating && project?.id
                 ? 'bg-[#58cc02] text-white shadow-[0_4px_0_#58a700] hover:shadow-[0_2px_0_#58a700] hover:translate-y-[2px] active:shadow-none active:translate-y-[4px]'
                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            {isGenerating ? (
-              <><Loader2 size={16} className="animate-spin" /> Building your schedule...</>
-            ) : (
-              <><Sparkles size={16} /> Generate Schedule (1 credit)</>
-            )}
+            }`}>
+            {isGenerating ? <><Loader2 size={16} className="animate-spin" /> Building your schedule...</> : <><Sparkles size={16} /> Generate Schedule (1 credit)</>}
           </button>
 
-          {credits && (
-            <p className="text-center text-[11px] text-gray-400 mt-2">{credits.remaining} credits remaining</p>
-          )}
+          {credits && <p className="text-center text-[11px] text-gray-400 mt-2">{credits.remaining} credits remaining</p>}
         </div>
       </div>
     );
@@ -580,6 +443,12 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
   const streak = getStreak(calendarData, todayInfo);
   const weekHours = getWeekHours(todayWeek);
   const shortPlan = isShortTimeline(calendarData);
+
+  // Get precomputed date for a given week/day index
+  const getDate = (wi: number, di: number): Date => {
+    const idx = wi * calendarData.daysPerWeek + di;
+    return dayDates[idx] || new Date();
+  };
 
   return (
     <div className="max-w-3xl mx-auto space-y-4">
@@ -603,13 +472,13 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
               <span className="text-xl font-black text-gray-900">{progress.percent}%</span>
               <p className="text-[10px] text-gray-400 font-medium">{progress.completed}/{progress.total} tasks</p>
             </div>
-            <button onClick={handleNewSchedule} className="p-2 rounded-xl hover:bg-gray-100 transition-all group" title="New schedule">
+            <button onClick={handleNewSchedule} className="p-2 rounded-xl hover:bg-gray-100 group" title="New schedule">
               <RotateCcw size={16} className="text-gray-400 group-hover:text-gray-600" />
             </button>
           </div>
         </div>
         <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-          <div className="h-full rounded-full transition-all duration-500"
+          <div className="h-full rounded-full transition-[width] duration-500"
             style={{ width: `${progress.percent}%`, backgroundColor: progress.percent === 100 ? '#58cc02' : '#1cb0f6' }} />
         </div>
       </div>
@@ -644,7 +513,25 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
             </div>
           </div>
           <div className="space-y-2">
-            {todayGoals.map(task => renderTask(task, true))}
+            {todayGoals.map(task => {
+              const cat = CATEGORY_CONFIG[task.category] || CATEGORY_CONFIG.planning;
+              return (
+                <button key={task.id} onClick={() => toggleGoal(task.id)}
+                  className={`w-full flex items-start gap-3 px-3 py-3.5 rounded-xl text-left ${
+                    task.completed ? 'bg-[#58cc02]/5' : 'bg-gray-50 hover:bg-gray-100'
+                  }`}>
+                  <div className="mt-0.5">
+                    {task.completed ? <CheckCircle2 size={22} className="text-[#58cc02]" /> : <Circle size={22} className="text-gray-300" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className={`text-sm font-medium block ${task.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}>{task.title}</span>
+                    {task.why && !task.completed && <span className="text-[10px] text-gray-400 block mt-0.5">{task.why}</span>}
+                  </div>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 mt-0.5" style={{ color: cat.color, backgroundColor: cat.bg }}>{cat.label}</span>
+                  <span className="text-[10px] text-gray-400 font-medium shrink-0 mt-0.5">{task.hours}h</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -673,78 +560,92 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
       )}
 
       {/* ── TASK LIST ── */}
-
       {shortPlan ? (
-        /* ── Flat task list for short timelines (1 week / 1 month) ── */
         <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-[0_3px_0_#e5e7eb] p-4 space-y-4">
           {calendarData.weeks.map((week, wi) => (
             <div key={wi}>
-              {/* Show week focus as a subtle divider if more than 1 week */}
               {calendarData.totalWeeks > 1 && (
                 <div className="flex items-center gap-2 mb-3 mt-1">
                   {week.deliverable ? (
-                    <>
-                      <Package size={12} className="text-blue-500 shrink-0" />
-                      <span className="text-xs font-bold text-blue-700">{week.focus}</span>
-                      <span className="text-[10px] text-blue-500">&mdash; {week.deliverable}</span>
-                    </>
+                    <><Package size={12} className="text-blue-500 shrink-0" /><span className="text-xs font-bold text-blue-700">{week.focus}</span><span className="text-[10px] text-blue-500">&mdash; {week.deliverable}</span></>
                   ) : (
-                    <>
-                      <Sparkles size={12} className="text-gray-400 shrink-0" />
-                      <span className="text-xs font-bold text-gray-600">{week.focus}</span>
-                    </>
+                    <><Sparkles size={12} className="text-gray-400 shrink-0" /><span className="text-xs font-bold text-gray-600">{week.focus}</span></>
                   )}
                 </div>
               )}
               <div className="space-y-3">
                 {week.days.map((day, di) => {
-                  const isToday = todayInfo.status === 'working_day'
-                    && todayInfo.weekIndex === wi && todayInfo.dayIndex === di;
-                  return renderDayGroup(day, wi, di, isToday);
+                  const isToday = todayInfo.status === 'working_day' && todayInfo.weekIndex === wi && todayInfo.dayIndex === di;
+                  const dayDate = getDate(wi, di);
+                  const allDone = day.goals.length > 0 && day.goals.every(g => g.completed);
+                  const dayHours = day.goals.reduce((sum, g) => sum + g.hours, 0);
+                  return (
+                    <div key={di} className={`rounded-xl ${isToday ? 'bg-[#1cb0f6]/5 border border-[#1cb0f6]/20 p-3' : 'py-1'}`}>
+                      <div className={`flex items-center gap-2 mb-2 ${isToday ? '' : 'px-1'}`}>
+                        {isToday && <span className="text-[9px] font-black text-white bg-[#1cb0f6] px-2 py-0.5 rounded uppercase">Today</span>}
+                        <span className={`text-xs font-bold ${allDone ? 'text-[#58cc02]' : isToday ? 'text-[#1cb0f6]' : 'text-gray-700'}`}>
+                          Complete by {formatDeadline(dayDate)}
+                        </span>
+                        {allDone && <CheckCircle2 size={12} className="text-[#58cc02]" />}
+                        <span className="text-[10px] text-gray-400 ml-auto">{dayHours}h</span>
+                      </div>
+                      <div className="space-y-1">
+                        {day.goals.map(task => {
+                          const cat = CATEGORY_CONFIG[task.category] || CATEGORY_CONFIG.planning;
+                          return (
+                            <button key={task.id} onClick={() => toggleGoal(task.id)}
+                              className={`w-full flex items-start gap-2.5 px-3 py-2.5 rounded-xl text-left ${
+                                task.completed ? 'opacity-50' : 'hover:bg-gray-50'
+                              }`}>
+                              <div className="mt-0.5">
+                                {task.completed ? <CheckCircle2 size={18} className="text-[#58cc02]" /> : <Circle size={18} className="text-gray-300" />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <span className={`text-xs block ${task.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}>{task.title}</span>
+                                {task.why && !task.completed && <span className="text-[10px] text-gray-400 block mt-0.5">{task.why}</span>}
+                              </div>
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 mt-0.5" style={{ color: cat.color, backgroundColor: cat.bg }}>{cat.label}</span>
+                              <span className="text-[10px] text-gray-400 font-medium shrink-0 mt-0.5">{task.hours}h</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
                 })}
               </div>
             </div>
           ))}
         </div>
       ) : (
-        /* ── Week-grouped accordion for longer timelines (3+ months) ── */
         <div className="space-y-2">
           {calendarData.weeks.map((week, wi) => {
             const isExpanded = expandedWeek === wi;
             const isCurrent = todayInfo.status === 'working_day' && todayInfo.weekIndex === wi;
-            const weekTasksDone = week.days.reduce((sum, d) => sum + d.goals.filter(g => g.completed).length, 0);
-            const weekTasksTotal = week.days.reduce((sum, d) => sum + d.goals.length, 0);
-            const allDone = weekTasksTotal > 0 && weekTasksDone === weekTasksTotal;
+            let weekDone = 0, weekTotal = 0;
+            for (const d of week.days) for (const g of d.goals) { weekTotal++; if (g.completed) weekDone++; }
+            const allDone = weekTotal > 0 && weekDone === weekTotal;
 
             return (
-              <div key={wi} className={`bg-white rounded-2xl border-2 overflow-hidden transition-all ${
+              <div key={wi} className={`bg-white rounded-2xl border-2 overflow-hidden ${
                 isCurrent ? 'border-[#1cb0f6] shadow-[0_3px_0_#0099dd]'
                   : allDone ? 'border-[#58cc02]/30 shadow-[0_3px_0_#e5e7eb]'
                   : 'border-gray-200 shadow-[0_3px_0_#e5e7eb]'
               }`}>
                 <button onClick={() => setExpandedWeek(isExpanded ? null : wi)}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50/50 transition-all">
-                  {allDone ? (
-                    <CheckCircle2 size={18} className="text-[#58cc02] shrink-0" />
-                  ) : (
+                  className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50/50">
+                  {allDone ? <CheckCircle2 size={18} className="text-[#58cc02] shrink-0" /> : (
                     <div className="w-[18px] h-[18px] rounded-full border-2 border-gray-200 shrink-0 flex items-center justify-center">
                       <span className="text-[8px] font-black text-gray-400">{week.week}</span>
                     </div>
                   )}
                   <div className="flex-1 text-left min-w-0">
-                    <span className={`font-bold text-sm ${isCurrent ? 'text-[#1cb0f6]' : allDone ? 'text-[#58cc02]' : 'text-gray-900'}`}>
-                      Week {week.week}
-                    </span>
+                    <span className={`font-bold text-sm ${isCurrent ? 'text-[#1cb0f6]' : allDone ? 'text-[#58cc02]' : 'text-gray-900'}`}>Week {week.week}</span>
                     <span className="text-xs text-gray-400 mx-1.5">&mdash;</span>
                     <span className="text-xs text-gray-500">{week.focus}</span>
                   </div>
-                  <span className={`text-[11px] font-bold shrink-0 ${allDone ? 'text-[#58cc02]' : 'text-gray-400'}`}>
-                    {weekTasksDone}/{weekTasksTotal}
-                  </span>
-                  {isExpanded
-                    ? <ChevronDown size={14} className="text-gray-400 shrink-0" />
-                    : <ChevronRight size={14} className="text-gray-400 shrink-0" />
-                  }
+                  <span className={`text-[11px] font-bold shrink-0 ${allDone ? 'text-[#58cc02]' : 'text-gray-400'}`}>{weekDone}/{weekTotal}</span>
+                  {isExpanded ? <ChevronDown size={14} className="text-gray-400 shrink-0" /> : <ChevronRight size={14} className="text-gray-400 shrink-0" />}
                 </button>
 
                 {isExpanded && (
@@ -757,9 +658,43 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
                       </div>
                     )}
                     {week.days.map((day, di) => {
-                      const isToday = todayInfo.status === 'working_day'
-                        && todayInfo.weekIndex === wi && todayInfo.dayIndex === di;
-                      return renderDayGroup(day, wi, di, isToday);
+                      const isToday = todayInfo.status === 'working_day' && todayInfo.weekIndex === wi && todayInfo.dayIndex === di;
+                      const dayDate = getDate(wi, di);
+                      const allDayDone = day.goals.length > 0 && day.goals.every(g => g.completed);
+                      const dayHours = day.goals.reduce((sum, g) => sum + g.hours, 0);
+                      return (
+                        <div key={di} className={`rounded-xl ${isToday ? 'bg-[#1cb0f6]/5 border border-[#1cb0f6]/20 p-3' : 'py-1'}`}>
+                          <div className={`flex items-center gap-2 mb-2 ${isToday ? '' : 'px-1'}`}>
+                            {isToday && <span className="text-[9px] font-black text-white bg-[#1cb0f6] px-2 py-0.5 rounded uppercase">Today</span>}
+                            <span className={`text-xs font-bold ${allDayDone ? 'text-[#58cc02]' : isToday ? 'text-[#1cb0f6]' : 'text-gray-700'}`}>
+                              Complete by {formatDeadline(dayDate)}
+                            </span>
+                            {allDayDone && <CheckCircle2 size={12} className="text-[#58cc02]" />}
+                            <span className="text-[10px] text-gray-400 ml-auto">{dayHours}h</span>
+                          </div>
+                          <div className="space-y-1">
+                            {day.goals.map(task => {
+                              const cat = CATEGORY_CONFIG[task.category] || CATEGORY_CONFIG.planning;
+                              return (
+                                <button key={task.id} onClick={() => toggleGoal(task.id)}
+                                  className={`w-full flex items-start gap-2.5 px-3 py-2.5 rounded-xl text-left ${
+                                    task.completed ? 'opacity-50' : 'hover:bg-gray-50'
+                                  }`}>
+                                  <div className="mt-0.5">
+                                    {task.completed ? <CheckCircle2 size={18} className="text-[#58cc02]" /> : <Circle size={18} className="text-gray-300" />}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <span className={`text-xs block ${task.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}>{task.title}</span>
+                                    {task.why && !task.completed && <span className="text-[10px] text-gray-400 block mt-0.5">{task.why}</span>}
+                                  </div>
+                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 mt-0.5" style={{ color: cat.color, backgroundColor: cat.bg }}>{cat.label}</span>
+                                  <span className="text-[10px] text-gray-400 font-medium shrink-0 mt-0.5">{task.hours}h</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
                     })}
                   </div>
                 )}
