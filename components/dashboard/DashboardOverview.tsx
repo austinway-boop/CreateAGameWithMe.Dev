@@ -20,10 +20,10 @@ function ScoreCircle({ score, label }: { score: number; label: string }) {
   const style = getStyle(score);
   return (
     <div className="text-center">
-      <div className={`w-14 h-14 rounded-2xl border-2 ${style.border} ${style.bg} ${style.shadow} flex items-center justify-center mx-auto mb-1`}>
-        <span className={`text-xl font-black ${style.text}`}>{score}</span>
+      <div className={`w-16 h-16 rounded-2xl border-2 ${style.border} ${style.bg} ${style.shadow} flex items-center justify-center mx-auto mb-1.5`}>
+        <span className={`text-2xl font-black ${style.text}`}>{score}</span>
       </div>
-      <div className="text-[11px] font-bold text-gray-600 uppercase tracking-wide">{label}</div>
+      <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</div>
     </div>
   );
 }
@@ -51,7 +51,6 @@ export function DashboardOverview() {
     if (!project) return;
     setLoading(true);
     setError(null);
-
     try {
       const savedRes = await fetch(`/api/validation-runs?projectId=${project.id}`);
       if (savedRes.ok) {
@@ -75,7 +74,6 @@ export function DashboardOverview() {
     setLoading(true);
     setError(null);
     setIsSavedResult(false);
-
     try {
       const res = await fetch('/api/validateComprehensive', {
         method: 'POST',
@@ -98,10 +96,10 @@ export function DashboardOverview() {
   if (!readiness.isReady) {
     return (
       <div className="max-w-2xl mx-auto space-y-4">
-        <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-[0_4px_0_#e5e7eb] p-6 text-center space-y-3">
-          <Gamepad2 className="w-10 h-10 mx-auto text-pink-500" />
-          <h2 className="font-bold text-gray-900">Complete Your Journey First</h2>
-          <p className="text-gray-500 text-sm">Finish the game creation steps to see your AI validation results here.</p>
+        <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-[0_4px_0_#e5e7eb] p-8 text-center space-y-3">
+          <Gamepad2 className="w-12 h-12 mx-auto text-pink-500" />
+          <h2 className="text-lg font-black text-gray-900">Complete Your Journey First</h2>
+          <p className="text-gray-500 text-[15px] leading-relaxed">Finish the game creation steps to see your AI validation results here.</p>
         </div>
       </div>
     );
@@ -110,11 +108,11 @@ export function DashboardOverview() {
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto space-y-4">
-        <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-6 border-2 border-pink-200 text-center">
-          <Bot className="w-10 h-10 text-pink-600 mx-auto mb-3" />
-          <div className="font-bold text-pink-700 text-lg">Loading Your Results</div>
-          <p className="text-pink-500 text-sm mt-1">Checking for saved analysis...</p>
-          <Loader2 className="w-5 h-5 animate-spin mx-auto mt-3 text-pink-400" />
+        <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-8 border-2 border-pink-200 text-center">
+          <Bot className="w-12 h-12 text-pink-600 mx-auto mb-3" />
+          <div className="font-black text-pink-700 text-xl">Loading Your Results</div>
+          <p className="text-pink-500 text-[15px] mt-2">Checking for saved analysis...</p>
+          <Loader2 className="w-5 h-5 animate-spin mx-auto mt-4 text-pink-400" />
         </div>
       </div>
     );
@@ -123,10 +121,10 @@ export function DashboardOverview() {
   if (error) {
     return (
       <div className="max-w-2xl mx-auto space-y-4">
-        <div className="bg-white rounded-2xl border-2 border-red-200 shadow-[0_4px_0_#fca5a5] p-6 text-center space-y-3">
-          <AlertTriangle className="w-10 h-10 mx-auto text-red-500" />
-          <h2 className="font-bold text-gray-900">Validation Failed</h2>
-          <p className="text-gray-500 text-sm">{error}</p>
+        <div className="bg-white rounded-2xl border-2 border-red-200 shadow-[0_4px_0_#fca5a5] p-8 text-center space-y-3">
+          <AlertTriangle className="w-12 h-12 mx-auto text-red-500" />
+          <h2 className="text-lg font-black text-gray-900">Validation Failed</h2>
+          <p className="text-gray-500 text-[15px]">{error}</p>
           <Button onClick={runValidation} size="sm">
             <RefreshCw className="w-4 h-4 mr-2" /> Try Again
           </Button>
@@ -154,40 +152,40 @@ export function DashboardOverview() {
   }[verdict] || { label: 'Unknown', color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200', shadow: 'shadow-[0_4px_0_#d1d5db]' };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4">
+    <div className="max-w-2xl mx-auto space-y-5 pb-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs text-gray-500">
+        <div className="flex items-center gap-2 text-sm text-gray-500">
           <Bot className="w-4 h-4" />
-          <span className="font-medium">
+          <span className="font-semibold">
             {isSavedResult ? 'Saved AI Analysis' : 'Analyzed by AI'} &mdash; 4 specialized agents
           </span>
         </div>
-        <button onClick={runValidation} className="flex items-center gap-1 text-[10px] text-[#1cb0f6] font-bold hover:underline">
-          <RefreshCw size={10} /> Re-analyze
+        <button onClick={runValidation} className="flex items-center gap-1.5 text-xs text-[#1cb0f6] font-bold hover:underline">
+          <RefreshCw size={12} /> Re-analyze
         </button>
       </div>
 
       {/* Verdict Card */}
-      <div className={`${vc.bg} ${vc.border} border-2 rounded-2xl ${vc.shadow} p-6 text-center`}>
-        <div className={`text-2xl font-black ${vc.color} uppercase tracking-wide`}>{vc.label}</div>
-        <p className="text-gray-600 mt-3 text-sm leading-relaxed max-w-md mx-auto">{fv?.summary}</p>
-        <div className="flex justify-center mt-6 pt-4 border-t border-white/50">
+      <div className={`${vc.bg} ${vc.border} border-2 rounded-2xl ${vc.shadow} p-8 text-center`}>
+        <div className={`text-3xl font-black ${vc.color} uppercase tracking-wide`}>{vc.label}</div>
+        <p className="text-gray-700 mt-4 text-base leading-relaxed max-w-lg mx-auto">{fv?.summary}</p>
+        <div className="flex justify-center mt-8 pt-5 border-t border-white/50">
           <div className="text-center">
-            <div className={`w-20 h-20 rounded-2xl border-2 ${
+            <div className={`w-24 h-24 rounded-2xl border-2 ${
               overall >= 8 ? 'border-[#58cc02] bg-[#d7ffb8] shadow-[0_4px_0_#58a700]' :
               overall >= 6 ? 'border-[#1cb0f6] bg-[#ddf4ff] shadow-[0_4px_0_#1899d6]' :
               overall >= 4 ? 'border-[#ff9600] bg-[#fff4e0] shadow-[0_4px_0_#ea7900]' :
               'border-[#ff4b4b] bg-[#ffe0e0] shadow-[0_4px_0_#ea2b2b]'
             } flex items-center justify-center mx-auto mb-2`}>
-              <span className={`text-3xl font-black ${
+              <span className={`text-4xl font-black ${
                 overall >= 8 ? 'text-[#58a700]' : overall >= 6 ? 'text-[#1899d6]' : overall >= 4 ? 'text-[#ea7900]' : 'text-[#ea2b2b]'
               }`}>{overall}</span>
             </div>
-            <div className="text-sm font-bold text-gray-600 uppercase tracking-wide">Overall Score</div>
+            <div className="text-sm font-bold text-gray-500 uppercase tracking-wider">Overall Score</div>
           </div>
         </div>
-        <div className="flex justify-center gap-3 mt-4">
+        <div className="flex justify-center gap-5 mt-5">
           <ScoreCircle score={marketScore} label="Market" />
           <ScoreCircle score={loopScore} label="Loop" />
           <ScoreCircle score={compScore} label="Edge" />
@@ -196,14 +194,14 @@ export function DashboardOverview() {
 
       {/* Hard Truth */}
       {hardTruth && (
-        <div className="bg-[#fff4e0] border-2 border-[#ff9600] rounded-2xl shadow-[0_4px_0_#ea7900] p-4">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-[#ff9600] rounded-xl flex items-center justify-center shadow-[0_2px_0_#ea7900]">
+        <div className="bg-[#fff4e0] border-2 border-[#ff9600] rounded-2xl shadow-[0_4px_0_#ea7900] p-5">
+          <div className="flex items-start gap-4">
+            <div className="w-11 h-11 bg-[#ff9600] rounded-xl flex items-center justify-center shadow-[0_2px_0_#ea7900] shrink-0">
               <AlertTriangle className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
-              <div className="font-bold text-[#ea7900] text-sm uppercase tracking-wide">Hard Truth</div>
-              <p className="text-gray-700 text-sm mt-1 leading-relaxed">{hardTruth}</p>
+              <h3 className="font-black text-[#ea7900] text-sm uppercase tracking-wider mb-2">Hard Truth</h3>
+              <p className="text-gray-800 text-[15px] leading-relaxed">{hardTruth}</p>
             </div>
           </div>
         </div>
@@ -212,57 +210,57 @@ export function DashboardOverview() {
       {/* Competition */}
       {validation.competitorAnalysis && (
         <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3 border-b-2 border-[#ff9600]">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-[#ff9600] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#ea7900]">
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-5 py-4 border-b-2 border-[#ff9600]">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-[#ff9600] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#ea7900]">
                 <Trophy className="w-4 h-4" />
               </div>
-              <span className="font-bold text-[#ea7900] uppercase tracking-wide text-sm">Competition</span>
-              <span className="ml-auto text-xs bg-[#ff9600] text-white px-2 py-0.5 rounded-full font-bold">{compScore}/10</span>
+              <h3 className="font-black text-[#ea7900] uppercase tracking-wider text-sm">Competition</h3>
+              <span className="ml-auto text-xs bg-[#ff9600] text-white px-2.5 py-1 rounded-full font-black">{compScore}/10</span>
             </div>
           </div>
-          <div className="p-4 space-y-3">
+          <div className="p-5 space-y-4">
             {validation.competitorAnalysis.directCompetitors?.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {validation.competitorAnalysis.directCompetitors.slice(0, 3).map((comp: any, i: number) => (
-                  <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                    <div className="w-7 h-7 bg-[#ff9600] text-white rounded-lg flex items-center justify-center font-bold text-sm">{i + 1}</div>
+                  <div key={i} className="flex items-center gap-3 p-3.5 bg-gray-50 rounded-xl">
+                    <div className="w-8 h-8 bg-[#ff9600] text-white rounded-lg flex items-center justify-center font-black text-sm">{i + 1}</div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-gray-900 truncate">{comp.name}</div>
-                      <div className="text-xs text-gray-500">{comp.visits}</div>
+                      <div className="font-bold text-gray-900 text-[15px]">{comp.name}</div>
+                      <div className="text-sm text-gray-500 mt-0.5">{comp.visits}</div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
             {validation.competitorAnalysis.differentiationAnalysis && (
-              <div className={`p-3 rounded-xl border ${
+              <div className={`p-4 rounded-xl border ${
                 validation.competitorAnalysis.differentiationAnalysis.toLowerCase().includes('weak') ||
                 validation.competitorAnalysis.differentiationAnalysis.toLowerCase().includes('unclear')
                   ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
               }`}>
-                <div className="text-xs font-bold uppercase mb-1 text-gray-600">Your Differentiation</div>
-                <div className="text-sm text-gray-700">{validation.competitorAnalysis.differentiationAnalysis}</div>
+                <h4 className="text-xs font-black uppercase tracking-wider mb-1.5 text-gray-600">Your Differentiation</h4>
+                <p className="text-[15px] text-gray-800 leading-relaxed">{validation.competitorAnalysis.differentiationAnalysis}</p>
               </div>
             )}
             {(validation.competitorAnalysis.competitiveAdvantages?.length > 0 || validation.competitorAnalysis.competitiveDisadvantages?.length > 0) && (
               <div className="grid grid-cols-2 gap-3">
                 {validation.competitorAnalysis.competitiveAdvantages?.length > 0 && (
-                  <div className="bg-green-50 p-3 rounded-xl border border-green-200">
-                    <div className="text-xs font-bold text-green-700 uppercase mb-2">Your Edge</div>
-                    <ul className="space-y-1">
+                  <div className="bg-green-50 p-4 rounded-xl border border-green-200">
+                    <h4 className="text-xs font-black text-green-700 uppercase tracking-wider mb-2.5">Your Edge</h4>
+                    <ul className="space-y-2">
                       {validation.competitorAnalysis.competitiveAdvantages.slice(0, 3).map((adv: string, i: number) => (
-                        <li key={i} className="text-xs text-gray-700 flex items-start gap-1"><span className="text-green-500">+</span>{adv}</li>
+                        <li key={i} className="text-sm text-gray-700 leading-snug flex items-start gap-2"><span className="text-green-500 font-bold mt-px">+</span>{adv}</li>
                       ))}
                     </ul>
                   </div>
                 )}
                 {validation.competitorAnalysis.competitiveDisadvantages?.length > 0 && (
-                  <div className="bg-red-50 p-3 rounded-xl border border-red-200">
-                    <div className="text-xs font-bold text-red-700 uppercase mb-2">Gaps</div>
-                    <ul className="space-y-1">
+                  <div className="bg-red-50 p-4 rounded-xl border border-red-200">
+                    <h4 className="text-xs font-black text-red-700 uppercase tracking-wider mb-2.5">Gaps</h4>
+                    <ul className="space-y-2">
                       {validation.competitorAnalysis.competitiveDisadvantages.slice(0, 3).map((dis: string, i: number) => (
-                        <li key={i} className="text-xs text-gray-700 flex items-start gap-1"><span className="text-red-500">-</span>{dis}</li>
+                        <li key={i} className="text-sm text-gray-700 leading-snug flex items-start gap-2"><span className="text-red-500 font-bold mt-px">&minus;</span>{dis}</li>
                       ))}
                     </ul>
                   </div>
@@ -276,42 +274,44 @@ export function DashboardOverview() {
       {/* Market */}
       {validation.marketAnalysis && (
         <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-4 py-3 border-b-2 border-[#1cb0f6]">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-[#1cb0f6] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#1899d6]">
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-5 py-4 border-b-2 border-[#1cb0f6]">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-[#1cb0f6] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#1899d6]">
                 <TrendingUp className="w-4 h-4" />
               </div>
-              <span className="font-bold text-[#1899d6] uppercase tracking-wide text-sm">Market</span>
-              <span className="ml-auto text-xs bg-[#1cb0f6] text-white px-2 py-0.5 rounded-full font-bold">{marketScore}/10</span>
+              <h3 className="font-black text-[#1899d6] uppercase tracking-wider text-sm">Market</h3>
+              <span className="ml-auto text-xs bg-[#1cb0f6] text-white px-2.5 py-1 rounded-full font-black">{marketScore}/10</span>
             </div>
           </div>
-          <div className="p-4 space-y-3">
-            <div className="grid grid-cols-3 gap-2">
-              <div className="bg-blue-50 p-2 rounded-xl border border-blue-100 text-center">
-                <div className="text-[10px] font-bold text-[#1899d6] uppercase">Genre</div>
-                <div className="text-sm font-medium text-gray-800">{validation.marketAnalysis.genre}</div>
+          <div className="p-5 space-y-4">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 text-center">
+                <div className="text-[10px] font-black text-[#1899d6] uppercase tracking-wider">Genre</div>
+                <div className="text-[15px] font-semibold text-gray-800 mt-1">{validation.marketAnalysis.genre}</div>
               </div>
-              <div className={`p-2 rounded-xl border text-center ${
+              <div className={`p-3 rounded-xl border text-center ${
                 validation.marketAnalysis.growthTrend?.includes('rising') ? 'bg-green-50 border-green-200' :
                 validation.marketAnalysis.growthTrend?.includes('declining') ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'
               }`}>
-                <div className="text-[10px] font-bold uppercase text-gray-600">Trend</div>
-                <div className="text-sm font-medium text-gray-800">{validation.marketAnalysis.growthTrend}</div>
+                <div className="text-[10px] font-black uppercase tracking-wider text-gray-500">Trend</div>
+                <div className="text-[15px] font-semibold text-gray-800 mt-1">{validation.marketAnalysis.growthTrend}</div>
               </div>
-              <div className={`p-2 rounded-xl border text-center ${
+              <div className={`p-3 rounded-xl border text-center ${
                 validation.marketAnalysis.saturationLevel?.includes('extreme') || validation.marketAnalysis.saturationLevel?.includes('high')
                   ? 'bg-red-50 border-red-200' : validation.marketAnalysis.saturationLevel?.includes('low') ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'
               }`}>
-                <div className="text-[10px] font-bold uppercase text-gray-600">Saturation</div>
-                <div className="text-sm font-medium text-gray-800">{validation.marketAnalysis.saturationLevel}</div>
+                <div className="text-[10px] font-black uppercase tracking-wider text-gray-500">Saturation</div>
+                <div className="text-[15px] font-semibold text-gray-800 mt-1">{validation.marketAnalysis.saturationLevel}</div>
               </div>
             </div>
             {validation.marketAnalysis.risks?.length > 0 && (
-              <div className="bg-amber-50 p-3 rounded-xl border border-amber-200">
-                <div className="text-xs font-bold text-[#ea7900] uppercase mb-2">Market Risks</div>
-                <ul className="space-y-1">
+              <div className="bg-amber-50 p-4 rounded-xl border border-amber-200">
+                <h4 className="text-xs font-black text-[#ea7900] uppercase tracking-wider mb-3">Market Risks</h4>
+                <ul className="space-y-2.5">
                   {validation.marketAnalysis.risks.slice(0, 3).map((risk: string, i: number) => (
-                    <li key={i} className="text-sm text-gray-700 flex items-start gap-2"><span className="text-amber-500 mt-0.5">&#x2022;</span>{risk}</li>
+                    <li key={i} className="text-[15px] text-gray-800 leading-relaxed flex items-start gap-2.5">
+                      <span className="text-amber-500 mt-1 shrink-0">&#x2022;</span>{risk}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -323,29 +323,29 @@ export function DashboardOverview() {
       {/* First 5 Minutes */}
       {validation.loopAnalysis?.firstSession && (
         <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
-          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 px-4 py-3 border-b-2 border-[#ffc800]">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-[#ffc800] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#e6b400]">
+          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 px-5 py-4 border-b-2 border-[#ffc800]">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-[#ffc800] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#e6b400]">
                 <Zap className="w-4 h-4" />
               </div>
-              <span className="font-bold text-[#b38f00] uppercase tracking-wide text-sm">First 5 Minutes</span>
+              <h3 className="font-black text-[#b38f00] uppercase tracking-wider text-sm">First 5 Minutes</h3>
             </div>
           </div>
-          <div className="p-4 space-y-3">
+          <div className="p-5 space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-amber-50 p-3 rounded-xl border border-amber-200">
-                <div className="text-xs font-bold text-[#b38f00] uppercase mb-1">Time to Fun</div>
-                <div className="text-sm font-bold text-gray-800">{validation.loopAnalysis.firstSession.timeToFun}</div>
+              <div className="bg-amber-50 p-4 rounded-xl border border-amber-200">
+                <h4 className="text-xs font-black text-[#b38f00] uppercase tracking-wider mb-1.5">Time to Fun</h4>
+                <div className="text-[15px] font-bold text-gray-900">{validation.loopAnalysis.firstSession.timeToFun}</div>
               </div>
-              <div className="bg-amber-50 p-3 rounded-xl border border-amber-200">
-                <div className="text-xs font-bold text-[#b38f00] uppercase mb-1">Tutorial Risk</div>
-                <div className="text-sm font-medium text-gray-800">{validation.loopAnalysis.firstSession.tutorialRisk}</div>
+              <div className="bg-amber-50 p-4 rounded-xl border border-amber-200">
+                <h4 className="text-xs font-black text-[#b38f00] uppercase tracking-wider mb-1.5">Tutorial Risk</h4>
+                <div className="text-[15px] font-semibold text-gray-800">{validation.loopAnalysis.firstSession.tutorialRisk}</div>
               </div>
             </div>
             {validation.loopAnalysis.firstSession.hookMoment && (
-              <div className="bg-green-50 p-3 rounded-xl border border-green-200">
-                <div className="text-xs font-bold text-[#58a700] uppercase mb-1">Hook Moment</div>
-                <div className="text-sm text-gray-700">{validation.loopAnalysis.firstSession.hookMoment}</div>
+              <div className="bg-green-50 p-4 rounded-xl border border-green-200">
+                <h4 className="text-xs font-black text-[#58a700] uppercase tracking-wider mb-1.5">Hook Moment</h4>
+                <p className="text-[15px] text-gray-800 leading-relaxed">{validation.loopAnalysis.firstSession.hookMoment}</p>
               </div>
             )}
           </div>
@@ -355,28 +355,28 @@ export function DashboardOverview() {
       {/* Core Loop */}
       {validation.loopAnalysis && (
         <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
-          <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-4 py-3 border-b-2 border-[#a560e8]">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-[#a560e8] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#8b47cc]">
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-5 py-4 border-b-2 border-[#a560e8]">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-[#a560e8] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#8b47cc]">
                 <RefreshCw className="w-4 h-4" />
               </div>
-              <span className="font-bold text-[#8b47cc] uppercase tracking-wide text-sm">Core Loop</span>
-              <span className="ml-auto text-xs bg-[#a560e8] text-white px-2 py-0.5 rounded-full font-bold">{loopScore}/10</span>
+              <h3 className="font-black text-[#8b47cc] uppercase tracking-wider text-sm">Core Loop</h3>
+              <span className="ml-auto text-xs bg-[#a560e8] text-white px-2.5 py-1 rounded-full font-black">{loopScore}/10</span>
             </div>
           </div>
-          <div className="p-4 space-y-3">
+          <div className="p-5 space-y-4">
             {validation.loopAnalysis.primaryLoop && (
-              <div className="bg-purple-50 p-3 rounded-xl border border-purple-100">
-                <div className="text-sm text-gray-700 font-medium">{validation.loopAnalysis.primaryLoop}</div>
+              <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                <p className="text-[15px] text-gray-800 leading-relaxed font-medium">{validation.loopAnalysis.primaryLoop}</p>
               </div>
             )}
             {validation.loopAnalysis.loopStrength && (
-              <div className={`p-3 rounded-xl border ${
+              <div className={`p-4 rounded-xl border ${
                 validation.loopAnalysis.loopStrength.includes('strong') ? 'bg-green-50 border-green-200' :
                 validation.loopAnalysis.loopStrength.includes('weak') ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'
               }`}>
-                <div className="text-xs font-bold uppercase mb-1 text-gray-600">Loop Assessment</div>
-                <div className="text-sm text-gray-700">{validation.loopAnalysis.loopStrength}</div>
+                <h4 className="text-xs font-black uppercase tracking-wider mb-1.5 text-gray-600">Loop Assessment</h4>
+                <p className="text-[15px] text-gray-800 leading-relaxed">{validation.loopAnalysis.loopStrength}</p>
               </div>
             )}
           </div>
@@ -386,35 +386,37 @@ export function DashboardOverview() {
       {/* Retention */}
       {validation.loopAnalysis?.retention && (
         <div className="bg-white rounded-2xl border-2 border-[#e5e7eb] shadow-[0_4px_0_#d1d5db] overflow-hidden">
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 border-b-2 border-[#58cc02]">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-[#58cc02] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#58a700]">
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-5 py-4 border-b-2 border-[#58cc02]">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-[#58cc02] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#58a700]">
                 <TrendingUp className="w-4 h-4" />
               </div>
-              <span className="font-bold text-[#58a700] uppercase tracking-wide text-sm">Why Players Return</span>
+              <h3 className="font-black text-[#58a700] uppercase tracking-wider text-sm">Why Players Return</h3>
             </div>
           </div>
-          <div className="p-4 space-y-3">
-            <div className="space-y-2">
+          <div className="p-5 space-y-4">
+            <div className="space-y-3">
               {validation.loopAnalysis.retention.whyComeBackTomorrow && (
-                <div className="bg-green-50 p-3 rounded-xl border border-green-200">
-                  <div className="text-xs font-bold text-[#58a700] uppercase mb-1">Tomorrow</div>
-                  <div className="text-sm text-gray-700">{validation.loopAnalysis.retention.whyComeBackTomorrow}</div>
+                <div className="bg-green-50 p-4 rounded-xl border border-green-200">
+                  <h4 className="text-xs font-black text-[#58a700] uppercase tracking-wider mb-1.5">Tomorrow</h4>
+                  <p className="text-[15px] text-gray-800 leading-relaxed">{validation.loopAnalysis.retention.whyComeBackTomorrow}</p>
                 </div>
               )}
               {validation.loopAnalysis.retention.whyComeBackNextWeek && (
-                <div className="bg-blue-50 p-3 rounded-xl border border-blue-200">
-                  <div className="text-xs font-bold text-[#1899d6] uppercase mb-1">Next Week</div>
-                  <div className="text-sm text-gray-700">{validation.loopAnalysis.retention.whyComeBackNextWeek}</div>
+                <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                  <h4 className="text-xs font-black text-[#1899d6] uppercase tracking-wider mb-1.5">Next Week</h4>
+                  <p className="text-[15px] text-gray-800 leading-relaxed">{validation.loopAnalysis.retention.whyComeBackNextWeek}</p>
                 </div>
               )}
             </div>
             {validation.loopAnalysis.retention.retentionKillers?.length > 0 && (
-              <div className="bg-red-50 p-3 rounded-xl border border-red-200">
-                <div className="text-xs font-bold text-[#ea2b2b] uppercase mb-2">Retention Killers</div>
-                <ul className="space-y-1">
+              <div className="bg-red-50 p-4 rounded-xl border border-red-200">
+                <h4 className="text-xs font-black text-[#ea2b2b] uppercase tracking-wider mb-3">Retention Killers</h4>
+                <ul className="space-y-2.5">
                   {validation.loopAnalysis.retention.retentionKillers.map((killer: string, i: number) => (
-                    <li key={i} className="text-sm text-gray-700 flex items-start gap-2"><span className="text-red-500 mt-0.5">x</span>{killer}</li>
+                    <li key={i} className="text-[15px] text-gray-800 leading-relaxed flex items-start gap-2.5">
+                      <span className="text-red-500 font-bold mt-px shrink-0">&times;</span>{killer}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -426,22 +428,24 @@ export function DashboardOverview() {
       {/* Dealbreakers */}
       {dealbreakers.length > 0 && (
         <div className="bg-white rounded-2xl border-2 border-[#ff4b4b] shadow-[0_4px_0_#ea2b2b] overflow-hidden">
-          <div className="bg-[#ffe0e0] px-4 py-3 border-b-2 border-[#ff4b4b] flex items-center gap-2">
-            <div className="w-7 h-7 bg-[#ff4b4b] rounded-lg flex items-center justify-center text-white text-sm shadow-[0_2px_0_#ea2b2b]">x</div>
-            <span className="font-bold text-[#ea2b2b] uppercase tracking-wide text-sm">Dealbreakers</span>
+          <div className="bg-[#ffe0e0] px-5 py-4 border-b-2 border-[#ff4b4b] flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-[#ff4b4b] rounded-lg flex items-center justify-center text-white shadow-[0_2px_0_#ea2b2b]">
+              <AlertTriangle className="w-4 h-4" />
+            </div>
+            <h3 className="font-black text-[#ea2b2b] uppercase tracking-wider text-sm">Dealbreakers</h3>
           </div>
-          <div className="p-4 space-y-2">
+          <div className="p-5 space-y-3">
             {dealbreakers.map((d: string, i: number) => (
-              <div key={i} className="flex items-start gap-3 text-sm">
-                <span className="w-5 h-5 bg-[#ff4b4b] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">x</span>
-                <span className="text-gray-700">{d}</span>
+              <div key={i} className="flex items-start gap-3">
+                <span className="w-6 h-6 bg-[#ff4b4b] text-white rounded-full flex items-center justify-center text-xs font-black shrink-0 mt-0.5">!</span>
+                <span className="text-[15px] text-gray-800 leading-relaxed">{d}</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      <p className="text-center text-xs text-gray-400 pb-4 mt-4">
+      <p className="text-center text-sm text-gray-400 pb-4 mt-6">
         AI-powered analysis of market data, game loops, and competition
       </p>
     </div>
