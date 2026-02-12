@@ -286,7 +286,12 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error); return; }
-      setCalendarData(data.calendarData);
+      const cal = data.calendarData;
+      if (!cal?.weeks || !Array.isArray(cal.weeks) || cal.weeks.length === 0) {
+        setError('AI returned an invalid schedule. Please try again.');
+        return;
+      }
+      setCalendarData(cal);
       setCalendarId(data.id);
       setExpandedWeek(0);
       onCreditsUpdate();
@@ -300,15 +305,16 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
   // toggleGoal does NOT depend on calendarData — uses functional setState
   const toggleGoal = useCallback((goalId: string) => {
     setCalendarData(prev => {
-      if (!prev) return prev;
+      if (!prev?.weeks) return prev;
       return {
         ...prev,
-        weeks: prev.weeks.map(w => ({
+        weeks: (prev.weeks || []).map(w => ({
           ...w,
-          days: w.days.map(d => {
-            const idx = d.goals.findIndex(g => g.id === goalId);
+          days: (w.days || []).map(d => {
+            const goals = d.goals || [];
+            const idx = goals.findIndex(g => g.id === goalId);
             if (idx === -1) return d;
-            const newGoals = [...d.goals];
+            const newGoals = [...goals];
             newGoals[idx] = { ...newGoals[idx], completed: !newGoals[idx].completed };
             pendingSavesRef.current.set(goalId, newGoals[idx].completed);
             return { ...d, goals: newGoals };
@@ -438,19 +444,24 @@ export function DevCalendar({ credits, onCreditsUpdate }: Props) {
   // Calendar View
   // ============================================
 
+  // Extra safety: if calendarData somehow has no valid weeks, show setup
+  if (!calendarData.weeks || calendarData.weeks.length === 0) {
+    setCalendarData(null);
+    return null;
+  }
+
   const progress = getProgress(calendarData);
   const todayInfo = getTodayInfo(calendarData);
   const todayGoals = todayInfo.status === 'working_day'
-    ? calendarData.weeks[todayInfo.weekIndex]?.days[todayInfo.dayIndex]?.goals || []
+    ? calendarData.weeks[todayInfo.weekIndex]?.days?.[todayInfo.dayIndex]?.goals || []
     : [];
-  const todayWeek = todayInfo.status === 'working_day' ? calendarData.weeks[todayInfo.weekIndex] : null;
+  const todayWeek = todayInfo.status === 'working_day' ? calendarData.weeks[todayInfo.weekIndex] || null : null;
   const streak = getStreak(calendarData, todayInfo);
   const weekHours = getWeekHours(todayWeek);
   const shortPlan = isShortTimeline(calendarData);
 
-  // Get precomputed date for a given week/day index
   const getDate = (wi: number, di: number): Date => {
-    const idx = wi * calendarData.daysPerWeek + di;
+    const idx = wi * (calendarData.daysPerWeek || 5) + di;
     return dayDates[idx] || new Date();
   };
 

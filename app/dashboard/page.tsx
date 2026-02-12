@@ -1,14 +1,46 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, Component, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import {
   LayoutDashboard, Paintbrush, Box, Music, Calendar,
-  Loader2, Lock, Sparkles, Crown, Zap,
+  Loader2, Lock, Sparkles, Crown, Zap, AlertTriangle, RefreshCw,
 } from 'lucide-react';
 import { useProject } from '@/hooks/useProject';
 import { CreditInfo } from '@/lib/credits';
+
+// Error boundary — catches render crashes so one tab can't kill the whole page
+class TabErrorBoundary extends Component<
+  { children: ReactNode; tabName: string },
+  { hasError: boolean; error: string }
+> {
+  constructor(props: { children: ReactNode; tabName: string }) {
+    super(props);
+    this.state = { hasError: false, error: '' };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error: error.message || 'Something went wrong' };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="max-w-md mx-auto mt-16 text-center space-y-4">
+          <AlertTriangle className="w-10 h-10 text-red-400 mx-auto" />
+          <h3 className="font-bold text-gray-900">{this.props.tabName} ran into a problem</h3>
+          <p className="text-sm text-gray-500">{this.state.error}</p>
+          <button
+            onClick={() => this.setState({ hasError: false, error: '' })}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-bold text-gray-700"
+          >
+            <RefreshCw size={14} /> Try Again
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // Lazy-load each tab component — only downloaded when the tab is first visited
 const TabSpinner = () => <div className="flex justify-center pt-20"><Loader2 className="w-6 h-6 animate-spin text-gray-400" /></div>;
@@ -190,27 +222,27 @@ function DashboardContent() {
           <>
             {mountedTabs.has('overview') && (
               <div style={{ display: activeTab === 'overview' ? undefined : 'none' }}>
-                <DashboardOverview />
+                <TabErrorBoundary tabName="Overview"><DashboardOverview /></TabErrorBoundary>
               </div>
             )}
             {mountedTabs.has('art') && (
               <div style={{ display: activeTab === 'art' ? undefined : 'none' }}>
-                <SketchToArt credits={credits} onCreditsUpdate={fetchCredits} />
+                <TabErrorBoundary tabName="Art Studio"><SketchToArt credits={credits} onCreditsUpdate={fetchCredits} /></TabErrorBoundary>
               </div>
             )}
             {mountedTabs.has('3d') && (
               <div style={{ display: activeTab === '3d' ? undefined : 'none' }}>
-                <ImageTo3D credits={credits} onCreditsUpdate={fetchCredits} />
+                <TabErrorBoundary tabName="3D Lab"><ImageTo3D credits={credits} onCreditsUpdate={fetchCredits} /></TabErrorBoundary>
               </div>
             )}
             {mountedTabs.has('music') && (
               <div style={{ display: activeTab === 'music' ? undefined : 'none' }}>
-                <MusicGenerator credits={credits} onCreditsUpdate={fetchCredits} />
+                <TabErrorBoundary tabName="Music"><MusicGenerator credits={credits} onCreditsUpdate={fetchCredits} /></TabErrorBoundary>
               </div>
             )}
             {mountedTabs.has('calendar') && (
               <div style={{ display: activeTab === 'calendar' ? undefined : 'none' }}>
-                <DevCalendar credits={credits} onCreditsUpdate={fetchCredits} />
+                <TabErrorBoundary tabName="Calendar"><DevCalendar credits={credits} onCreditsUpdate={fetchCredits} /></TabErrorBoundary>
               </div>
             )}
           </>
