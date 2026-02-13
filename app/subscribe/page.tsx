@@ -5,6 +5,7 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { ArrowLeft, CheckCircle2, Loader2, Play, ChevronRight, Check, Phone, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PLANS } from '@/lib/plans';
+import { usePowerPath } from '@/hooks/usePowerPath';
 
 export default function SubscribePage() {
   return (
@@ -29,6 +30,7 @@ function SubscribeContent() {
   const [videoStarted, setVideoStarted] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const [videoProgress, setVideoProgress] = useState(0);
+  const { submitVideoComplete } = usePowerPath();
 
   const success = searchParams.get('success') === 'true';
   const sessionId = searchParams.get('session_id');
@@ -84,6 +86,16 @@ function SubscribeContent() {
     setUnlocking(true);
     try {
       await fetch('/api/video-unlock', { method: 'POST' });
+
+      // Report video completion to PowerPath (best-effort, non-blocking)
+      submitVideoComplete({
+        assessmentLineItemSourcedId: '', // TODO: populate with actual line item ID from course content
+        courseTitle: '',
+        lessonTitle: '',
+        enrollmentId: '',
+      }).catch(() => {
+        // Silent -- PowerPath reporting should not block the user
+      });
     } catch {
       // silent
     } finally {
